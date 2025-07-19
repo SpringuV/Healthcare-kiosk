@@ -1,4 +1,4 @@
-function ServiceItem() {
+function ServiceItem({onClose}) {
     return (
         <>
             <div>

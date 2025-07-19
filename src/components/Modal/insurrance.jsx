@@ -1,58 +1,59 @@
-function Insurrance({ onClose }) {
+import { useState, useRef } from 'react'
+import NumberPad from './number_pad'
+function Insurrance({ onClose, onShowInputCheckInfo }) {
+    const [showNumpad, setShowNumberPad] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("");
+    const inputRef = useRef(null)
+    const handleInput = (value) => {
+        if (inputRef.current) {
+            if (value === "delete") {
+                inputRef.current.value = inputRef.current.value.slice(0, -1)
+            } else {
+                if (inputRef.current.value.length < 12) {
+                    inputRef.current.value += value
+                }
+            }
+        }
+    }
 
-    const [showInfo, setShowInfo] = useState(false)
+    const handleCheckInfo = (e) => {
+        e.preventDefault()
+        const inputValue = inputRef.current.value.trim()
+        console.log(inputValue.length)
+        if (inputValue.length !== 12) {
+            setErrorMessage("Căn cước công dân gồm 12 chữ số")
+            return
+        }
+        setErrorMessage("")
+        onShowInputCheckInfo()
+    }
+
     return (
         <>
             {/* lớp phủ */}
             <div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm">
-                <div className="max-h-[80vh] max-w-[40vw] bg-white z-[100] rounded-md">
-                    <div className="flex justify-between w-full items-center py-1 bg-colorOne rounded-t-md">
-                        <div className="text-center flex-1 text-white font-semibold">
+                <div className="max-h-[80vh] min-w-[30vw] max-w-[80vw] bg-white z-[100] rounded-md">
+                    <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
+                        <div className="text-center flex-1 text-white font-semibold text-[23px]">
                             <h2>Nhập thông tin</h2>
                         </div>
-                        <div className="w-8 flex justify-center" onClick={onClose}>
+                        <div className="w-8 flex justify-center mr-1" onClick={onClose}>
                             <i className="text-center fa-solid fa-xmark p-1 rounded-full h-6 w-6 bg-slate-300 hover:bg-slate-400"></i>
                         </div>
                     </div>
                     <div className="flex justify-center">
                         <form className="flex flex-col w-[30vw] justify-center items-center">
-                            <input type="text" className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" placeholder="Nhập thẻ căn cước công dân"></input>
-                            <button className="text-white font-medium mb-4 mt-2 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" onClick={() => setShowInfo(true)}>Kiểm tra thông tin</button>
+                            <input ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" placeholder="Nhập thẻ căn cước công dân"></input>
+                            {errorMessage && (
+                                <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
+                            )}
+                            {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />}
+                            <button className="text-white font-medium mb-4 mt-2 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" onClick={handleCheckInfo}>Kiểm tra thông tin</button>
                         </form>
                     </div>
                 </div>
             </div>
-            {/* lấy từ api các cái show info */}
-            {showInfo && (
-                <div>
-                    <div className="flex justify-between items-center bg-colorOne text-white p-2 rounded-t-md">
-                        <h1>Thông tin bảo hiểm y tế</h1>
-                        <i className="fa-solid fa-xmark p-2 bg-slate-200 hover:bg-slate-300"></i>
-                    </div>
-                    <div>
-                        <div>
-                            <label className="font-semibold">Họ và tên:</label>
-                            <span>Nguyễn Văn A</span>
-                        </div>
-                        <div>
-                            <label className="font-semibold">Ngày sinh:</label>
-                            <span>01/01/1990</span>
-                        </div>
-                        <div>
-                            <label className="font-semibold">Số thẻ bảo hiểm y tế:</label>
-                            <span>1234567890</span>
-                        </div>
-                        <div>
-                            <label className="font-semibold">Thời hạn sử dụng:</label>
-                            <span>01/01/2023 - 31/12/2023</span>
-                        </div>
-                        <div>
-                            <label className="font-semibold">Nơi Cấp:</label>
-                            <span>Bệnh viện A</span>
-                        </div>
-                    </div>
-                </div>
-            )}
+
         </>
     )
 }

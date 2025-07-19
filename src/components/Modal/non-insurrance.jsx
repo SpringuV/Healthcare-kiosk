@@ -40,7 +40,7 @@ function NonInsurrance({ onClose }) {
                                 <input className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
                             </div>
                             <div className="flex justify-center w-full my-3">
-                                <button className="px-4 py-1 text-center bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" type="submit">Lưu thông tin</button>
+                                <button className="px-4 py-1 text-center bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" type="submit">Bước tiếp theo</button>
                             </div>
                         </form>
                     </div>

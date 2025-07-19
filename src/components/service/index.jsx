@@ -1,12 +1,12 @@
 import { useState } from "react"
 import Header from "../Header"
+import ServiceItem from "./service_selection"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
-    const service = ['Lấy số', 'Liên thông hồ sơ bệnh án (CCCD/VNEID)', 'Đăng kí khám', 'Tra cứu', 'Đăng kí mở bảo hiểm', 'Bản đồ', 'Ngân hàng số 24/7']
+    const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
     return (
         <>
             <div className='h-screen flex flex-col'>
-                <Header></Header>
                 <div className='py-2 w-full flex justify-center'>
                     <h2 className='text-center text-colorOne font-extrabold text-[22px] w-[80vw]'>Chào mừng bạn tới KIOSK phục vụ tự động, vui lòng
                         chọn dịch vụ bạn muốn thực hiện!</h2>
@@ -24,6 +24,7 @@ function Service() {
                     </div>
                 </div>
             </div>
+            {selectedService === "Đăng kí khám" && <ServiceItem onClose={() => setShowServiceSelection(false)} />}
         </>
     )
 }
