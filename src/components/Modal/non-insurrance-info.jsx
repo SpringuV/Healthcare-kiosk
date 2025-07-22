@@ -1,4 +1,9 @@
-function InfoInsurrance({ onClose }) {
+import { useLocation, useNavigate } from 'react-router-dom'
+//  Dùng useLocation để nhận data bên NonInsurranceInfo
+function NonInsurranceInfo() {
+    const navigate = useNavigate()
+    const { state } = useLocation()
+    const data = state || {}
     return (
         <>
             <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
@@ -10,27 +15,35 @@ function InfoInsurrance({ onClose }) {
                     <div className="flex flex-col bg-white overflow-y-auto px-4 min-w-[30vw] pt-3">
                         <div className="flex justify-between py-2">
                             <label className="font-semibold w-1/2 border-r-slate-700">Họ và tên:</label>
-                            <span>Nguyễn Văn A</span>
+                            <span>{data.fullName}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Ngày sinh:</label>
-                            <span>01/01/1990</span>
+                            <span>{data.dob}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                            <label className="font-semibold">Số thẻ bảo hiểm y tế:</label>
-                            <span>1234567890</span>
+                            <label className="font-semibold">Địa chỉ:</label>
+                            <span>{data.address}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                            <label className="font-semibold">Thời hạn sử dụng:</label>
-                            <span>01/01/2023 - 31/12/2023</span>
+                            <label className="font-semibold">Căn cước công dân:</label>
+                            <span>{data.cccd}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                            <label className="font-semibold">Nơi Cấp:</label>
-                            <span>Bệnh viện A</span>
+                            <label className="font-semibold">Nghề nghiệp:</label>
+                            <span>{data.occupation}</span>
+                        </div>
+                        <div className="flex justify-between py-2">
+                            <label className="font-semibold">Dân tộc:</label>
+                            <span>{data.ethnicity}</span>
+                        </div>
+                        <div className="flex justify-between py-2">
+                            <label className="font-semibold">Số điện thoại:</label>
+                            <span>{data.phone}</span>
                         </div>
                     </div>
                     <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                        <button className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={onClose}>Bước tiếp theo</button>
+                        <button className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={() => navigate('/service')}>Bước tiếp theo</button>
                     </div>
                 </div>
             </div>
@@ -38,4 +51,4 @@ function InfoInsurrance({ onClose }) {
     )
 }
 
-export default InfoInsurrance
+export default NonInsurranceInfo

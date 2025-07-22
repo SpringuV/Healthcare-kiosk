@@ -28,6 +28,26 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
         onShowInputCheckInfo()
     }
 
+    const handleKeyDownInput = (e) => {
+        const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"];
+        const inputValue = inputRef.current.value;
+
+        // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
+        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+            console.log(e.key)
+            e.preventDefault();
+            setErrorMessage("Không nhập kí tự chữ")
+            return;
+        }
+
+        // Nếu là số và đã đủ 12 ký tự → ngăn không cho nhập thêm
+        if (/[0-9]/.test(e.key) && inputValue.length >= 12) {
+            setErrorMessage("Căn cước công dân gồm 12 chữ số")
+            e.preventDefault();
+        }
+        setErrorMessage("")
+    }
+
     return (
         <>
             {/* lớp phủ */}
@@ -43,7 +63,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
                     </div>
                     <div className="flex justify-center">
                         <form className="flex flex-col w-[30vw] justify-center items-center">
-                            <input ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" placeholder="Nhập thẻ căn cước công dân"></input>
+                            <input maxLength={12} onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" placeholder="Nhập thẻ căn cước công dân"></input>
                             {errorMessage && (
                                 <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
                             )}
@@ -53,7 +73,6 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
                     </div>
                 </div>
             </div>
-
         </>
     )
 }
