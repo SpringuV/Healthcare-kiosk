@@ -1,27 +1,30 @@
 import { useNavigate } from "react-router-dom"
 import { useState } from 'react'
-
-function NonInsurrance({ onClose, onShowInputCheckInfoNon }) {
+import { useForm } from "../context/form_context"
+function NonInsurrance({ onClose }) {
+    const { setFormData } = useForm()
     const navigate = useNavigate()
-    const [formData, setFormData] = useState({
+    const [localFormData, setLocalFormData] = useState({
         fullName: '',
         dob: '',
         address: '',
         cccd: '',
         occupation: '',
         ethnicity: '',
-        phone: ''
+        phone: '',
+        service_register: []
     })
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
+        setLocalFormData({
+            ...localFormData,
             [e.target.name]: e.target.value
         })
     }
     const handleSubmit = (e) => {
         e.preventDefault()
-        navigate('/non-bhyt/info', { state: formData })
+        setFormData(localFormData)
+        navigate('/non-bhyt/info')
     }
     return (
         <>
@@ -37,31 +40,42 @@ function NonInsurrance({ onClose, onShowInputCheckInfoNon }) {
                         <form className="px-3" onSubmit={handleSubmit}>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtFullName">Họ và Tên:</label>
-                                <input name="fullName" value={formData.fullName} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
+                                <input name="fullName" value={localFormData.fullName} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="inputDob">Ngày/Tháng/Năm sinh:</label>
-                                <input name="dob" value={formData.dob} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="date" id="inputDob" ></input>
+                                <input name="dob" value={localFormData.dob} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="date" id="inputDob" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtAddress">Địa chỉ:</label>
-                                <input name="address" value={formData.address} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtAddress" placeholder="Nhập địa chỉ của bạn (Phường-Tỉnh)" ></input>
+                                <input name="address" value={localFormData.address} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtAddress" placeholder="Nhập địa chỉ của bạn (Phường-Tỉnh)" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtCCCD">Căn cước công dân:</label>
-                                <input name="cccd" value={formData.cccd} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
+                                <input name="cccd" value={localFormData.cccd} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtOccupation">Nghề nghiệp:</label>
-                                <input name="occupation" value={formData.occupation} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtOccupation" placeholder="Nhập nghề nghiệp của bạn"></input>
+                                <select name="occupation" value={localFormData.occupation} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtOccupation">
+                                    <option value="none" selected>-- Chọn nghề nghiệp --</option>
+                                    <option value="Sinh viên">Sinh viên</option>
+                                    <option value="Công nhân">Công nhân</option>
+                                    <option value="Nhân viên văn phòng">Nhân viên văn phòng</option>
+                                    <option value="Giáo viên">Giáo viên</option>
+                                    <option value="Kĩ sư">Kĩ sư</option>
+                                    <option value="Bác sĩ">Bác sĩ</option>
+                                    <option value="Nông dân">Nông dân</option>
+                                    <option value="Kinh doanh">Kinh doanh</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtAtxtEthnicityddress">Dân tộc:</label>
-                                <input name="ethnicity" value={formData.ethnicity} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtEthnicity" placeholder="Nhập dân tộc của bạn"></input>
+                                <input name="ethnicity" value={localFormData.ethnicity} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtEthnicity" placeholder="Nhập dân tộc của bạn"></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtPhoneNumber">Số điện thoại:</label>
-                                <input name="phone" value={formData.phone} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
+                                <input name="phone" value={localFormData.phone} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
                             </div>
                             <div className="flex justify-center w-full my-3">
                                 <button className="cursor-pointer px-4 py-1 text-center bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" type="submit">Bước tiếp theo</button>

@@ -1,9 +1,14 @@
 import { useState, useRef } from 'react'
 import NumberPad from './number_pad'
+import { insurrance } from "../../data/insurrance-api"
+import {useInsurrance} from "../context/insurrance_context"
+
 function Insurrance({ onClose, onShowInputCheckInfo }) {
     const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
     const inputRef = useRef(null)
+
+    const {setInsurranceInfo} = useInsurrance()
     const handleInput = (value) => {
         if (inputRef.current) {
             if (value === "delete") {
@@ -19,13 +24,20 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
     const handleCheckInfo = (e) => {
         e.preventDefault()
         const inputValue = inputRef.current.value.trim()
-        console.log(inputValue.length)
         if (inputValue.length !== 12) {
             setErrorMessage("Căn cước công dân gồm 12 chữ số")
             return
         }
-        setErrorMessage("")
-        onShowInputCheckInfo()
+        const resultSearch = insurrance.find(item => item.citizen_id === inputValue)
+        if (!resultSearch) {
+            setErrorMessage("Không tìm thấy thông tin BHYT")
+            return
+        } else {
+            // luu vao context
+            setInsurranceInfo(resultSearch)
+            setErrorMessage("")
+            onShowInputCheckInfo()
+        }
     }
 
     const handleKeyDownInput = (e) => {

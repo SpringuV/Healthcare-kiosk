@@ -7,6 +7,8 @@ import NonInsurrance from './components/Modal/non-insurrance'
 import InfoInsurrance from './components/Modal/insurrance_info'
 import StateStep from './components/state-step'
 import NonInsurranceInfo from './components/Modal/non-insurrance-info'
+import { InsurranceProvider } from './components/context/insurrance_context'
+import RegisterSuccess from './components/service/register-success'
 
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
@@ -46,7 +48,7 @@ function BhytPage() {
             <StateStep step={1} />
             <Insurrance
                 onClose={() => navigate('/')}
-                onShowInputCheckInfo={() => navigate('/bhyt/info')}
+                onShowInputCheckInfo={() => { navigate('/bhyt/info');}}
             />
         </>
     )
@@ -77,37 +79,47 @@ function SelectKhamDichVu() {
     return (
         <>
             <StateStep step={1} />
-            <NonInsurrance onShowInputCheckInfoNon={()=> {setShowCheckService(true);navigate('/non-bhyt/info')}} onClose={() => { setShowCheckService(false); navigate(-1) }}></NonInsurrance>
+            <NonInsurrance onShowInputCheckInfoNon={() => { setShowCheckService(true); navigate('/non-bhyt/info') }} onClose={() => { setShowCheckService(false); navigate(-1) }}></NonInsurrance>
         </>
     )
 }
 
 function NonBhytInfoPage() {
-    const navigate = useNavigate()
     const [showDetailNonInsurranceInfo, setShowDetailNonInsurranceInfo] = useState(false)
     return (
         <>
             <StateStep step={1}></StateStep>
-            <NonInsurranceInfo  onClose={()=> {setShowDetailNonInsurranceInfo(false)}}></NonInsurranceInfo>
+            <NonInsurranceInfo onClose={() => { setShowDetailNonInsurranceInfo(false) }}></NonInsurranceInfo>
+        </>
+    )
+}
+
+function PrintPDF_ConfirmOrder(){
+    return (
+        <>
+            <StateStep step={3}></StateStep>
+            <RegisterSuccess></RegisterSuccess>
         </>
     )
 }
 
 function App() {
     return (
-        <Router>
-            <Header />
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/bhyt" element={<BhytPage />} />
-                <Route path="/bhyt/info" element={<BhytInfoPage />} />
-                <Route path="/service" element={<ServicePage />} />
-                <Route path='/non-bhyt' element={<SelectKhamDichVu />}></Route>
-                <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
-            </Routes>
-        </Router>
+        <InsurranceProvider>
+            <Router>
+                <Header />
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/bhyt" element={<BhytPage />} />
+                    <Route path="/bhyt/info" element={<BhytInfoPage />} />
+                    <Route path="/service" element={<ServicePage />} />
+                    <Route path='/non-bhyt' element={<SelectKhamDichVu />}></Route>
+                    <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
+                    <Route path='/confirm-registration' element={<PrintPDF_ConfirmOrder></PrintPDF_ConfirmOrder>}></Route>
+                </Routes>
+            </Router>
+        </InsurranceProvider>
     )
 }
-
 
 export default App

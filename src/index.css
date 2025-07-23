@@ -9,3 +9,9 @@
         @apply bg-colorBody pt-20
     }
 }
+
+@layer components {
+  .print-pdf {
+    @apply text-sm p-4 w-[148mm] h-[210mm] bg-white text-black;
+  }
+}

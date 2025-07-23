@@ -12,9 +12,9 @@ function Service() {
                         chọn dịch vụ bạn muốn thực hiện!</h2>
                 </div> */}
                 <div className='overflow-y-auto p-3'>
-                    <div className='flex justify-center items-center flex-wrap w-full gap-3'>
+                    <div className='flex justify-center items-center flex-wrap gap-3'>
                         {service.map((text, i) => (
-                            <div key={i} className='flex justify-center' onClick={() => setSelectedService(text)}>
+                            <div key={i} className='bg-white px-5 py-3 rounded-xl' onClick={() => setSelectedService(text)}>
                                 <div className='cursor-pointer flex justify-center items-center p-3 rounded-xl bg-gradient-to-r from-teal-800 to-teal-600 w-fit'>
                                     <h3 className='text-white font-bold text-[17px]'>{text}</h3>
                                 </div>

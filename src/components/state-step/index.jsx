@@ -7,7 +7,7 @@ function StateStep({step}) {
     ]
     return (
         <>
-            <div className="flex justify-center items-center gap-3 w-full text-colorOneDark">
+            <div className="flex justify-center items-center gap-3 w-full text-colorOneDark my-3">
                 {steps.map((item, index) => (
                     <React.Fragment key={item.id}>
                         <div className="font-semibold text-[20px] flex justify-center items-center">
