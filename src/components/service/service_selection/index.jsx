@@ -1,15 +1,18 @@
 import { useState } from "react";
-import RegisterSuccess from "../register-success";
 import { groupedOptions } from "./option";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
+import { useService } from "../../context/service_context";
+
 function ServiceItem() {
     const [selectedItemService, setSelectedItemService] = useState("Vui lòng chọn dịch vụ khám")
     const [selectedOption, setSelectedOption] = useState(null)
+    const {setSelectedService } = useService()
 
     const handleChange = (option) => {
         setSelectedOption(option)
         setSelectedItemService(option.label)
+        setSelectedService(option.label)
     };
 
     const navigate = useNavigate()

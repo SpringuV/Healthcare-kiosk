@@ -2,7 +2,17 @@ import html2pdf from 'html2pdf.js'
 import { useRef, useState } from 'react'
 import { QRCode } from 'react-qr-code'
 import { useNavigate } from 'react-router-dom'
+import { useService } from '../context/service_context'
+import { useForm } from '../context/form_context'
+import { useInsurrance } from '../context/insurrance_context'
 function RegisterSuccess() {
+
+    const { insurranceInfo } = useInsurrance()
+    const { selectedService } = useService()
+    const { formData } = useForm()
+    const userInfo = insurranceInfo || formData
+
+    // pdf
     const printRef = useRef()
     const [pdfUrl, setPdfUrl] = useState(null)
     const handleGeneratePdf = async () => {
@@ -23,7 +33,7 @@ function RegisterSuccess() {
     }
 
     const navigate = useNavigate()
-    const handleConfirmAndReturnHome = ()=>{
+    const handleConfirmAndReturnHome = () => {
         navigate('/')
     }
 
@@ -44,7 +54,7 @@ function RegisterSuccess() {
                             ['Họ và tên:', 'Nguyễn Văn A'],
                             ['Giới tính:', 'Nam'],
                             ['Ngày sinh:', '02-10-2002'],
-                            ['Dịch vụ khám:', 'Khám nội tổng quát'],
+                            ['Dịch vụ khám:', `${selectedService}`],
                             ['CCCD:', '987654321000'],
                             ['Phòng khám:', 'Tầng 1 - Khu B, Phòng 101 - Tai Mũi Họng'],
                             ['Bác sĩ:', 'Bác sĩ Lê Văn D'],
@@ -79,4 +89,44 @@ function RegisterSuccess() {
     )
 }
 
+// NOTE:
+// Backend sẽ trả về một cái link url có chứa mã định danh, 🔹 Bước 1. Khi người dùng hoàn tất đăng ký
+// Backend tạo ra một uniqueId(mã đăng ký).
+
+// Ví dụ: abc123, dk - 202507201035 - abcd, UUID hoặc mã có tiền tố CCCD.
+
+// 🔹 Bước 2. Trả về link
+// Ví dụ:
+// {
+//     "message": "Đăng ký thành công",
+//         "link": "https://kiosk.example.com/ket-qua/abc123"
+// }
+// Bạn hiển thị link này cho người dùng hoặc tạo QR code để in / quét.
+//  Bước 3. Trang /ket-qua/:id truy vấn lại dữ liệu
+// React (sử dụng useParams)
+// import { useParams } from 'react-router-dom';
+// import { useEffect, useState } from 'react';
+
+// function ResultPage() {
+//   const { id } = useParams(); // Lấy 'abc123' từ URL
+//   const [result, setResult] = useState(null);
+
+//   useEffect(() => {
+//     fetch(`/api/registration/${id}`)
+//       .then(res => res.json())
+//       .then(data => setResult(data))
+//       .catch(() => alert("Không tìm thấy mã đăng ký!"));
+//   }, [id]);
+
+//   if (!result) return <div>Đang tải...</div>;
+
+//   return (
+//     <div>
+//       <h1>Thông tin đăng ký khám</h1>
+//       <p>Họ tên: {result.name}</p>
+//       <p>Ngày đăng ký: {result.date}</p>
+//       {/* Các thông tin khác */}
+//     </div>
+//   );
+// }
 export default RegisterSuccess

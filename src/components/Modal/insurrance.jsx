@@ -2,10 +2,14 @@ import { useState, useRef } from 'react'
 import NumberPad from './number_pad'
 import { insurrance } from "../../data/insurrance-api"
 import {useInsurrance} from "../context/insurrance_context"
+import AlertNonInsurrance from '../alert/non_insurrance_alert'
 
 function Insurrance({ onClose, onShowInputCheckInfo }) {
     const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
+
+    const [showAlertNonInsurrance, setShowAlertNonInsurrance] = useState(false)
+
     const inputRef = useRef(null)
 
     const {setInsurranceInfo} = useInsurrance()
@@ -30,7 +34,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
         }
         const resultSearch = insurrance.find(item => item.citizen_id === inputValue)
         if (!resultSearch) {
-            setErrorMessage("Không tìm thấy thông tin BHYT")
+            setShowAlertNonInsurrance(true)
             return
         } else {
             // luu vao context
@@ -41,7 +45,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
     }
 
     const handleKeyDownInput = (e) => {
-        const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"];
+        const allowedKeys = ["Backspace", "Tab", "Delete","v", "Control", "ArrowLeft", "ArrowRight"];
         const inputValue = inputRef.current.value;
 
         // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
@@ -85,6 +89,8 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
                     </div>
                 </div>
             </div>
+
+            {showAlertNonInsurrance && <AlertNonInsurrance onClose={()=>setShowAlertNonInsurrance(false)}></AlertNonInsurrance>}
         </>
     )
 }
