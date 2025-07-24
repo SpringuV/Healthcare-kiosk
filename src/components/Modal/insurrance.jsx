@@ -32,6 +32,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
             setErrorMessage("Căn cước công dân gồm 12 chữ số")
             return
         }
+
         const resultSearch = insurrance.find(item => item.citizen_id === inputValue)
         if (!resultSearch) {
             setShowAlertNonInsurrance(true)
