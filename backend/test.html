@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+    <body>
+        <div id="all"></div>
+        <img id="qr" />
+        <a href="http://127.0.0.1:8000/showPDF?order_id=1">Xem pdf</a>
+        <a href="http://127.0.0.1:8000/downloadPDF?order_id=1">Tải xuống pdf</a>
+
+
+        <form id="form" method="post" action="/makePatientInfo">
+            <label for="citizen_id">Số CCCD:</label>
+            <input type="text" id="citizen_id" name="citizen_id" required>
+
+            <label for="fullname">Họ và tên:</label>
+            <input type="text" id="fullname" name="fullname" required>
+
+            <label for="gender">Giới tính:</label>
+            <div class="gender">
+                <input type="radio" id="male" name="gender" value="true" required>
+                <label for="male">Nam</label>
+                <input type="radio" id="female" name="gender" value="false">
+                <label for="female">Nữ</label>
+            </div>
+
+            <label for="dob">Ngày sinh:</label>
+            <input type="date" id="dob" name="dob" required>
+
+            <label for="address">Địa chỉ:</label>
+            <input type="text" id="address" name="address" required>
+
+            <label for="phone_number">Số điện thoại:</label>
+            <input type="tel" id="phone_number" name="phone_number" required>
+
+            <label for="ethnic">Dân tộc:</label>
+            <select id="ethnic" name="ethnic" required>
+                <option value="Kinh">Kinh</option>
+                <option value="Tày">Tày</option>
+                <option value="Thái">Thái</option>
+                <option value="Mường">Mường</option>
+                <option value="Khác">Khác</option>
+            </select>
+
+            <label for="job">Nghề nghiệp:</label>
+            <select id="job" name="job" required>
+                <option value="Học sinh">Học sinh</option>
+                <option value="Sinh viên">Sinh viên</option>
+                <option value="Công nhân">Công nhân</option>
+                <option value="Nông dân">Nông dân</option>
+                <option value="Khác">Khác</option>
+            </select>
+
+            <button type="submit" id="save">Lưu</button>
+        </form>
+    </body>
+</html>
+<script>
+// fetch("http://127.0.0.1:8000/makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001", {method: "POST"})
+//   .then(res => res.json())
+//   .then(data => {
+
+
+// xử lý để hiện thị QR code từ server
+//     document.getElementById("qr").src = "data:image/png;base64," + data["QRCode"];
+
+
+//     document.getElementById("all").innerText = data["QRCode"];
+//   });
+</script>
+<script>
+    // xử lý form nhập thông tin bệnh nhân
+    const form = document.getElementById("form");
+    const resultDiv = document.getElementById("result");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        try {
+            const response = await fetch("http://127.0.0.1:8000/makePatientInfo", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.result === true) {
+                console.log("Lưu thông tin thành công!");
+            } else {
+                console.log("Lưu không thành công!");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+    </script>
