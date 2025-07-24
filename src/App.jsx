@@ -10,6 +10,7 @@ import NonInsurranceInfo from './components/Modal/non-insurrance-info'
 import { InsurranceProvider } from './components/context/insurrance_context'
 import RegisterSuccess from './components/service/register-success'
 import { ServiceProvider } from './components/context/service_context'
+import UpdateInfoPatientInsurrance from './components/Modal/update_insurrance_info'
 
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
@@ -104,6 +105,15 @@ function PrintPDF_ConfirmOrder() {
     )
 }
 
+function CallUpdateInfoPatientInsurrance(){
+    return (
+        <>
+            <StateStep step={1}></StateStep>
+            <UpdateInfoPatientInsurrance></UpdateInfoPatientInsurrance>
+        </>
+    )
+}
+
 function App() {
     return (
         <InsurranceProvider>
@@ -118,6 +128,7 @@ function App() {
                         <Route path='/non-bhyt' element={<SelectKhamDichVu />}></Route>
                         <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
                         <Route path='/confirm-registration' element={<PrintPDF_ConfirmOrder></PrintPDF_ConfirmOrder>}></Route>
+                        <Route path='/bhyt/update-info' element={<CallUpdateInfoPatientInsurrance></CallUpdateInfoPatientInsurrance>}></Route>
                     </Routes>
                 </Router>
             </ServiceProvider>
