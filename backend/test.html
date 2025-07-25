@@ -57,17 +57,17 @@
     </body>
 </html>
 <script>
-// fetch("http://127.0.0.1:8000/makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001", {method: "POST"})
-//   .then(res => res.json())
-//   .then(data => {
+fetch("http://127.0.0.1:8000/makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001", {method: "POST"})
+  .then(res => res.json())
+  .then(data => {
 
 
 // xử lý để hiện thị QR code từ server
-//     document.getElementById("qr").src = "data:image/png;base64," + data["QRCode"];
+ document.getElementById("qr").src = "data:image/png;base64," + data["QRCode"];
 
 
-//     document.getElementById("all").innerText = data["QRCode"];
-//   });
+    document.getElementById("all").innerText = data["QRCode"];
+  });
 </script>
 <script>
     // xử lý form nhập thông tin bệnh nhân

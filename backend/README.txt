@@ -6,3 +6,5 @@ Database mySQL sử dung tài khoản
         "user": "machine",
         "password": "P@$$vv0rd"
 Nếu ko có hoặc chưa tạo thì chỉnh lại ở connectDB.py line 12 -> 14
+
+Chạy file insertDataTest.py để tạo database và insert data tạo sẵn

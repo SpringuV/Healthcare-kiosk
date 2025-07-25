@@ -37,7 +37,6 @@ def connect():
     fullname VARCHAR(30) NOT NULL,
     gender BOOLEAN NOT NULL,
     dob DATE NOT NULL,
-    address TEXT NOT NULL,
     phone_number CHAR(10) NOT NULL,
     registration_place TEXT NOT NULL,
     valid_from DATE NOT NULL,
