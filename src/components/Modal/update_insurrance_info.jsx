@@ -12,7 +12,7 @@ function UpdateInfoPatientInsurrance() {
                     <div className="flex flex-col bg-white overflow-y-auto px-4 min-w-[30vw] pt-3">
                         <div className="flex flex-col p-1">
                             <label htmlFor="txtFullName">Địa chỉ:</label>
-                            <input name="fullName" className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
+                            <input name="fullName" className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập địa chỉ của bạn" ></input>
                         </div>
                         <div className="flex flex-col p-1">
                             <label htmlFor="txtEthnicity">Dân tộc:</label>
