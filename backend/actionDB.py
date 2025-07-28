@@ -9,7 +9,7 @@ def isInsurrance(citizen_id:str):
         result = cursor.fetchone()
         if result:
             now = datetime.now().date()
-            if result[7] <= now <= result[8]:
+            if result[6] <= now <= result[7]:
                 return True, "Bảo hiểm hợp lệ", result
             else:
                 return False, "Hết thời hạn bảo hiểm", result
@@ -75,6 +75,18 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
         insur_int = 1 if is_insurrance else 0
         query = '''INSERT INTO patient (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
         cursor.execute(query, (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, insur_int))
+        conn.commit()
+        return cursor.rowcount != 0
+    except Exception as e:
+        return False
+    finally:
+        disconnect(conn, cursor)
+
+def updatePatientInfo(citizen_id, address, ethnic, job):
+    conn, cursor = connect()
+    try:
+        query = '''UPDATE patient SET address = %s, ethnic = %s, job = %s WHERE citizen_id = %s'''
+        cursor.execute(query, (address, ethnic, job, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:

@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Response, Request, Form
-from fastapi.responses import StreamingResponse, FileResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Form
 from pydantic import BaseModel
-from itsdangerous import URLSafeSerializer
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, getInsurrance, savePatientInfo, getPatient, getServices, createOrder, getOrder
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, getInsurrance, savePatientInfo, getPatient, getServices, createOrder, getOrder, updatePatientInfo
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
-import io
 
 app = FastAPI()
 
@@ -18,88 +16,84 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class PatientInfo(BaseModel):
+    patient_id:str
+    full_name:str
+    dob:str
+    gender:bool
+    phone_number:str
+    address:str
+    ethnic:str
+    job:str
+
+class PatientInfoUpdate(BaseModel):
+    address:str
+    ethnic:str
+    job:str
+
+class OrderInfo(BaseModel):
+    service_name:str
+
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD), hàm này cũng sẽ lưu session citizen_id vào cookie để dùng cho các hàm sau
 # VD link: /checkCitizenID?citizen_id=000000000001
-@app.get("/checkCitizenID")
-def checkCitizenID(response: Response, citizen_id):
+@app.get("/health-insurrances/{citizen_id}", status_code=200)
+def checkInsurrance(citizen_id:str):
     isActivate, state, insurrance = isInsurrance(citizen_id)
-    print(isActivate)
     isHad, _ = isHasPatientInfo(citizen_id)
-    insurranceInfo = dict()
-    patientInfo = dict()
-    if insurrance is not None:
-        insurranceInfo = {
-            "state": state,
-            "registration_place": insurrance[6],
-            "valid_from": insurrance[7],
-            "expired": insurrance[8],
-        }
-    if isHad:
-        updatePatientInsurranceState(citizen_id, isActivate)
-        patient = getPatient(citizen_id)
-        patientInfo = {
-            "citizen_id": patient[0],
-            "fullname": patient[1],
-            "gender": "Nam" if patient[2] == 1 else "Nữ",
-            "dob": patient[3],
-            "address": patient[4],
-            "phone_number": patient[5],
-            "ethnic": patient[6],
-            "job": patient[7],
-            "is_insurrance": "Có" if patient[9] == 1 else "Không"
-        }
-        updatePatientInsurranceState(citizen_id, isActivate)
+    if insurrance is None:
+        return JSONResponse(
+            status_code=404,
+            content={}
+        )
     else:
-        if isActivate:
-            info = getInsurrance(citizen_id)
-            if info is not None:
-                # tạo thông tin bệnh nhân mới qua thông tin từ bảo hiểm y tế
-                savePatientInfo(*info[:6], None, None, True)
-                isHad = True
-                patientInfo = {
-                    "citizen_id": info[0],
-                    "fullname": info[1],
-                    "gender": "Nam" if info[2] == 1 else "Nữ",
-                    "dob": info[3],
-                    "address": info[4],
-                    "phone_number": info[5],
-                    "ethnic": "",
-                    "job": "",
-                    "is_insurrance": "Có"
-                }
-    return {"isPatientInfo":isHad, "patient":patientInfo, "insurrance":insurranceInfo}
-# {
-#     "isPatientInfo": true,
-#     "patient": {
-#         "citizen_id": "000000000001",
-#         "fullname": "Nguyễn Ngô An",
-#         "gender": "Nam",
-#         "dob": "2002-11-22",
-#         "address": "Tây Tựu, Nam Từ Liêm, Hà Nội",
-#         "phone_number": "0333788190",
-#         "ethnic": null,
-#         "job": null,
-#         "is_insurrance": "Có"
-#     },
-#     "insurrance": {
-#         "state": "Bảo hiểm hợp lệ",
-#         "registration_place": "BV Bạch Mai",
-#         "valid_from": "2023-07-01",
-#         "expired": "2028-07-01"
-#     }
-# }
+        if isHad:
+            updatePatientInsurranceState(citizen_id, isActivate)
+        else:
+            savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
+        return {
+            "citizen_id": insurrance[0],
+            "full_name": insurrance[1],
+            "dob": insurrance[3],
+            "valid_from": insurrance[6],
+            "expired": insurrance[7],
+            "registration_place": insurrance[5],
+            "phone_number": insurrance[4],
+            "gender": "Nam" if insurrance[2] == 1 else "Nữ",
+            "is_activate": isActivate
+        }
+        
 
-# Tạo bảng ghi thông tin bệnh nhân (truyền vào 1 form)
-@app.post("/makePatientInfo")
-def makePatientInfo(citizen_id:str=Form(...), fullname:str=Form(...), gender:bool=Form(...), dob:str=Form(...), address:str=Form(...), phone_number:str=Form(...), ethnic:str=Form(...), job:str=Form(...)):
+# Tạo bảng ghi thông tin bệnh nhân
+@app.post("/patient/non-insurrance")
+def makePatientInfo(patient:PatientInfo):
     # chút điều trỉnh ở đây
-    if not savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, False):
-        return {"result": False}
+    if not savePatientInfo(patient.citizen_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False):
+        return JSONResponse(
+            status_code=400,
+            content={}
+        )
     else:
-        return {"result": True}
+        return JSONResponse(
+            status_code=201,
+            content={}
+        )
+    
+# Cập nhật thông tin bệnh nhân
+@app.put("/patient/insurrance-info/{citizen_id}")
+def updatePatient(citizenid:str, info:PatientInfoUpdate):
+    if not updatePatientInfo(info.citizen_id, info.address, info.ethnic, info.job):
+        return JSONResponse(
+            status_code=400,
+            content={}
+        )
+    else:
+        return JSONResponse(
+            status_code=201,
+            content={}
+        )
 
 # Lấy danh sách dịch vụ (ko cần tham số)
-@app.get("/services")
+@app.get("/api/services")
 def getServicesList():
     services = []
     listService = getServices()
@@ -140,16 +134,18 @@ def getServicesList():
 
 # Tạo phiếu khám 
 # VD link: /makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001
-@app.post("/makeOrder")
-def makeOrder(service_name:str, citizen_id:str):
-    order_id = createOrder(citizen_id, service_name)
+@app.post("/orders/create/{citizen_id}", status_code=200)
+def makeOrder(citizen_id:str, orderInfo:OrderInfo):
+    order_id = createOrder(citizen_id, orderInfo.service_name)
     if order_id is None:
-        return {"error": "Tạo phiếu khám thất bại"}
+        return JSONResponse(
+            status_code=400,
+            content={}
+        )
     else:
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname]
         order = getOrder(order_id)
-        # tạo QR 
         return {
             "citizen_id": order[0],
             "fullname": order[1],
@@ -164,7 +160,7 @@ def makeOrder(service_name:str, citizen_id:str):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://localhost:8000/showPDF?order_id={order_id}")
+            "QRCode": makeQRCode(f"http://192.168.1.4:8000/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
@@ -184,7 +180,7 @@ def makeOrder(service_name:str, citizen_id:str):
 # }
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
-@app.get("/showPDF")
+@app.get("/showPDF/{order_id}")
 def showPDF(order_id:str):
     order = getOrder(order_id)
     if order is not None:
@@ -196,7 +192,7 @@ def showPDF(order_id:str):
         )
 
 # Tự download file pdf phiếu khám bệnh cho client
-@app.get("/downloadPDF")
+@app.get("/downloadPDF/{order_id}")
 def downloadPDF(order_id:str):
     order = getOrder(order_id)
     if order is not None:
