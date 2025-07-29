@@ -34,8 +34,7 @@ class PatientInfoUpdate(BaseModel):
 class OrderInfo(BaseModel):
     service_name:str
 
-# Kiểm tra thông tin bệnh nhân (truyền vào CCCD), hàm này cũng sẽ lưu session citizen_id vào cookie để dùng cho các hàm sau
-# VD link: /checkCitizenID?citizen_id=000000000001
+# Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
 @app.get("/health-insurrances/{citizen_id}", status_code=200)
 def checkInsurrance(citizen_id:str):
     isActivate, state, insurrance = isInsurrance(citizen_id)
@@ -66,8 +65,7 @@ def checkInsurrance(citizen_id:str):
 # Tạo bảng ghi thông tin bệnh nhân
 @app.post("/patient/non-insurrance")
 def makePatientInfo(patient:PatientInfo):
-    # chút điều trỉnh ở đây
-    if not savePatientInfo(patient.citizen_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False):
+    if not savePatientInfo(patient.patient_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False):
         return JSONResponse(
             status_code=400,
             content={}
@@ -80,8 +78,8 @@ def makePatientInfo(patient:PatientInfo):
     
 # Cập nhật thông tin bệnh nhân
 @app.put("/patient/insurrance-info/{citizen_id}")
-def updatePatient(citizenid:str, info:PatientInfoUpdate):
-    if not updatePatientInfo(info.citizen_id, info.address, info.ethnic, info.job):
+def updatePatient(citizen_id:str, info:PatientInfoUpdate):
+    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job):
         return JSONResponse(
             status_code=400,
             content={}
