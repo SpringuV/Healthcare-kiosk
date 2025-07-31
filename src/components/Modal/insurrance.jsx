@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import NumberPad from './number_pad'
-import { insurrance } from "../../data/insurrance-api"
-import {useInsurrance} from "../context/insurrance_context"
+import { useInsurrance } from "../context/insurrance_context"
 import AlertNonInsurrance from '../alert/non_insurrance_alert'
 
 function Insurrance({ onClose, onShowInputCheckInfo }) {
@@ -12,7 +11,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
 
     const inputRef = useRef(null)
 
-    const {setInsurranceInfo} = useInsurrance()
+    const { setInsurranceInfo } = useInsurrance()
     const handleInput = (value) => {
         if (inputRef.current) {
             if (value === "delete") {
@@ -25,7 +24,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
         }
     }
 
-    const handleCheckInfo = (e) => {
+    const handleCheckInfo = async (e) => {
         e.preventDefault()
         const inputValue = inputRef.current.value.trim()
         if (inputValue.length !== 12) {
@@ -33,20 +32,25 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
             return
         }
 
-        const resultSearch = insurrance.find(item => item.citizen_id === inputValue)
-        if (!resultSearch) {
-            setShowAlertNonInsurrance(true)
-            return
-        } else {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/health-insurrances/${inputValue}`)
+            if (!response.ok) {
+                setShowAlertNonInsurrance(true)
+                return
+            }
+            const data = await response.json();
             // luu vao context
-            setInsurranceInfo(resultSearch)
+            setInsurranceInfo(data)
             setErrorMessage("")
             onShowInputCheckInfo()
+        } catch (error) {
+            console.error("Lỗi khi gọi API:", error);
+            setErrorMessage("Lỗi kết nối tới máy chủ");
         }
     }
 
     const handleKeyDownInput = (e) => {
-        const allowedKeys = ["Backspace", "Tab", "Delete","v", "Control", "ArrowLeft", "ArrowRight"];
+        const allowedKeys = ["Backspace", "Tab", "Delete", "v", "Control", "ArrowLeft", "ArrowRight"];
         const inputValue = inputRef.current.value;
 
         // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
@@ -91,7 +95,7 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
                 </div>
             </div>
 
-            {showAlertNonInsurrance && <AlertNonInsurrance onClose={()=>setShowAlertNonInsurrance(false)}></AlertNonInsurrance>}
+            {showAlertNonInsurrance && <AlertNonInsurrance onClose={() => setShowAlertNonInsurrance(false)}></AlertNonInsurrance>}
         </>
     )
 }

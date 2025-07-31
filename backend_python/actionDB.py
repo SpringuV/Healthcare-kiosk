@@ -82,10 +82,10 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
     finally:
         disconnect(conn, cursor)
 
-def updatePatientInfo(citizen_id, address, ethnic, job):
+def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
     conn, cursor = connect()
     try:
-        query = '''UPDATE patient SET address = %s, ethnic = %s, job = %s WHERE citizen_id = %s'''
+        query = '''UPDATE patient SET address = %s, ethnic = %s, job = %s, is_insurrance = 1 WHERE citizen_id = %s'''
         cursor.execute(query, (address, ethnic, job, citizen_id))
         conn.commit()
         return cursor.rowcount != 0

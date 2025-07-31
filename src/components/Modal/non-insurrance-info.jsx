@@ -21,6 +21,10 @@ function NonInsurranceInfo() {
                             <span>{formData.dob}</span>
                         </div>
                         <div className="flex justify-between py-2">
+                            <label className="font-semibold">Giới tính:</label>
+                            <span>{formData.gender}</span>
+                        </div>
+                        <div className="flex justify-between py-2">
                             <label className="font-semibold">Địa chỉ:</label>
                             <span>{formData.address}</span>
                         </div>

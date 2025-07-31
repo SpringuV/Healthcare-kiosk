@@ -22,10 +22,37 @@ function NonInsurrance({ onClose }) {
             [e.target.name]: e.target.value
         })
     }
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
+        const payload = {
+            patient_id: localFormData.cccd,
+            full_name: localFormData.fullName,
+            gender: localFormData.gender, // true nếu Nam
+            dob: localFormData.dob,
+            address: localFormData.address,
+            phone_number: localFormData.phone,
+            ethnic: localFormData.ethnicity,
+            job: localFormData.occupation,
+        }
+        console.log(payload)
+        try {
+            const response = await fetch("http://localhost:8000/patient/non-insurrance", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+
+            if (response.ok) {
+                navigate('/non-bhyt/info')
+            } else {
+                alert("Lưu thông tin thất bại!")
+            }
+        } catch (error) {
+            console.error("Lỗi gửi API:", error)
+        }
         setFormData(localFormData)
-        navigate('/non-bhyt/info')
     }
     return (
         <>
@@ -71,8 +98,8 @@ function NonInsurrance({ onClose }) {
                                 </select>
                             </div>
                             <div className="flex flex-col p-1">
-                                <label htmlFor="txtOccupation">Giới tính:</label>
-                                <select name="occupation" value={localFormData.gender} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtOccupation">
+                                <label htmlFor="txtGender">Giới tính:</label>
+                                <select name="gender" value={localFormData.gender} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtGender">
                                     <option value="none">-- Chọn giới tính --</option>
                                     <option value="Nam">Nam</option>
                                     <option value="Nữ">Nữ</option>

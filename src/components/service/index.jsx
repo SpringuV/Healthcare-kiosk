@@ -1,9 +1,9 @@
 import { useState } from "react"
-import Header from "../Header"
 import ServiceItem from "./service_selection"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
     const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
+
     return (
         <>
             <div className='h-screen flex flex-col'>

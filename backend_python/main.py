@@ -30,6 +30,7 @@ class PatientInfoUpdate(BaseModel):
     address:str
     ethnic:str
     job:str
+    is_insurrance:bool
 
 class OrderInfo(BaseModel):
     service_name:str
@@ -79,7 +80,7 @@ def makePatientInfo(patient:PatientInfo):
 # Cập nhật thông tin bệnh nhân
 @app.put("/patient/insurrance-info/{citizen_id}")
 def updatePatient(citizen_id:str, info:PatientInfoUpdate):
-    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job):
+    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job, info.is_insurrance):
         return JSONResponse(
             status_code=400,
             content={}
@@ -161,7 +162,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://192.168.1.4:8000/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://192.168.100.208:8000/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
