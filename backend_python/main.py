@@ -100,7 +100,10 @@ def getServicesList():
             "service_name": service[0],
             "service_description": service[1]
         })
-    return {"services": services}
+    return JSONResponse(
+        status_code=200,
+        content={"services": services}
+    )
 # {
 #     "services": [
 #         {

@@ -175,7 +175,7 @@ def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
         query = '''SELECT s.price, s.price_insurrance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
-        WHERE s.service_name = %s AND cs.clinic_service_id = %s'''
+        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
         cursor.execute(query, (service_name, clinic_service_id))
         price_values = cursor.fetchone()
         if not price_values:
