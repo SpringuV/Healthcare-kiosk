@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from '../context/form_context'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
-    const {formData} = useForm()
+    const { formData } = useForm()
     return (
         <>
             <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
@@ -14,7 +14,7 @@ function NonInsurranceInfo() {
                     <div className="flex flex-col bg-white overflow-y-auto px-4 min-w-[30vw] pt-3">
                         <div className="flex justify-between py-2">
                             <label className="font-semibold w-1/2 border-r-slate-700">Họ và tên:</label>
-                            <span>{formData.fullName}</span>
+                            <span>{formData.full_name}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Ngày sinh:</label>
@@ -30,19 +30,19 @@ function NonInsurranceInfo() {
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Căn cước công dân:</label>
-                            <span>{formData.cccd}</span>
+                            <span>{formData.patient_id}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Nghề nghiệp:</label>
-                            <span>{formData.occupation}</span>
+                            <span>{formData.job}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Dân tộc:</label>
-                            <span>{formData.ethnicity}</span>
+                            <span>{formData.ethnic}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Số điện thoại:</label>
-                            <span>{formData.phone}</span>
+                            <span>{formData.phone_number}</span>
                         </div>
                     </div>
                     <div className="flex justify-center items-center p-3 bg-white rounded-b-md">

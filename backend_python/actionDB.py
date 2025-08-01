@@ -81,7 +81,7 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Database error: {e}")
         return False
     finally:
         disconnect(conn, cursor)
@@ -93,6 +93,20 @@ def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
         cursor.execute(query, (address, ethnic, job, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
+
+def checkPatientInfo(citizen_id:str):
+    conn, cursor = connect()
+    try:
+        query = '''SELECT citizen_id FROM patient WHERE citizen_id = %s'''
+        cursor.execute(query, (citizen_id,))
+        if cursor.fetchone():
+            return True
+        return False
     except Exception as e:
         print(f"Error: {e}")
         return False

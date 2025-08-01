@@ -45,7 +45,8 @@ function ServiceItem() {
         const payload = {
             service_name: selectedOption.value,
         }
-        const citizen_id = insurranceInfo?.citizen_id || formData?.citizen_id
+        const citizen_id = insurranceInfo?.citizen_id || formData?.patient_id
+        console.log(citizen_id)
         if (selectedOption === "none") {
             alert("Vui lòng chọn dịch vụ.")
             return

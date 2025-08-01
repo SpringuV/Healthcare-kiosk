@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom"
 function InfoInsurrance({ onClose }) {
     const { insurranceInfo } = useInsurrance()
     const navigate = useNavigate()
+
+    const handleChangePath = () => {
+        if (insurranceInfo.is_saved) {
+            navigate('/service')
+        } else {
+            navigate('/bhyt/update-info')
+        }
+    }
     return (
         <>
             {insurranceInfo ? (
@@ -35,7 +43,7 @@ function InfoInsurrance({ onClose }) {
                             </div>
                         </div>
                         <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                            <button className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={()=> navigate('/bhyt/update-info')}>Bước tiếp theo</button>
+                            <button className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={handleChangePath}>Bước tiếp theo</button>
                         </div>
                     </div>
                 </div>

@@ -118,6 +118,18 @@ func main() {
 
 	PatientRouter := router.Group("/patient")
 	{
+		// Kiểm tra thông tin bệnh nhân
+		PatientRouter.GET("/check/:citizen_id", func(ctx *gin.Context) {
+			citizen_id := ctx.Param("citizen_id")
+			err := CheckPatientInfo(citizen_id)
+			if err != nil {
+				ctx.JSON(400, gin.H{})
+				return
+			} else {
+				ctx.JSON(200, gin.H{})
+				return
+			}
+		})
 		// Tạo bảng ghi thông tin bệnh nhân
 		PatientRouter.POST("/non-insurrance", func(ctx *gin.Context) {
 			var patientJSON PatientJson

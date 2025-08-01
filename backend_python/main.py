@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, createOrder, getOrder, updatePatientInfo
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, createOrder, getOrder, updatePatientInfo, checkPatientInfo
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
 app = FastAPI()
 
-IP = "196.168.110.40"
+IP = "localhost"
 PORT = "8000"
 
 app.add_middleware(
@@ -92,6 +92,20 @@ def updatePatient(citizen_id:str, info:PatientInfoUpdate):
     else:
         return JSONResponse(
             status_code=201,
+            content={}
+        )
+    
+# Kiểm tra thông tin bệnh nhân
+@app.get("/patient/check/{citizen_id}")
+def checkPatient(citizen_id:str):
+    if not checkPatientInfo(citizen_id):
+        return JSONResponse(
+            status_code=400,
+            content={}
+        )
+    else:
+        return JSONResponse(
+            status_code=200,
             content={}
         )
 
