@@ -5,15 +5,14 @@ function NonInsurrance({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
     const [localFormData, setLocalFormData] = useState({
-        fullName: '',
+        full_name: '',
         dob: '',
         address: '',
         gender: '',
-        cccd: '',
-        occupation: '',
-        ethnicity: '',
-        phone: '',
-        service_register: []
+        patient_id: '',
+        job: '',
+        ethnic: '',
+        phone_number: ''
     })
 
     const handleChange = (e) => {
@@ -24,17 +23,45 @@ function NonInsurrance({ onClose }) {
     }
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (!localFormData.patient_id || !localFormData.full_name || !localFormData.dob) {
+            alert("Vui lòng điền đầy đủ thông tin bắt buộc")
+            return
+        }
+        if (localFormData.phone_number.length > 10 || localFormData.phone_number.length < 10) {
+            alert("Vui lòng điền đúng số điện thoại 10 số")
+            return
+        }
+
+        if (localFormData.patient_id.length > 10 || localFormData.patient_id.length < 10) {
+            alert("Vui lòng điền đúng số căng cước công dân 12 số")
+            return
+        }
+
+        if (localFormData.ethnic === "none") {
+            alert("Bạn vui lòng chọn dân tộc")
+            return
+        }
+        if (localFormData.job === "none") {
+            alert("Bạn vui lòng chọn nghề nghiệp")
+            return
+        }
+
+        if (localFormData.gender === "none" || localFormData.gender === "") {
+            alert("Bạn vui lòng chọn giới tính")
+            return
+        }
+
         var gender = false
-        if (localFormData.gender === "Nam") {gender = true}
+        if (localFormData.gender === "Nam") { gender = true }
         const payload = {
-            patient_id: localFormData.cccd,
-            full_name: localFormData.fullName,
+            patient_id: localFormData.patient_id,
+            full_name: localFormData.full_name,
             gender: gender, // true nếu Nam
             dob: localFormData.dob,
             address: localFormData.address,
-            phone_number: localFormData.phone,
-            ethnic: localFormData.ethnicity,
-            job: localFormData.occupation,
+            phone_number: localFormData.phone_number,
+            ethnic: localFormData.ethnic,
+            job: localFormData.job,
         }
         console.log(payload)
         try {
@@ -49,7 +76,9 @@ function NonInsurrance({ onClose }) {
             if (response.ok) {
                 navigate('/non-bhyt/info')
             } else {
-                alert("Lưu thông tin thất bại!")
+                const errorData = await response.json() // Lấy thông tin lỗi chi tiết
+                console.error("Error response:", errorData)
+                alert(`Lưu thông tin thất bại! ${response.status}`)
             }
         } catch (error) {
             console.error("Lỗi gửi API:", error)
@@ -70,7 +99,7 @@ function NonInsurrance({ onClose }) {
                         <form className="px-3" onSubmit={handleSubmit}>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtFullName">Họ và Tên:</label>
-                                <input name="fullName" value={localFormData.fullName} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
+                                <input name="full_name" value={localFormData.full_name} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="inputDob">Ngày/Tháng/Năm sinh:</label>
@@ -82,11 +111,11 @@ function NonInsurrance({ onClose }) {
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtCCCD">Căn cước công dân:</label>
-                                <input name="cccd" value={localFormData.cccd} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
+                                <input name="patient_id" value={localFormData.patient_id} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" maxLength={12} type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtOccupation">Nghề nghiệp:</label>
-                                <select name="occupation" value={localFormData.occupation} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtOccupation">
+                                <select name="job" value={localFormData.job} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtOccupation">
                                     <option value="none">-- Chọn nghề nghiệp --</option>
                                     <option value="Sinh viên">Sinh viên</option>
                                     <option value="Công nhân">Công nhân</option>
@@ -109,10 +138,10 @@ function NonInsurrance({ onClose }) {
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtEthnicity">Dân tộc:</label>
-                                <select name="ethnicity" value={localFormData.ethnicity} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtEthnicity">
+                                <select name="ethnic" value={localFormData.ethnic} onChange={handleChange} defaultValue={"none"} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" id="txtEthnicity">
                                     <option value="none">-- Chọn dân tộc --</option>
                                     <option value="Kinh">Kinh</option>
-                                    <option value="Tày">Tày</option>
+                                    <option value="Tày">Tày</option> rounded-lg hover:
                                     <option value="Thái">Thái</option>
                                     <option value="Mường">Mường</option>
                                     <option value="Khmer">Khmer</option>
@@ -168,7 +197,7 @@ function NonInsurrance({ onClose }) {
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtPhoneNumber">Số điện thoại:</label>
-                                <input name="phone" value={localFormData.phone} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
+                                <input name="phone_number" value={localFormData.phone_number} onChange={handleChange} maxLength={10} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
                             </div>
                             <div className="flex justify-center w-full my-3">
                                 <button className="cursor-pointer px-4 py-1 text-center bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" type="submit">Bước tiếp theo</button>

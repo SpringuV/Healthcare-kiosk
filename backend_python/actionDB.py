@@ -78,6 +78,7 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
+        print(f"Database error: {e}")
         return False
     finally:
         disconnect(conn, cursor)

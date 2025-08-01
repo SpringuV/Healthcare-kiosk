@@ -8,7 +8,7 @@ from pdfMaker import makePDF
 
 app = FastAPI()
 
-IP = "196.168.110.40"
+IP = "localhost"
 PORT = "8000"
 
 app.add_middleware(
@@ -166,7 +166,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://196.168.110.200:8000/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
