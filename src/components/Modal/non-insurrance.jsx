@@ -24,10 +24,12 @@ function NonInsurrance({ onClose }) {
     }
     const handleSubmit = async (e) => {
         e.preventDefault()
+        var gender = false
+        if (localFormData.gender === "Nam") {gender = true}
         const payload = {
             patient_id: localFormData.cccd,
             full_name: localFormData.fullName,
-            gender: localFormData.gender, // true nếu Nam
+            gender: gender, // true nếu Nam
             dob: localFormData.dob,
             address: localFormData.address,
             phone_number: localFormData.phone,

@@ -20,10 +20,12 @@ func MakePDF(order OrderFormat) *bytes.Buffer {
 	pdf.SetFont("DejaVu", "", 14)
 
 	pdf.SetFontSize(23)
+	pdf.SetFontStyle("B")
 	pdf.CellFormat(0, 10, "PHIẾU KHÁM BỆNH", "", 1, "C", false, 0, "")
 	pdf.Ln(10)
 
 	pdf.SetFontSize(16)
+	pdf.SetFontStyle("")
 	infoLine(pdf, "Họ tên:", order.Fullname)
 	infoLine(pdf, "Giới tính:", map[bool]string{true: "Nam", false: "Nữ"}[order.Gender])
 	infoLine(pdf, "Ngày sinh:", order.DOB.Format("2006-01-02"))

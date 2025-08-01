@@ -8,11 +8,14 @@ from pdfMaker import makePDF
 
 app = FastAPI()
 
+IP = "196.168.110.40"
+PORT = "8000"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # địa trỉ cho phép truy cập api, http://localhost:5173"
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["*"],
 )
 
@@ -59,7 +62,8 @@ def checkInsurrance(citizen_id:str):
             "registration_place": insurrance[5],
             "phone_number": insurrance[4],
             "gender": "Nam" if insurrance[2] == 1 else "Nữ",
-            "is_activate": isActivate
+            "is_activate": isActivate,
+            "is_saved": isHad
         }
         
 
@@ -162,7 +166,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://192.168.100.208:8000/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
@@ -204,3 +208,5 @@ def downloadPDF(order_id:str):
             media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"}
         )
+
+# run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

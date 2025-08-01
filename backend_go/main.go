@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	ServerLink = "http://localhost"
+	IP         = "192.168.1.2"
+	ServerLink = "http://" + IP
+	Local      = "0.0.0.0"
 	Port       = "8080"
 )
 
@@ -248,5 +250,5 @@ func main() {
 	})
 
 	ChekingDBConnection()
-	router.Run(":" + Port)
+	router.Run(Local + ":" + Port)
 }
