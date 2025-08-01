@@ -3,6 +3,7 @@ import { useForm } from '../context/form_context'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
     const { formData } = useForm()
+    console.log(formData)
     return (
         <>
             <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
@@ -30,7 +31,7 @@ function NonInsurranceInfo() {
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Căn cước công dân:</label>
-                            <span>{formData.patient_id}</span>
+                            <span>{formData.citizen_id}</span>
                         </div>
                         <div className="flex justify-between py-2">
                             <label className="font-semibold">Nghề nghiệp:</label>
