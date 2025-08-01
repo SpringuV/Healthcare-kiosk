@@ -162,7 +162,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://192.168.100.208:8000/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://196.168.110.200:8000/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
