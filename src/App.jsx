@@ -31,7 +31,7 @@ function HomePage() {
                                 if (text === "Khám bảo hiểm y tế") {
                                     navigate('/bhyt')
                                 }
-                                else navigate('/non-bhyt') // nếu là khám dịch vụ thì điền thông tin
+                                else navigate('/non-bhyt/check') // nếu là khám dịch vụ thì điền thông tin
                             }}>
                                 <div className='bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
                                     <button className='cursor-pointer p-2 font-semibold text-[22px]'>{text}</button>
@@ -52,7 +52,8 @@ function BhytPage() {
             <StateStep step={1} />
             <InputCCCD
                 onClose={() => navigate('/')}
-                onShowInputCheckInfo={() => { navigate('/bhyt/info')}}
+                onShowInputCheckInfo={() => { navigate('/bhyt/info') }}
+                isInsurance={true}
             />
         </>
     )
@@ -82,15 +83,14 @@ function SelectKhamDichVu() {
     return (
         <>
             <StateStep step={1} />
-            <InputCCCD onClose={() => navigate('/')}
-                onShowInputNonInsurance={()=> {navigate('/non-bhyt')}}
+            <InputCCCD
+                onClose={() => navigate('/')}
+                onShowInputNonInsuranceInfo={() => navigate('/non-bhyt/info')}
                 isInsurance={false}
-                ></InputCCCD>
-            {/* <NonInsurrance onShowInputCheckInfoNon={() => { setShowCheckService(true); navigate('/non-bhyt/info') }} onClose={() => { setShowCheckService(false); navigate('/') }}></NonInsurrance> */}
+            />
         </>
     )
 }
-
 function NonBhytInfoPage() {
     const [showDetailNonInsurranceInfo, setShowDetailNonInsurranceInfo] = useState(false)
     return (
@@ -119,6 +119,17 @@ function CallUpdateInfoPatientInsurrance() {
     )
 }
 
+// Trang nhập thông tin chi tiết khi không tìm thấy CCCD (404)
+function NonBhytRegisterPage() {
+    const navigate = useNavigate()
+    return (
+        <>
+            <StateStep step={1} />
+            <NonInsurrance onClose={() => navigate('/')} />
+        </>
+    )
+}
+
 function App() {
     return (
         <InsurranceProvider>
@@ -130,7 +141,8 @@ function App() {
                         <Route path="/bhyt" element={<BhytPage />} />
                         <Route path="/bhyt/info" element={<BhytInfoPage />} />
                         <Route path="/service" element={<ServicePage />} />
-                        <Route path='/non-bhyt' element={<SelectKhamDichVu />}></Route>
+                        <Route path='/non-bhyt/check' element={<SelectKhamDichVu />}></Route>
+                        <Route path='/non-bhyt' element={<NonBhytRegisterPage />}></Route>
                         <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
                         <Route path='/confirm-registration' element={<PrintPDF_ConfirmOrder></PrintPDF_ConfirmOrder>}></Route>
                         <Route path='/bhyt/update-info' element={<CallUpdateInfoPatientInsurrance></CallUpdateInfoPatientInsurrance>}></Route>

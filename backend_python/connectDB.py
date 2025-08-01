@@ -10,9 +10,9 @@ def main():
 def connect():
     config = {
         "host" : "localhost",
-        "user" : "machine",
-        "password" : "P@$$vv0rd",
-        "database" : "kiosk"
+        "user" : "root",
+        "password" : "hocmysql1234",
+        "database" : "kiosk_health"
     }
     try:
         conn = mysql.connector.Connect(**config)

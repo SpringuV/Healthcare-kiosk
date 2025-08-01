@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, createOrder, getOrder, updatePatientInfo, checkPatientInfo
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, checkPatientInfo
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
@@ -97,17 +97,28 @@ def updatePatient(citizen_id:str, info:PatientInfoUpdate):
     
 # Kiểm tra thông tin bệnh nhân
 @app.get("/patient/check/{citizen_id}")
-def checkPatient(citizen_id:str):
-    if not checkPatientInfo(citizen_id):
+def checkPatient(citizen_id: str):
+    patient = getPatient(citizen_id)  # GỌI ĐÚNG HÀM TRẢ DỮ LIỆU
+    if not patient:
         return JSONResponse(
-            status_code=400,
-            content={}
+            status_code=404,
+            content={"message": "Không tìm thấy thông tin bệnh nhân"}
         )
-    else:
-        return JSONResponse(
-            status_code=200,
-            content={}
-        )
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "citizen_id": patient[0],
+            "full_name": patient[1],
+            "gender": "Nam" if patient[2] else "Nữ",
+            "dob": str(patient[3]),
+            "address": patient[4],
+            "phone_number": patient[5],
+            "ethnic": patient[6],
+            "job": patient[7],
+            "is_insurrance": bool(patient[8])
+        }
+    )
 
 # Lấy danh sách dịch vụ (ko cần tham số)
 @app.get("/api/services")
