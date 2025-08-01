@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, getInsurrance, savePatientInfo, getPatient, getServices, createOrder, getOrder, updatePatientInfo
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, createOrder, getOrder, updatePatientInfo
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
@@ -138,8 +138,7 @@ def getServicesList():
 #     ]
 # }
 
-# Tạo phiếu khám 
-# VD link: /makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001
+# Tạo phiếu khám
 @app.post("/orders/create/{citizen_id}", status_code=200)
 def makeOrder(citizen_id:str, orderInfo:OrderInfo):
     order_id = createOrder(citizen_id, orderInfo.service_name)
