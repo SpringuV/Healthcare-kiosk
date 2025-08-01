@@ -32,7 +32,7 @@ function NonInsurrance({ onClose }) {
             return
         }
 
-        if (localFormData.patient_id.length > 10 || localFormData.patient_id.length < 10) {
+        if (localFormData.patient_id.length > 12 || localFormData.patient_id.length < 12) {
             alert("Vui lòng điền đúng số căng cước công dân 12 số")
             return
         }
@@ -51,7 +51,7 @@ function NonInsurrance({ onClose }) {
             return
         }
 
-        var gender = false
+        let gender = false
         if (localFormData.gender === "Nam") { gender = true }
         const payload = {
             patient_id: localFormData.patient_id,
@@ -63,7 +63,6 @@ function NonInsurrance({ onClose }) {
             ethnic: localFormData.ethnic,
             job: localFormData.job,
         }
-        console.log(payload)
         try {
             const response = await fetch("http://localhost:8000/patient/non-insurrance", {
                 method: "POST",

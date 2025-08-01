@@ -3,7 +3,7 @@ import NumberPad from './number_pad'
 import { useInsurrance } from "../context/insurrance_context"
 import AlertNonInsurrance from '../alert/non_insurrance_alert'
 
-function Insurrance({ onClose, onShowInputCheckInfo }) {
+function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsurance }) {
     const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -100,4 +100,4 @@ function Insurrance({ onClose, onShowInputCheckInfo }) {
     )
 }
 
-export default Insurrance
+export default InputCCCD

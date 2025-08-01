@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import Service from './components/service'
 import Header from './components/Header'
-import Insurrance from './components/Modal/insurrance'
+import InputCCCD from './components/Modal/inputCCCD'
 import NonInsurrance from './components/Modal/non-insurrance'
 import InfoInsurrance from './components/Modal/insurrance_info'
 import StateStep from './components/state-step'
@@ -50,9 +50,9 @@ function BhytPage() {
     return (
         <>
             <StateStep step={1} />
-            <Insurrance
+            <InputCCCD
                 onClose={() => navigate('/')}
-                onShowInputCheckInfo={() => { navigate('/bhyt/info'); }}
+                onShowInputCheckInfo={() => { navigate('/bhyt/info')}}
             />
         </>
     )
@@ -79,11 +79,14 @@ function ServicePage() {
 
 function SelectKhamDichVu() {
     const navigate = useNavigate()
-    const [showCheckService, setShowCheckService] = useState(false)
     return (
         <>
             <StateStep step={1} />
-            <NonInsurrance onShowInputCheckInfoNon={() => { setShowCheckService(true); navigate('/non-bhyt/info') }} onClose={() => { setShowCheckService(false); navigate('/') }}></NonInsurrance>
+            <InputCCCD onClose={() => navigate('/')}
+                onShowInputNonInsurance={()=> {navigate('/non-bhyt')}}
+                isInsurance={false}
+                ></InputCCCD>
+            {/* <NonInsurrance onShowInputCheckInfoNon={() => { setShowCheckService(true); navigate('/non-bhyt/info') }} onClose={() => { setShowCheckService(false); navigate('/') }}></NonInsurrance> */}
         </>
     )
 }

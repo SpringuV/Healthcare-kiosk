@@ -26,8 +26,6 @@ function UpdateInfoPatientInsurrance() {
             job: updateInsurranceData.occupation,
             is_insurrance: 1
         }
-        console.log(citizen_id)
-        console.log(payload)
         try {
             const response = await fetch(`http://localhost:8000/patient/insurrance-info/${citizen_id}`, {
                 method: "PUT",
