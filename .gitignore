@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 get-pip.py
 kiosk
+__pycache__
+.venv

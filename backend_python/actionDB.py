@@ -16,6 +16,7 @@ def isInsurrance(citizen_id:str):
         else:
             return False, "Không có bảo hiểm", None
     except Exception as e:
+        print(f"Error: {e}")
         return False, str(e), None
     finally:
         disconnect(conn, cursor)
@@ -31,6 +32,7 @@ def getInsurrance(citizen_id:str):
         else:
             return None
     except Exception as e:
+        print(f"Error: {e}")
         return None
     finally:
         disconnect(conn, cursor)
@@ -46,6 +48,7 @@ def isHasPatientInfo(citizen_id:str):
         else:
             return False, "Không có thông tin bệnh nhân"
     except Exception as e:
+        print(f"Error: {e}")
         return False, str(e)
     finally:
         disconnect(conn, cursor)
@@ -64,7 +67,7 @@ def updatePatientInsurranceState(citizen_id:str, state:bool):
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
         return False
     finally:
         disconnect(conn, cursor)
@@ -91,6 +94,21 @@ def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
+
+def checkPatientInfo(citizen_id:str):
+    conn, cursor = connect()
+    try:
+        query = '''SELECT citizen_id FROM patient WHERE citizen_id = %s'''
+        cursor.execute(query, (citizen_id,))
+        if cursor.fetchone():
+            return True
+        return False
+    except Exception as e:
+        print(f"Error: {e}")
         return False
     finally:
         disconnect(conn, cursor)
@@ -106,6 +124,7 @@ def getPatient(citizen_id:str):
         else:
             return None
     except Exception as e:
+        print(f"Error: {e}")
         return None
     finally:
         disconnect(conn, cursor)

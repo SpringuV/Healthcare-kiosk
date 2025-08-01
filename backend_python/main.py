@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, getInsurrance, savePatientInfo, getPatient, getServices, createOrder, getOrder, updatePatientInfo
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, createOrder, getOrder, updatePatientInfo, checkPatientInfo
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
@@ -94,6 +94,20 @@ def updatePatient(citizen_id:str, info:PatientInfoUpdate):
             status_code=201,
             content={}
         )
+    
+# Kiểm tra thông tin bệnh nhân
+@app.get("/patient/check/{citizen_id}")
+def checkPatient(citizen_id:str):
+    if not checkPatientInfo(citizen_id):
+        return JSONResponse(
+            status_code=400,
+            content={}
+        )
+    else:
+        return JSONResponse(
+            status_code=200,
+            content={}
+        )
 
 # Lấy danh sách dịch vụ (ko cần tham số)
 @app.get("/api/services")
@@ -138,8 +152,7 @@ def getServicesList():
 #     ]
 # }
 
-# Tạo phiếu khám 
-# VD link: /makeOrder?service_name=Khám cảm cúm nhi&citizen_id=000000000001
+# Tạo phiếu khám
 @app.post("/orders/create/{citizen_id}", status_code=200)
 def makeOrder(citizen_id:str, orderInfo:OrderInfo):
     order_id = createOrder(citizen_id, orderInfo.service_name)
