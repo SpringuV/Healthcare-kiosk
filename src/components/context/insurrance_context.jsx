@@ -6,9 +6,9 @@ export const useInsurrance = ()=> useContext(InsurranceContext)
 
 export const InsurranceProvider = ({children}) =>{
     const [insurranceInfo, setInsurranceInfo] = useState(null)
-    const clearInsuranceInfo = () => setInsurranceInfo(null);
+    const clearInsuranceInfo = () => setInsurranceInfo({});
     return (
-        <InsurranceContext.Provider value={{insurranceInfo, setInsurranceInfo}}>
+        <InsurranceContext.Provider value={{insurranceInfo, setInsurranceInfo, clearInsuranceInfo}}>
             {children}
         </InsurranceContext.Provider>
     )
