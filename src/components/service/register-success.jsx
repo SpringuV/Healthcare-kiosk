@@ -1,13 +1,25 @@
 import { useRef, useState } from 'react'
-import { useLocation,useNavigate } from 'react-router-dom'
+import { replace, useLocation,useNavigate } from 'react-router-dom'
 import { useService } from '../context/service_context'
+import { useInsurrance } from '../context/insurrance_context'
+import { useForm } from '../context/form_context'
 function RegisterSuccess() {
     const navigate = useNavigate()
     const location = useLocation()
     const state = location.state
-    console.log(state.QRCode)
+    
+    const {clearFormData} = useForm()
+    const {clearInsuranceInfo} = useInsurrance()
     const handleConfirmAndReturnHome = () => {
-        navigate('/')
+        clearFormData()
+        clearInsuranceInfo()
+        navigate('/', {replace: true}) // điều hướng về trang chủ, replace: true là Thay thế trang hiện tại trong lịch sử trình duyệt thay vì thêm một mục mới. 
+//         Khi bạn không muốn người dùng quay lại trang cũ (ví dụ: form đã submit xong).
+// Khi điều hướng sau một hành động hoàn tất như:
+// Đăng nhập
+// Đăng ký thành công
+// Xác nhận thông tin
+// Hoàn tất thanh toán, v.v
     }
     console.log(state)
     return (
