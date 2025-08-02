@@ -7,6 +7,7 @@ export const useForm = () => useContext(FormContext)
 
 export const FormProvider = ({children}) =>{
     const [formData, setFormData] = useState({})
+    const clearFormData = () => setFormData(null);
     return (
         <FormContext.Provider value={{formData, setFormData}}>
             {children}
