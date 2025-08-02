@@ -88,18 +88,18 @@ func UpdatePatientInfo(info PatientInfoUpdate, citizen_id string) bool {
 	return true
 }
 
-func CheckPatientInfo(citizen_id string) error {
+func CheckPatientInfo(citizen_id string) (Patient, error) {
 	db := connectDB()
 	defer db.Close()
-	var id string
-	query := `SELECT citizen_id FROM patient WHERE citizen_id = ?`
+	var p Patient
+	query := `SELECT citizen_id, fullname, gender, dob, address, phone_number, ethnic, job FROM patient WHERE citizen_id = ? LIMIT 1`
 	row := db.QueryRow(query, citizen_id)
-	err := row.Scan(&id)
+	err := row.Scan(&p.Citizen_id, &p.Fullname, &p.Gender, &p.DOB, &p.Address, &p.PhoneNumber, &p.Ethnic, &p.Job)
 	if err != nil {
 		log.Println("Lỗi khi truy vấn:", err)
-		return err
+		return p, err
 	}
-	return nil
+	return p, nil
 }
 
 func Convert_JSpatient2patient(pj PatientJson) Patient {

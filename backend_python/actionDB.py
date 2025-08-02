@@ -99,20 +99,6 @@ def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
     finally:
         disconnect(conn, cursor)
 
-def checkPatientInfo(citizen_id:str):
-    conn, cursor = connect()
-    try:
-        query = '''SELECT citizen_id FROM patient WHERE citizen_id = %s'''
-        cursor.execute(query, (citizen_id,))
-        if cursor.fetchone():
-            return True
-        return False
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
-    finally:
-        disconnect(conn, cursor)
-
 def getPatient(citizen_id:str):
     conn, cursor = connect()
     try:

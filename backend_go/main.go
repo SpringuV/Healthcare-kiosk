@@ -121,12 +121,21 @@ func main() {
 		// Kiểm tra thông tin bệnh nhân
 		PatientRouter.GET("/check/:citizen_id", func(ctx *gin.Context) {
 			citizen_id := ctx.Param("citizen_id")
-			err := CheckPatientInfo(citizen_id)
+			patient, err := CheckPatientInfo(citizen_id)
 			if err != nil {
 				ctx.JSON(400, gin.H{})
 				return
 			} else {
-				ctx.JSON(200, gin.H{})
+				ctx.JSON(200, gin.H{
+					"patient_id":   patient.Citizen_id,
+					"full_name":    patient.Fullname,
+					"gender":       map[bool]string{true: "Nam", false: "Nữ"}[patient.Gender],
+					"dob":          patient.DOB.Format("2006-01-02"),
+					"address":      patient.Address,
+					"phone_number": patient.PhoneNumber,
+					"ethnic":       patient.Ethnic,
+					"job":          patient.Job,
+				})
 				return
 			}
 		})

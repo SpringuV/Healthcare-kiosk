@@ -21,6 +21,13 @@ function NonInsurrance({ onClose }) {
             [e.target.name]: e.target.value
         })
     }
+    const onlyGetNum = (e) => {
+        const onlyNums = e.target.value.replace(/[^0-9]/g, '')
+        setLocalFormData(prev => ({
+            ...prev,
+            [e.target.name]: onlyNums
+        }));
+    }
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!localFormData.patient_id || !localFormData.full_name || !localFormData.dob) {
@@ -196,7 +203,7 @@ function NonInsurrance({ onClose }) {
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtPhoneNumber">Số điện thoại:</label>
-                                <input name="phone_number" value={localFormData.phone_number} onChange={handleChange} maxLength={10} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="tel" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
+                                <input name="phone_number" value={localFormData.phone_number} onChange={onlyGetNum} maxLength={10} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtPhoneNumber" max={10} min={10} placeholder="Nhập số điện thoại của bạn"></input>
                             </div>
                             <div className="flex justify-center w-full my-3">
                                 <button className="cursor-pointer px-4 py-1 text-center bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" type="submit">Bước tiếp theo</button>

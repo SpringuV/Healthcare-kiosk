@@ -61,10 +61,10 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Bạn không có bảo hiểm y tế, vui lòng kiểm tra lại thông tin hoặc chọn khám dịch vụ!",
-                        confirmText: "Khám dịch vụ",
+                        confirmText: "Ok",
                         onConfirm: () => {
                             setShowAlert(false)
-                            navigate('/non-bhyt')
+                            navigate('/')
                         }
                     })
                     return
