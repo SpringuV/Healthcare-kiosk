@@ -11,8 +11,8 @@ function RegisterSuccess() {
     const {clearFormData} = useForm()
     const {clearInsuranceInfo} = useInsurrance()
     const handleConfirmAndReturnHome = () => {
-        clearFormData()
-        clearInsuranceInfo()
+        clearFormData?.()
+        clearInsuranceInfo?.()
         navigate('/', {replace: true}) // điều hướng về trang chủ, replace: true là Thay thế trang hiện tại trong lịch sử trình duyệt thay vì thêm một mục mới. 
 //         Khi bạn không muốn người dùng quay lại trang cũ (ví dụ: form đã submit xong).
 // Khi điều hướng sau một hành động hoàn tất như:
