@@ -135,7 +135,7 @@ function NonInsurrance({ onClose }) {
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtCCCD">Căn cước công dân:</label>
-                                <input name="patient_id" value={localFormData.patient_id} onChange={handleChange} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" maxLength={12} type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
+                                <input name="patient_id" value={localFormData.patient_id} onChange={onlyGetNum} className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" maxLength={12} type="text" id="txtCCCD" placeholder="Nhập căn cước công dân của bạn" ></input>
                             </div>
                             <div className="flex flex-col p-1">
                                 <label htmlFor="txtOccupation">Nghề nghiệp:</label>
