@@ -57,7 +57,8 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
         try {
             // khám có bảo hiểm
             if (isInsurance) {
-                const response = await fetch(`http://127.0.0.1:8000/health-insurrances/${inputValue}`)
+                const response = await fetch(`https://healthcare-kiosk.onrender.com/health-insurrances/${inputValue}`)
+                // const response = await fetch(`http://127.0.0.1:8000/health-insurrances/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Bạn không có bảo hiểm y tế, vui lòng kiểm tra lại thông tin hoặc chọn khám dịch vụ!",
@@ -75,7 +76,8 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                 setErrorMessage("")
                 onShowInputCheckInfo()
             } else { // khám không có bảo hiểm
-                const response = await fetch(`http://127.0.0.1:8000/patient/check/${inputValue}`)
+                // const response = await fetch(`http://127.0.0.1:8000/patient/check/${inputValue}`)
+                const response = await fetch(`https://healthcare-kiosk.onrender.com/patient/check/${inputValue}`)
                 if(response.ok){
                     const data = await response.json()
                     setFormData(data)

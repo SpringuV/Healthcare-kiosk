@@ -189,7 +189,8 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",
