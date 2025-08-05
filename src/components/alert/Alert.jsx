@@ -14,11 +14,11 @@ function Alert({ textInput, onClose, onConfirm, showConfirmButton = true, confir
     return (
         <>
             <div className="fixed flex inset-0 justify-center items-center flex-col backdrop-blur-sm z-[200]">
-                <div className="w-fit">
-                    <div className="p-2 bg-gradient-to-r from-orange-600 to-red-600 text-center rounded-t-xl font-semibold text-[20px] text-white uppercase">
+                <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px]">
+                    <div className="p-2 bg-gradient-to-r from-orange-600 to-red-600 text-center rounded-t-xl font-semibold text-white uppercase">
                         <h3>Thông báo</h3>
                     </div>
-                    <div className="bg-white p-5 text-[20px] w-[30vw] text-center">
+                    <div className="bg-white p-5 w-full text-center">
                         <span>{textInput}</span>
                     </div>
                     <div className="p-3 flex justify-end bg-gradient-to-r from-emerald-500 to-teal-700 rounded-b-xl">
@@ -28,7 +28,7 @@ function Alert({ textInput, onClose, onConfirm, showConfirmButton = true, confir
                         {showConfirmButton && (
                             <button
                                 type="button"
-                                className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                                className="lg:px-4 lg:py-2 px-2 py-1 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
                                 onClick={handleConfirm}
                             >
                                 {confirmText}

@@ -112,7 +112,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
     }
 
     const handleKeyDownInput = (e) => {
-        const allowedKeys = ["Backspace", "Tab", "Delete", "v", "Control", "ArrowLeft", "ArrowRight"];
+        const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"];
         const inputValue = inputRef.current.value;
 
         // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
@@ -135,17 +135,17 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
         <>
             {/* lớp phủ */}
             <div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm">
-                <div className="max-h-[80vh] min-w-[30vw] max-w-[80vw] bg-white z-[100] rounded-md">
+                <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
-                        <div className="text-center flex-1 text-white font-semibold text-[23px]">
+                        <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">
                             <h2>Nhập thông tin</h2>
                         </div>
-                        <div className="w-8 flex justify-center mr-1" onClick={onClose}>
+                        <div className="w-6 lg:w-8 flex justify-center mr-1" onClick={onClose}>
                             <i className="text-center fa-solid fa-xmark p-1 rounded-full h-6 w-6 bg-slate-300 hover:bg-slate-400"></i>
                         </div>
                     </div>
-                    <div className="flex justify-center">
-                        <form className="flex flex-col w-[30vw] justify-center items-center">
+                    <div className="flex justify-center text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]">
+                        <form className="flex flex-col w-[80%] sm:w-[70%] justify-center items-center">
                             <input maxLength={12}  onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" 
                                 className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" 
                                 placeholder="Nhập thẻ căn cước công dân"
@@ -154,7 +154,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                                 <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
                             )}
                             {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />}
-                            <button className="text-white font-medium mb-4 mt-2 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" 
+                            <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" 
                                 onClick={handleCheckInfo}>Kiểm tra thông tin</button>
                         </form>
                     </div>

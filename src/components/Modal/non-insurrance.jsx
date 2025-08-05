@@ -80,8 +80,8 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            // const response = await fetch("http://localhost:8000/patient/non-insurrance", {
-            const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
+            const response = await fetch("http://localhost:8000/patient/non-insurrance", {
+            // const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -112,7 +112,7 @@ function NonInsurrance({ onClose }) {
     return (
         <>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
-                <div className="bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[50vw] lg:w-[30vw] max-h-[80vh] flex flex-col">
+                <div className="bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[50vw] lg:w-[35vw] max-h-[80vh] flex flex-col text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]">
                     <div className="p-2 bg-colorOne rounded-t-lg">
                         <div className="flex justify-between items-center w-full">
                             <h3 className="flex-1 text-center text-white font-semibold">Nhập thông tin chi tiết</h3>

@@ -35,7 +35,7 @@ def makePDF(info):
     info_line(pdf, "Địa chỉ phòng:", info[11])
     info_line(pdf, "Bác sĩ:", info[12])
     info_line(pdf, "Thời gian đăng ký:", to_str(info[5]))
-    info_line(pdf, "Giá dịch vụ:", str(info[6]))
+    info_line(pdf, "Giá dịch vụ:", str(info[6] * 26.181))
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     pdf_buffer = io.BytesIO(pdf_bytes)

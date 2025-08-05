@@ -36,8 +36,8 @@ function UpdateInfoPatientInsurrance() {
             is_insurrance: 1
         }
         try {
-            const response = await fetch(`https://healthcare-kiosk.onrender.com/patient/insurrance-info/${citizen_id}`, {
-            // const response = await fetch(`http://localhost:8000/patient/insurrance-info/${citizen_id}`, {
+            // const response = await fetch(`https://healthcare-kiosk.onrender.com/patient/insurrance-info/${citizen_id}`, {
+            const response = await fetch(`http://localhost:8000/patient/insurrance-info/${citizen_id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
