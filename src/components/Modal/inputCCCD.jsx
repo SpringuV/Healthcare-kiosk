@@ -153,7 +153,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                             {errorMessage && (
                                 <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
                             )}
-                            {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />}
+                            {/* {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />} */}
                             <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" 
                                 onClick={handleCheckInfo}>Kiểm tra thông tin</button>
                         </form>

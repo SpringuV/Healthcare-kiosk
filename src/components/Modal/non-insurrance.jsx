@@ -80,8 +80,8 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            const response = await fetch("http://localhost:8000/patient/non-insurrance", {
-            // const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
+            // const response = await fetch("http://localhost:8000/patient/non-insurrance", {
+            const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

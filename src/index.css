@@ -6,7 +6,7 @@
 
 @layer base {
     body {
-        @apply bg-colorBody pt-20
+        @apply bg-colorBody pt-16 md:pt-20
     }
 }
 
