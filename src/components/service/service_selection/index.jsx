@@ -83,7 +83,7 @@ function ServiceItem() {
                         value={selectedOption}
                         onChange={handleChange}
                         placeholder="Chọn dịch vụ khám"
-                        isSearchable
+                        isSearchable={false}
                         className="text-left text-white flex-1"
 
                         styles={{
