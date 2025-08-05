@@ -144,8 +144,8 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                             <i className="text-center fa-solid fa-xmark p-1 rounded-full h-6 w-6 bg-slate-300 hover:bg-slate-400"></i>
                         </div>
                     </div>
-                    <div className="flex justify-center text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]">
-                        <form className="flex flex-col w-[80%] sm:w-[70%] justify-center items-center">
+                    <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
+                        <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
                             <input maxLength={12}  onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" 
                                 className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" 
                                 placeholder="Nhập thẻ căn cước công dân"

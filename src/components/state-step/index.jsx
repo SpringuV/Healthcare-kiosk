@@ -11,8 +11,8 @@ function StateStep({step}) {
                 {steps.map((item) => (
                     <React.Fragment key={item.id}>
                         <div className="flex md:min-w-[15vw] justify-center items-center flex-col text-center text-[12px] font-semibold md:text-[16px] lg:text-[18px] xl:text-[20px] 2xl:text-[16px]">
-                            <span className={`w-16 h-16 md:w-24 md:h-24 inline-flex justify-center text-center items-center p-2 rounded-full ${step === item.id ? "bg-green-400 ease-in-out text-white" : "bg-colorOneLighter"}`}> BƯỚC {item.id} </span>
-                            <span>{item.title}</span>
+                            <span className={`w-16 h-16 md:w-24 md:h-24 inline-flex justify-center text-center items-center p-2 bg-gradient-to-r rounded-full ${step === item.id ? "from-green-500 to-emerald-500 ease-in-out text-white italic" : "from-teal-600 to-emerald-600 text-white"}`}> BƯỚC {item.id} </span>
+                            <span className={`mt-2 px-1 rounded-md bg-white text-[14px] font-semibold md:text-[16px] lg:text-[18px] xl:text-[20px] 2xl:text-[22px] ${step === item.id ? " italic font-extrabold" : ""}`}>{item.title}</span>
                         </div>
                     </React.Fragment>
                 ))}

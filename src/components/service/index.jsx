@@ -15,7 +15,7 @@ function Service() {
                     <div className='flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 '>
                         {service.map((text, i) => (
                             <div key={i} className= 'rounded-xl' onClick={() => setSelectedService(text)}>
-                                <div className='cursor-pointer flex justify-center items-center p-3 rounded-xl bg-gradient-to-r from-teal-800 to-teal-600 w-full'>
+                                <div className={`cursor-pointer flex justify-center items-center p-3 rounded-xl bg-gradient-to-r w-full ${selectedService === text ? " from-green-600 to-emerald-600 " : " from-teal-800 to-teal-600 "}`}>
                                     <h3 className='text-white font-bold text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]'>{text}</h3>
                                 </div>
                             </div>
