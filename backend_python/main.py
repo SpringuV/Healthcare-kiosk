@@ -52,7 +52,7 @@ def checkInsurrance(citizen_id:str):
         if isHad:
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
-            savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
+            savePatientInfo(*insurrance[:4], "", insurrance[4], "", "", isActivate)
         return {
             "citizen_id": insurrance[0],
             "full_name": insurrance[1],

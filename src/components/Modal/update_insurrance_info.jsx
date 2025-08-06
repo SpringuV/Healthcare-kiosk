@@ -29,6 +29,7 @@ function UpdateInfoPatientInsurrance() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         const citizen_id = insurranceInfo.citizen_id
+        console.log(insurranceInfo.citizen_id)
         const payload = {
             address: updateInsurranceData.address,
             ethnic: updateInsurranceData.ethnicity,
@@ -43,6 +44,8 @@ function UpdateInfoPatientInsurrance() {
                 },
                 body: JSON.stringify(payload)
             })
+            // in ra
+            console.log(JSON.stringify(payload))
 
             if (response.ok) {
                 navigate('/service')
