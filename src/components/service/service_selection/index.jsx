@@ -23,7 +23,8 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/services`)
+                const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
+                // const response = await fetch(`http://localhost:8000/api/services`)
                 const data = await response.json()
                 const services = data.services || []
                 // format for react-select
@@ -51,7 +52,8 @@ function ServiceItem() {
             return
         }
         try {
-            const response = await fetch(`http://localhost:8000/orders/create/${citizen_id}`, {
+            const response = await fetch(`https://healthcare-kiosk.onrender.com/orders/create/${citizen_id}`, {
+            // const response = await fetch(`http://localhost:8000/orders/create/${citizen_id}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,14 +76,14 @@ function ServiceItem() {
     return (
         <>
             <div className="flex flex-col">
-                <div className="flex w-[40vw] gap-3 justify-center items-center bg-white p-6 rounded-xl">
+                <div className="text-[14px] md:text-[16px] lg:text-[18px] flex w-[90vw] lg:w-[40vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center bg-white p-6 rounded-xl">
                     <label className="w-[40%]" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
                     <Select
                         options={options}
                         value={selectedOption}
                         onChange={handleChange}
                         placeholder="Chọn dịch vụ khám"
-                        isSearchable
+                        isSearchable={false}
                         className="text-left text-white flex-1"
 
                         styles={{
@@ -111,9 +113,9 @@ function ServiceItem() {
                         }}
                     />
                 </div>
-                <div className="flex flex-col justify-center items-center">
+                <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
-                    <a className="cursor-pointer px-3 py-1 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" onClick={handleRegister}>Đăng kí để khám</a>
+                    <a className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" onClick={handleRegister}>Đăng kí để khám</a>
                 </div>
             </div>
         </>

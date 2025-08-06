@@ -49,10 +49,12 @@ def checkInsurrance(citizen_id:str):
             content={}
         )
     else:
+        print("[DEBUG] isHad:", isHad)
         if isHad:
+            print("[DEBUG] Patient đã tồn tại → cập nhật is_insurrance")
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
-            savePatientInfo(*insurrance[:4], "", insurrance[4], "", "", isActivate)
+            savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
         return {
             "citizen_id": insurrance[0],
             "full_name": insurrance[1],
@@ -189,7 +191,8 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "time_order": order[5],
             "price": order[6],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",

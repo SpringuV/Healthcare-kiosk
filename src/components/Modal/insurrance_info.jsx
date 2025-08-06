@@ -15,12 +15,12 @@ function InfoInsurrance({ onClose }) {
         <>
             {insurranceInfo ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
-                    <div className="min-w-[30vw]">
+                    <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">
                         <div className=" flex justify-between items-center bg-colorOne p-2 rounded-t-md">
-                            <h1 className="flex-1 text-center text-[22px] font-semibold text-white">Thông tin bảo hiểm y tế</h1>
+                            <h1 className="flex-1 text-center r text-[16px] md:text-[18px] lg:text-[20px] font-semibold text-white">Thông tin bảo hiểm y tế</h1>
                             {/* <i className="fa-solid fa-xmark p-2 bg-slate-200 hover:bg-slate-300 h-8 w-8 flex justify-center items-center rounded-full" onClick={onClose}></i> */}
                         </div>
-                        <div className="flex flex-col bg-white overflow-y-auto px-4 min-w-[30vw] pt-3">
+                        <div className="flex flex-col text-[14px] md:text-[16px] lg:text-[18px] bg-white overflow-y-auto px-4 pt-3">
                             <div className="flex justify-between py-2">
                                 <label className="font-semibold w-1/2 border-r-slate-700">Họ và tên:</label>
                                 <span>{insurranceInfo.full_name}</span>

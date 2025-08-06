@@ -19,22 +19,22 @@ function HomePage() {
     return (
         <>
             <StateStep step={1} />
-            <div className=' text-center px-7 py-8 bg-white rounded-lg'>
-                <div className='mb-3 text-colorOne font-bold text-[25px]'>
+            <div className='text-center px-7 py-8 bg-white rounded-lg'>
+                <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                     <h1>CHỌN HÌNH THỨC KHÁM</h1>
                 </div>
                 <div className='flex justify-center'>
-                    <div className='flex w-[40vw] justify-between items-center'>
+                    <div className='flex w-full gap-1 sm:w-[80%] lg:w-[45vw]'>
                         {button.map((text, i) => (
-                            <div key={i} className='m-2 w-1/2' onClick={() => {
+                            <div key={i} className='flex m-2 h-full w-1/2' onClick={() => {
                                 setCheckButtonShowModal(text)
                                 if (text === "Khám bảo hiểm y tế") {
                                     navigate('/bhyt')
                                 }
                                 else navigate('/non-bhyt/check') // nếu là khám dịch vụ thì điền thông tin
                             }}>
-                                <div className='bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
-                                    <button className='cursor-pointer p-2 font-semibold text-[22px]'>{text}</button>
+                                <div className='flex items-center justify-center h-[80%] w-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
+                                    <button className='cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]'>{text}</button>
                                 </div>
                             </div>
                         ))}
