@@ -49,10 +49,14 @@ def checkInsurrance(citizen_id:str):
             content={}
         )
     else:
+        print("[DEBUG] isHad:", isHad)
         if isHad:
+            print("[DEBUG] Patient đã tồn tại → cập nhật is_insurrance")
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
-            savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
+            print("[DEBUG] Patient chưa tồn tại → tiến hành thêm")
+            success = savePatientInfo(*insurrance[:4], "", insurrance[4], "", "", isActivate)
+            print("[DEBUG] Insert result:", success)
         return {
             "citizen_id": insurrance[0],
             "full_name": insurrance[1],
