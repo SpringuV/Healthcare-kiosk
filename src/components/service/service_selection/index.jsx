@@ -32,6 +32,7 @@ function ServiceItem() {
                     value: service.service_name,
                     label: service.service_name,
                     description: service.service_description,
+                    price: service.price,
                 }))
 
                 setOptions(formattedOptions)
