@@ -131,7 +131,7 @@ def getServicesList():
         services.append({
             "service_name": service[0],
             "service_description": service[1],
-            "price": service[2],
+            "price": float(service[2]),
         })
     return JSONResponse(
         status_code=200,
@@ -166,8 +166,8 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "price": order[12],
             "price_insur": order[13],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            # "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",

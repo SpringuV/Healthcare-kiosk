@@ -132,7 +132,7 @@ def getServices():
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE cs.service_status = 1
-        GROUP BY s.service_name, s.service_description
+        GROUP BY s.service_name, s.service_description, s.price
         ORDER BY s.service_name;'''
         cursor.execute(query)
         services = cursor.fetchall()

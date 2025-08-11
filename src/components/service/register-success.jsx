@@ -36,7 +36,7 @@ function RegisterSuccess() {
                     </div>
 
                     {/* Scrollable content */}
-                    <div className='overflow-y-auto px-5 py-2 flex-1'>
+                    <div className='px-5 py-2 flex-1'>
                         <span className='flex justify-center items-center text-[18px] sm:text-[20px] md:text-[23px] lg:text-[25px] font-bold w-full mb-2'>PHIẾU KHÁM BỆNH</span>
                         {[
                             ['Họ và tên:', state.fullname],
@@ -47,9 +47,10 @@ function RegisterSuccess() {
                             ['Phòng khám:', state.address_room],
                             ['Bác sĩ:', state.doctor_name],
                             ['Số phiếu đợi:', state.queue_number],
-                            ['Bảo hiểm y tế:', state.is_insurrance],
+                            ['Bảo hiểm y tế:', state.is_insurrance ? 'Có' : 'Không'],
                             ['Ngày đăng kí:', new Date(state.time_order).toLocaleString()],
-                            ['Giá khám:', `${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`],
+                            ['Giá khám dịch vụ:', `${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`],
+                            ['Giá khám bảo hiểm:', `${(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`],
                         ].map(([label, value], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>
@@ -65,7 +66,7 @@ function RegisterSuccess() {
                     </div>
 
                     {/* Footer buttons */}
-                    <div className='flex justify-end rounded-b-lg px-5 py-2'>
+                    <div className='flex justify-center items-center rounded-b-lg px-5 py-2'>
                         <button className='text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700 ' type='button' onClick={handleConfirmAndReturnHome}>Xác nhận và về trang chủ</button>
                         {/* <button className='ml-5 text-[17px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600' type='button' onClick={handleGeneratePdf}>In phiếu</button> */}
                     </div>
