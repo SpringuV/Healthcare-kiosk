@@ -33,6 +33,7 @@ def makePDF(info):
     info_line(pdf, "Dịch vụ:", info[9])
     info_line(pdf, "Phòng khám:", info[10])
     info_line(pdf, "Địa chỉ phòng:", info[11])
+    info_line(pdf, "Số phiếu đợi:", str(info[4]))
     info_line(pdf, "Bác sĩ:", info[12])
     info_line(pdf, "Thời gian đăng ký:", to_str(info[5]))
     info_line(pdf, "Giá dịch vụ:", str(f"{info[6] * 26181:,} VNĐ"))

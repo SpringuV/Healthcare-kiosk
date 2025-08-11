@@ -1,5 +1,6 @@
 from datetime import datetime
 from connectDB import connect, disconnect
+from mysql.connector import Error
 
 def isInsurrance(citizen_id:str):
     conn, cursor = connect()
@@ -79,10 +80,16 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
         query = '''INSERT INTO patient (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
         cursor.execute(query, (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, insur_int))
         conn.commit()
-        return cursor.rowcount != 0
+        if cursor.rowcount != 0:
+            return True, ""
+    except Error as e:
+        if e.errno == 1062:
+            return False, f"Công dân với ID '{citizen_id}' đã tồn tại"
+        else:
+            return False, f"Lỗi cơ sở dữ liệu"
     except Exception as e:
-        print(f"Database error: {e}")
-        return False
+        print(f"False: {e}")
+        return False, ""
     finally:
         disconnect(conn, cursor)
 
@@ -120,7 +127,8 @@ def getServices():
     try:
         query = '''SELECT
         s.service_name,
-        s.service_description
+        s.service_description,
+        s.price
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE cs.service_status = 1
@@ -200,6 +208,25 @@ def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
     finally:
         disconnect(conn, cursor)
 
+def getPrices(clinic_service_id:str, service_name:str):
+    conn, cursor = connect()
+    try:
+        query = '''SELECT s.price, s.price_insurrance 
+        FROM service s
+        JOIN clinic_service cs ON s.service_id = cs.service_id
+        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
+        cursor.execute(query, (service_name, clinic_service_id))
+        price_values = cursor.fetchone()
+        if not price_values:
+            return [0, 0]
+        price, price_insur = price_values
+        return [price, price_insur]
+    except Exception as e:
+        print(f"Error: {e}")
+        return [0, 0]
+    finally:
+        disconnect(conn, cursor)
+
 def createOrder(citizen_id:str, service_name:str):
     conn, cursor = connect()
     try:
@@ -222,7 +249,7 @@ def createOrder(citizen_id:str, service_name:str):
 def getOrder(order_id:str):
     conn, cursor = connect()
     try:
-        query = '''SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id
+        query = '''SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
         WHERE o.order_id = %s
@@ -243,8 +270,9 @@ def getOrder(order_id:str):
         info2 = cursor.fetchone()
         if not info2:
             return None
-        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname
-        return list(info1) + list(info2)
+        info3 = getPrices(info1[-1], info2[0])
+        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur
+        return list(info1) + list(info2) + info3
     except Exception as e:
         print(f"Error: {e}")
         return None

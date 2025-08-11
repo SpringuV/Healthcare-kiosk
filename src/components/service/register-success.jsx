@@ -49,7 +49,7 @@ function RegisterSuccess() {
                             ['Số phiếu đợi:', state.queue_number],
                             ['Bảo hiểm y tế:', state.is_insurrance],
                             ['Ngày đăng kí:', new Date(state.time_order).toLocaleString()],
-                            ['Giá khám:', `${(state.price * 26180).toLocaleString('vi-VN')} VNĐ`],
+                            ['Giá khám:', `${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`],
                         ].map(([label, value], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>

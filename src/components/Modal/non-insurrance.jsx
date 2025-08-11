@@ -80,8 +80,8 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            // const response = await fetch("http://localhost:8000/patient/non-insurrance", {
-            const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
+            const response = await fetch("http://196.168.110.40:8000/patient/non-insurrance", {
+            // const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -94,7 +94,7 @@ function NonInsurrance({ onClose }) {
             } else {
                 const errorData = await response.json() // Lấy thông tin lỗi chi tiết
                 console.error("Error response:", errorData)
-                alert(`Lưu thông tin thất bại! ${response.status}`)
+                alert(`Lưu thông tin thất bại: ${errorData.reason}`)
             }
         } catch (error) {
             console.error("Lỗi gửi API:", error)

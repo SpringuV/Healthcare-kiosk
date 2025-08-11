@@ -23,8 +23,8 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
-                // const response = await fetch(`http://localhost:8000/api/services`)
+                // const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
+                const response = await fetch(`http://196.168.110.40:8000/api/services`)
                 const data = await response.json()
                 const services = data.services || []
                 // format for react-select
@@ -52,8 +52,8 @@ function ServiceItem() {
             return
         }
         try {
-            const response = await fetch(`https://healthcare-kiosk.onrender.com/orders/create/${citizen_id}`, {
-            // const response = await fetch(`http://localhost:8000/orders/create/${citizen_id}`, {
+            // const response = await fetch(`https://healthcare-kiosk.onrender.com/orders/create/${citizen_id}`, {
+            const response = await fetch(`http://196.168.110.40:8000/orders/create/${citizen_id}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',

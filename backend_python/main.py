@@ -8,7 +8,7 @@ from pdfMaker import makePDF
 
 app = FastAPI()
 
-IP = "localhost"
+IP = "196.168.110.40"
 PORT = "8000"
 
 app.add_middleware(
@@ -72,10 +72,11 @@ def checkInsurrance(citizen_id:str):
 # Tạo bảng ghi thông tin bệnh nhân
 @app.post("/patient/non-insurrance")
 def makePatientInfo(patient:PatientInfo):
-    if not savePatientInfo(patient.patient_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False):
+    result, reason = savePatientInfo(patient.patient_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False)
+    if not result:
         return JSONResponse(
             status_code=400,
-            content={}
+            content={"reason": reason}
         )
     else:
         return JSONResponse(
@@ -129,40 +130,13 @@ def getServicesList():
     for service in listService:
         services.append({
             "service_name": service[0],
-            "service_description": service[1]
+            "service_description": service[1],
+            "price": service[2],
         })
     return JSONResponse(
         status_code=200,
         content={"services": services}
     )
-# {
-#     "services": [
-#         {
-#             "service_name": "Đo huyết áp",
-#             "service_description": "Kiểm tra huyết áp"
-#         },
-#         {
-#             "service_name": "Khám cảm cúm nhi",
-#             "service_description": "Kiểm tra cảm cúm cho trẻ dưới 4 tuổi"
-#         },
-#         {
-#             "service_name": "Khám da mẩn đỏ",
-#             "service_description": "Kiểm tra, cung cấp phương thức trị da mẩn đỏ"
-#         },
-#         {
-#             "service_name": "Khám mắt",
-#             "service_description": "Kiểm tra, đo độ mắt"
-#         },
-#         {
-#             "service_name": "Khám mắt, mũi, miệng nhi",
-#             "service_description": "Kiểm tra mắt, mũi, miệng cho trẻ dưới 4 tuổi"
-#         },
-#         {
-#             "service_name": "Khám trị mụn",
-#             "service_description": "Kiểm tra, cung cấp phương thức trị mụn"
-#         }
-#     ]
-# }
 
 # Tạo phiếu khám
 @app.post("/orders/create/{citizen_id}", status_code=200)
@@ -175,24 +149,25 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
         )
     else:
         # Thông tin order
-        # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname]
+        # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
         order = getOrder(order_id)
         return {
             "citizen_id": order[0],
             "fullname": order[1],
             "gender": "Nam" if order[2] == 1 else "Nữ",
             "dob": order[3],
-            "service_name": order[9],
-            "clinic_name": order[10],
-            "address_room": order[11],
-            "doctor_name": order[12],
             "queue_number": order[4],
-            "is_insurrance": "Có" if order[7] == 1 else "Không",
             "time_order": order[5],
-            "price": order[6],
+            "is_insurrance": "Có" if order[6] == 1 else "Không",
+            "service_name": order[8],
+            "clinic_name": order[9],
+            "address_room": order[10],
+            "doctor_name": order[11],
+            "price": order[12],
+            "price_insur": order[13],
             "order_id": order_id,
-            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 # {
 #     "citizen_id": "000000000001",

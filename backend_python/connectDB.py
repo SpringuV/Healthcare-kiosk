@@ -15,9 +15,9 @@ def main():
 def connect():
     config = {
         "host" : "localhost",
-        "user" : "root",
-        "password" : "hocmysql1234",
-        "database" : "kiosk_health"
+        "user" : "machine",
+        "password" : "P@$$vv0rd",
+        "database" : "kiosk"
     }
 
     try:
