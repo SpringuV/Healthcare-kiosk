@@ -19,7 +19,7 @@ function HomePage() {
     return (
         <>
             <StateStep step={1} />
-            <div className='text-center px-7 py-8 bg-white rounded-lg'>
+            <div className='text-center px-7 py-8  rounded-lg'>
                 <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                     <h1>CHỌN HÌNH THỨC KHÁM</h1>
                 </div>

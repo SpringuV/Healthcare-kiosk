@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useService } from "../../context/service_context";
 import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
@@ -42,7 +42,7 @@ function ServiceItem() {
         fetchApiService()
     }, [])
 
-    const handleRegister = async (e) => {
+    const handleRegister = async () => {
         const payload = {
             service_name: selectedOption.value,
         }
