@@ -7,7 +7,7 @@ function StateStep({step}) {
     ]
     return (
         <>
-            <div className="grid grid-cols-3 gap-1 md:flex md:justify-evenly items-center md:mt-2 lg:gap-3 w-screen text-colorOneDark px-1 mb-3">
+            <div className="grid grid-cols-3 gap-1 md:flex md:justify-evenly items-center md:mt-2 lg:gap-3 w-full text-colorOneDark px-1 mb-3">
                 {steps.map((item) => (
                     <React.Fragment key={item.id}>
                         <div className="flex md:min-w-[15vw] justify-center items-center flex-col text-center text-[12px] font-semibold md:text-[16px] lg:text-[18px] xl:text-[20px] 2xl:text-[22px]">

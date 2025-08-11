@@ -23,8 +23,8 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                // const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
-                const response = await fetch(`http://196.168.110.40:8000/api/services`)
+                const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
+                // const response = await fetch(`http://196.168.110.40:8000/api/services`)
                 const data = await response.json()
                 const services = data.services || []
                 // format for react-select
@@ -75,9 +75,9 @@ function ServiceItem() {
     }
     return (
         <>
-            <div className="flex flex-col">
-                <div className="text-[14px] md:text-[16px] lg:text-[18px] flex w-[90vw] lg:w-[40vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center bg-white p-6 rounded-xl">
-                    <label className="w-[40%]" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
+            <div className="flex flex-col bg-white p-2 md:p-6 rounded-xl">
+                <div className="text-[14px] md:text-[16px] lg:text-[18px] flex w-[90vw] lg:w-[40vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
+                    <label className="w-[40%] font-semibold text-center" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
                     <Select
                         options={options}
                         value={selectedOption}
