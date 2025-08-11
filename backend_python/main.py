@@ -131,7 +131,7 @@ def getServicesList():
         services.append({
             "service_name": service[0],
             "service_description": service[1],
-            "price": service[2],
+            "price": float(service[2]),
         })
     return JSONResponse(
         status_code=200,
