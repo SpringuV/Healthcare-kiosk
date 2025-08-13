@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import Service from './components/service'
 import Header from './components/Header'
 import InputCCCD from './components/Modal/inputCCCD'
@@ -19,7 +19,7 @@ function HomePage() {
     return (
         <>
             <StateStep step={1} />
-            <div className='text-center px-7 py-8 bg-white rounded-lg'>
+            <div className='text-center px-7 py-8  rounded-lg'>
                 <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                     <h1>CHỌN HÌNH THỨC KHÁM</h1>
                 </div>
@@ -134,20 +134,18 @@ function App() {
     return (
         <InsurranceProvider>
             <ServiceProvider>
-                <Router>
-                    <Header />
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/bhyt" element={<BhytPage />} />
-                        <Route path="/bhyt/info" element={<BhytInfoPage />} />
-                        <Route path="/service" element={<ServicePage />} />
-                        <Route path='/non-bhyt/check' element={<SelectKhamDichVu />}></Route>
-                        <Route path='/non-bhyt' element={<NonBhytRegisterPage />}></Route>
-                        <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
-                        <Route path='/confirm-registration' element={<PrintPDF_ConfirmOrder></PrintPDF_ConfirmOrder>}></Route>
-                        <Route path='/bhyt/update-info' element={<CallUpdateInfoPatientInsurrance></CallUpdateInfoPatientInsurrance>}></Route>
-                    </Routes>
-                </Router>
+                <Header />
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/bhyt" element={<BhytPage />} />
+                    <Route path="/bhyt/info" element={<BhytInfoPage />} />
+                    <Route path="/service" element={<ServicePage />} />
+                    <Route path='/non-bhyt/check' element={<SelectKhamDichVu />}></Route>
+                    <Route path='/non-bhyt' element={<NonBhytRegisterPage />}></Route>
+                    <Route path='/non-bhyt/info' element={<NonBhytInfoPage></NonBhytInfoPage>} />
+                    <Route path='/confirm-registration' element={<PrintPDF_ConfirmOrder></PrintPDF_ConfirmOrder>}></Route>
+                    <Route path='/bhyt/update-info' element={<CallUpdateInfoPatientInsurrance></CallUpdateInfoPatientInsurrance>}></Route>
+                </Routes>
             </ServiceProvider>
         </InsurranceProvider>
     )
