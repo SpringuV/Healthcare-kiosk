@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useService } from "../../context/service_context";
 import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
+import { DOMAIN } from "../../../data/port";
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -23,8 +24,7 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await fetch(`https://healthcare-kiosk.onrender.com/api/services`)
-                // const response = await fetch(`http://196.168.110.40:8000/api/services`)
+                const response = await fetch(`${DOMAIN}/api/services`)
                 const data = await response.json()
                 const services = data.services || []
                 // format for react-select
@@ -53,8 +53,7 @@ function ServiceItem() {
             return
         }
         try {
-            const response = await fetch(`https://healthcare-kiosk.onrender.com/orders/create/${citizen_id}`, {
-            // const response = await fetch(`http://196.168.110.40:8000/orders/create/${citizen_id}`, {
+            const response = await fetch(`${DOMAIN}/orders/create/${citizen_id}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +76,7 @@ function ServiceItem() {
     return (
         <>
             <div className="flex flex-col bg-white p-2 md:p-6 rounded-xl">
-                <div className="text-[14px] md:text-[16px] lg:text-[18px] flex w-[90vw] lg:w-[40vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
+                <div className="text-[14px] md:text-[16px] lg:text-[18px] flex flex-col lg:flex-row w-[90vw] lg:w-[60vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
                     <label className="w-[40%] font-semibold text-center" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
                     <Select
                         options={options}
@@ -86,7 +85,28 @@ function ServiceItem() {
                         placeholder="Chọn dịch vụ khám"
                         isSearchable={false}
                         className="text-left text-white flex-1"
-
+                        formatOptionLabel={(option, { isFocused, isSelected }) => (
+                            <div
+                                title={option.description}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    width: '100%',
+                                    padding: '4px 8px',
+                                    gap: '20px',
+                                    color: isFocused || isSelected ? "white" : "black",
+                                }}
+                            >
+                                <span>{option.label}</span>
+                                <span style={{
+                                    color: isFocused || isSelected ? "white" : "black",
+                                    fontWeight: 'bold'
+                                }}>
+                                    {(option.price * 26181).toLocaleString('vi-VN')} VNĐ
+                                </span>
+                            </div>
+                        )}
                         styles={{
                             placeholder: (base) => ({
                                 ...base,
@@ -101,15 +121,26 @@ function ServiceItem() {
                                 borderColor: "transparent",
                                 padding: "4px",
                             }),
+                            menu: (base) => ({
+                                ...base,
+                                width: 'auto',
+                                minWidth: '300px',
+                            }),
                             singleValue: (base) => ({
                                 ...base,
-                                color: "white",
+                                color: "white", // chữ dịch vụ đã chọn màu trắng
                                 fontWeight: "bold",
                             }),
-                            option: (base, { isFocused }) => ({
+                            option: (base, { isFocused, isSelected }) => ({
                                 ...base,
-                                backgroundColor: isFocused ? "#10b981" : "white",
-                                color: isFocused ? "white" : "black",
+                                backgroundColor: isSelected
+                                    ? "#10b981" // màu nền khi được chọn
+                                    : isFocused
+                                        ? "#10b981" // màu nền khi hover
+                                        : "white",
+                                color: isSelected || isFocused ? "white" : "black", // chữ trắng khi hover hoặc chọn
+                                fontWeight: isSelected ? "bold" : "normal",
+                                cursor: "pointer",
                             }),
                         }}
                     />

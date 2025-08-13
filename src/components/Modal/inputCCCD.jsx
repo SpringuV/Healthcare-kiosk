@@ -5,6 +5,7 @@ import Alert from '../alert/Alert'
 import NonInsurranceInfo from './non-insurrance-info'
 import { useForm } from '../context/form_context'
 import { useNavigate } from 'react-router-dom'
+import { DOMAIN } from '../../data/port'
 
 function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo, isInsurance }) {
     const [showNumpad, setShowNumberPad] = useState(false)
@@ -57,7 +58,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
         try {
             // khám có bảo hiểm
             if (isInsurance) {
-                const response = await fetch(`https://healthcare-kiosk.onrender.com/health-insurrances/${inputValue}`)
+                const response = await fetch(`${DOMAIN}/health-insurrances/${inputValue}`)
                 // const response = await fetch(`http://196.168.110.40:8000/health-insurrances/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
@@ -76,8 +77,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                 setErrorMessage("")
                 onShowInputCheckInfo()
             } else { // khám không có bảo hiểm
-                // const response = await fetch(`http://196.168.110.40:8000/patient/check/${inputValue}`)
-                const response = await fetch(`https://healthcare-kiosk.onrender.com/patient/check/${inputValue}`)
+                const response = await fetch(`${DOMAIN}/patient/check/${inputValue}`)
                 if(response.ok){
                     const data = await response.json()
                     setFormData(data)

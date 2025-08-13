@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react'
 import { useForm } from "../context/form_context"
 import Provinces from "./provinces"
+import { DOMAIN } from "../../data/port"
 function NonInsurrance({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
@@ -80,8 +81,7 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            // const response = await fetch("http://196.168.110.40:8000/patient/non-insurrance", {
-            const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
+            const response = await fetch(`${DOMAIN}/patient/non-insurrance`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
