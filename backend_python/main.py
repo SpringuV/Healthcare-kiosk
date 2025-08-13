@@ -154,6 +154,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
         order = getOrder(order_id)
+        print(order)
         return {
             "citizen_id": order[0],
             "fullname": order[1],
@@ -236,6 +237,7 @@ async def payOrder(request:Request, authorization: str = Header(None)):
     
     if int(round(order[8] * 26181)) == int(money):
         updateTransferState(order_id)
+        raise HTTPException(status_code=200, detail="Success")
     else:
         raise HTTPException(status_code=400, detail="Incorrect money transfer")
 

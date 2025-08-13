@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 # Load biến môi trường từ file .env (nếu bạn chạy local)
 load_dotenv()
 
-def main():
-    conn, cursor = connect()
-    print(conn)
-    print(cursor)
-    disconnect(conn, cursor)
+# def main():
+#     conn, cursor = connect()
+#     print(conn)
+#     print(cursor)
+#     disconnect(conn, cursor)
 
 # def connect():
 #     config = {

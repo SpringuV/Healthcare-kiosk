@@ -186,7 +186,7 @@ def getClinicServiceID(service_name:str):
 def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
     conn, cursor = connect()
     try:
-        query = '''SELECT s.price, s.price_insurrance 
+        query = '''SELECT s.price, s.price_isnsurrance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
@@ -249,26 +249,30 @@ def createOrder(citizen_id:str, service_name:str):
 def getOrder(order_id:str):
     conn, cursor = connect()
     try:
-        query = '''SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
+        query1 = '''SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
-        WHERE o.order_id = %s
+        WHERE o.order_id = %s LIMIT 1
         '''
-        cursor.execute(query, (order_id,))
+        cursor.execute(query1, (order_id,))
         info1 = cursor.fetchone()
-        if not info1:
+        if info1 is None:
+            print(f"Error info1")
             return None
         clinic_service_id = info1[-1]
-        query = '''SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
+        print(clinic_service_id)
+        query2 = '''SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
         JOIN clinic c ON cs.clinic_id = c.clinic_id
         JOIN staff st ON cs.clinic_id = st.clinic_id
-        WHERE st.staff_position = "DOCTOR" AND cs.clinic_service_id = %s
+        WHERE st.staff_position = "DOCTOR" AND cs.clinic_service_id = %s LIMIT 1
         '''
-        cursor.execute(query, (clinic_service_id,))
+        cursor.execute(query2, (clinic_service_id,))
         info2 = cursor.fetchone()
-        if not info2:
+        
+        if info2 is None:
+            print(f"Error info2")
             return None
         info3 = getPrices(info1[-1], info2[0])
         # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur
