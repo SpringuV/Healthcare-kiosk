@@ -278,3 +278,48 @@ def getOrder(order_id:str):
         return None
     finally:
         disconnect(conn, cursor)
+
+def getOrderInfo(order_id:str):
+    conn, cursor = connect()
+    try:
+        query = '''SELECT * FROM orders WHERE order_id = %s LIMIT 1'''
+        cursor.execute(query, (order_id,))
+        order = cursor.fetchone()
+        if not order:
+            return None
+        return order
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        disconnect(conn, cursor)
+
+def getTransferState(order_id:str):
+    conn, cursor = connect()
+    try:
+        query = '''SELECT payment_status FROM orders WHERE order_id = %s LIMIT 1'''
+        cursor.execute(query, (order_id,))
+        state = cursor.fetchone()
+        if not state:
+            return None
+        if state[0] == "UNPAID":
+            return False
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        disconnect(conn, cursor)
+
+def updateTransferState(order_id:str):
+    conn, cursor = connect()
+    try:
+        query = '''UPDATE orders SET payment_method = %s, payment_status = %s WHERE order_id = %s'''
+        cursor.execute(query, ("BANKING", "PAID", order_id))
+        conn.commit()
+        return cursor.rowcount != 0
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
