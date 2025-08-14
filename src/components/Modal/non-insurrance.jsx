@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from "../context/form_context"
 import Provinces from "./provinces"
 import { DOMAIN } from "../../data/port"
@@ -90,7 +90,7 @@ function NonInsurrance({ onClose }) {
             })
 
             if (response.ok) {
-                navigate('/non-bhyt/info')
+                navigate('/non-insur/info')
             } else {
                 const errorData = await response.json() // Lấy thông tin lỗi chi tiết
                 console.error("Error response:", errorData)

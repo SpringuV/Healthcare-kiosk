@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { DOMAIN } from '../../data/port'
 
 function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo, isInsurance }) {
-    const [showNumpad, setShowNumberPad] = useState(false)
+    // const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
     const {setFormData} = useForm()
     const [showAlert, setShowAlert] = useState(false)
@@ -24,17 +24,17 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
 
     const { setInsurranceInfo } = useInsurrance()
     
-    const handleInput = (value) => {
-        if (inputRef.current) {
-            if (value === "delete") {
-                inputRef.current.value = inputRef.current.value.slice(0, -1)
-            } else {
-                if (inputRef.current.value.length < 12) {
-                    inputRef.current.value += value
-                }
-            }
-        }
-    }
+    // const handleInput = (value) => {
+    //     if (inputRef.current) {
+    //         if (value === "delete") {
+    //             inputRef.current.value = inputRef.current.value.slice(0, -1)
+    //         } else {
+    //             if (inputRef.current.value.length < 12) {
+    //                 inputRef.current.value += value
+    //             }
+    //         }
+    //     }
+    // }
 
     const showAlertWithConfig = (config) => {
         setAlertConfig({
@@ -89,7 +89,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                         cancelText: "Nhập lại CCCD",
                         onConfirm: () => {
                             setShowAlert(false)
-                            navigate('/non-bhyt')
+                            navigate('/non-insur')
                         }
                     })
                 } else {
@@ -146,7 +146,8 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                     </div>
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
                         <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
-                            <input maxLength={12}  onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} onClick={() => setShowNumberPad(true)} type="text" 
+                            <input maxLength={12}  onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef}  type="text" 
+                            // onClick={() => setShowNumberPad(true)}
                                 className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" 
                                 placeholder="Nhập thẻ căn cước công dân"
                             />

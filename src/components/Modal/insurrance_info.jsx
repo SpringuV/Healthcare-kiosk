@@ -1,6 +1,6 @@
 import { useInsurrance } from "../context/insurrance_context"
 import { useNavigate } from "react-router-dom"
-function InfoInsurrance({ onClose }) {
+function InfoInsurrance() {
     const { insurranceInfo } = useInsurrance()
     const navigate = useNavigate()
 
@@ -8,7 +8,7 @@ function InfoInsurrance({ onClose }) {
         if (insurranceInfo.is_saved) {
             navigate('/service')
         } else {
-            navigate('/bhyt/update-info')
+            navigate('/insur/update-info')
         }
     }
     return (
