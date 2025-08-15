@@ -1,9 +1,16 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useForm } from '../context/form_context'
+import { useEffect } from 'react'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
     const { formData } = useForm()
-    console.log(formData)
+
+    const context = useOutletContext()
+    const { stateStep, setStateStep } = context
+    useEffect(() => {
+        console.log('Current step:', stateStep) // Debug
+        setStateStep(1) 
+    }, [setStateStep])
     return (
         <>
             <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>

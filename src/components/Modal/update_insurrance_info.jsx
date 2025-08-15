@@ -1,8 +1,9 @@
-import { useState} from "react"
-import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { useNavigate, useOutletContext } from "react-router-dom"
 import { useInsurrance } from "../context/insurrance_context"
 import Provinces from "./provinces"
 import { DOMAIN } from "../../data/port"
+import { useEffect } from 'react'
 function UpdateInfoPatientInsurrance() {
     const { insurranceInfo } = useInsurrance()
     const navigate = useNavigate()
@@ -65,6 +66,10 @@ function UpdateInfoPatientInsurrance() {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"]
 
+    const { setStateStep } = useOutletContext()
+    useEffect(() => {
+        setStateStep(1)
+    }, [])
     return (
         <>
             <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>

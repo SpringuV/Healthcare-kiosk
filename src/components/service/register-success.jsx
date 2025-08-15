@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
-import { replace, useLocation, useNavigate } from 'react-router-dom'
-import { useService } from '../context/service_context'
 import { useInsurrance } from '../context/insurrance_context'
 import { useForm } from '../context/form_context'
+import { useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 function RegisterSuccess() {
     const navigate = useNavigate()
     const location = useLocation()
@@ -25,6 +25,14 @@ function RegisterSuccess() {
             // Hoàn tất thanh toán, v.v
         }
     }
+
+    const context = useOutletContext()
+    const { stateStep, setStateStep } = context || {}
+    
+    useEffect(() => {
+        console.log('Service - Current step:', stateStep)
+        setStateStep?.(3) // Step cho chọn dịch vụ
+    }, [setStateStep])
     return (
         <>
             {/* lớp phủ ngoài */}

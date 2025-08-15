@@ -1,16 +1,16 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import NumberPad from './number_pad'
 import { useInsurrance } from "../context/insurrance_context"
 import Alert from '../alert/Alert'
-import NonInsurranceInfo from './non-insurrance-info'
 import { useForm } from '../context/form_context'
-import { useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
 import { DOMAIN } from '../../data/port'
 
-function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo, isInsurance }) {
+function InputCCCD(props) {
+    const { isInsurance, onShowInputCheckInfo, onShowInputNonInsuranceInfo, onClose } = props
     // const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
-    const {setFormData} = useForm()
+    const { setFormData } = useForm()
     const [showAlert, setShowAlert] = useState(false)
     const [alertConfig, setAlertConfig] = useState({
         text: "",
@@ -23,7 +23,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
     const inputRef = useRef(null)
 
     const { setInsurranceInfo } = useInsurrance()
-    
+
     // const handleInput = (value) => {
     //     if (inputRef.current) {
     //         if (value === "delete") {
@@ -78,7 +78,7 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                 onShowInputCheckInfo()
             } else { // khám không có bảo hiểm
                 const response = await fetch(`${DOMAIN}/patient/check/${inputValue}`)
-                if(response.ok){
+                if (response.ok) {
                     const data = await response.json()
                     setFormData(data)
                     onShowInputNonInsuranceInfo()
@@ -131,6 +131,12 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
         setErrorMessage("")
     }
 
+    const outletContext = useOutletContext()
+    useEffect(() => {
+        if (outletContext?.setStateStep) {
+            outletContext.setStateStep(1)
+        }
+    }, [outletContext?.setStateStep])
     return (
         <>
             {/* lớp phủ */}
@@ -146,24 +152,24 @@ function InputCCCD({ onClose, onShowInputCheckInfo, onShowInputNonInsuranceInfo,
                     </div>
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
                         <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
-                            <input maxLength={12}  onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef}  type="text" 
-                            // onClick={() => setShowNumberPad(true)}
-                                className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive" 
+                            <input maxLength={12} onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} type="text"
+                                // onClick={() => setShowNumberPad(true)}
+                                className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive"
                                 placeholder="Nhập thẻ căn cước công dân"
                             />
                             {errorMessage && (
                                 <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
                             )}
                             {/* {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />} */}
-                            <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600" 
+                            <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600"
                                 onClick={handleCheckInfo}>Kiểm tra thông tin</button>
                         </form>
                     </div>
                 </div>
             </div>
-
+            <Outlet context={outletContext} />
             {showAlert && (
-                <Alert 
+                <Alert
                     textInput={alertConfig.text}
                     onClose={() => setShowAlert(false)}
                     onConfirm={alertConfig.onConfirm}

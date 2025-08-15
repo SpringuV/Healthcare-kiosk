@@ -1,2 +1,1 @@
-export const DOMAIN = "https://healthcare-kiosk.onrender.com"
-// export const DOMAIN = "http://localhost:8000"
+export const DOMAIN = import.meta.env.VITE_DOMAIN;

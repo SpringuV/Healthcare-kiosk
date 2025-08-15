@@ -20,21 +20,21 @@ function App() {
             <ServiceProvider>
                 <Routes>
                     <Route path='/' element={<LayoutDefault></LayoutDefault>}>
-                        <Route path='/' element={<HomePage></HomePage>} context={{ stateStep: 1 }}></Route>
+                        <Route index element={<HomePage></HomePage>}></Route>
                         <Route path='insur' element={<InputCCCD onClose={() => navigate('/')}
                             onShowInputCheckInfo={() => navigate('/insur/info')}
-                            isInsurance={true}></InputCCCD>} context={{ stateStep: 1 }}>
-                            <Route path='info' element={<InfoInsurrance onClose={() => navigate('/service')}></InfoInsurrance>} context={{ stateStep: 1 }}></Route>
-                            <Route path='update-info' element={<UpdateInfoPatientInsurrance></UpdateInfoPatientInsurrance>} context={{stateStep: 1}}></Route>
+                            isInsurance={true}></InputCCCD>}>
+                            <Route path='info' element={<InfoInsurrance onClose={() => navigate('/service')}></InfoInsurrance>}></Route>
+                            <Route path='update-info' element={<UpdateInfoPatientInsurrance></UpdateInfoPatientInsurrance>}></Route>
                         </Route>
-                        <Route path='service' element={<Service></Service>} context={{ stateStep: 2 }}></Route>
+                        <Route path='service' element={<Service></Service>}></Route>
                         <Route path='non-insur' element={<InputCCCD onClose={() => navigate('/')}
                             onShowInputNonInsuranceInfo={() =>navigate('/non-insur/info')}
-                            isInsurance={false}></InputCCCD>} context={{ stateStep: 1 }}>
-                            <Route path='register' element={<NonInsurrance onClose={() => navigate('/')}></NonInsurrance>} context={{ stateStep: 1 }}></Route>
-                            <Route path='info' element={<NonInsurranceInfo></NonInsurranceInfo>} context={{stateStep: 1}}></Route>
+                            isInsurance={false}></InputCCCD>}>
+                            <Route path='register' element={<NonInsurrance onClose={() => navigate('/')}></NonInsurrance>}></Route>
+                            <Route path='info' element={<NonInsurranceInfo></NonInsurranceInfo>}></Route>
                         </Route>
-                        <Route path='confirm-registration' element={<RegisterSuccess></RegisterSuccess>} context={{stateStep: 3}}></Route>
+                        <Route path='confirm-registration' element={<RegisterSuccess></RegisterSuccess>}></Route>
 
                     </Route>
                 </Routes>
