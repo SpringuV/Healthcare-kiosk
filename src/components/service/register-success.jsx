@@ -55,7 +55,7 @@ function RegisterSuccess() {
                             ['Phòng khám:', state.address_room],
                             ['Bác sĩ:', state.doctor_name],
                             ['Số phiếu đợi:', state.queue_number],
-                            ['Bảo hiểm y tế:', state.is_insurrance ? 'Có' : 'Không'],
+                            ['Bảo hiểm y tế:', state.is_insurrance],
                             ['Ngày đăng kí:', new Date(state.time_order).toLocaleString()],
                             ['Giá khám dịch vụ:', `${Math.round(state.price * 26181).toLocaleString('vi-VN')} VNĐ`, state.is_insurrance === "Không" ? true : false ],
                             ['Giá khám bảo hiểm:', `${Math.round(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, state.is_insurrance === "Có" ? true : false],
