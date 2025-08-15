@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import NumberPad from './number_pad'
 import { useInsurrance } from "../context/insurrance_context"
 import Alert from '../alert/Alert'
@@ -132,11 +132,6 @@ function InputCCCD(props) {
     }
 
     const outletContext = useOutletContext()
-    useEffect(() => {
-        if (outletContext?.setStateStep) {
-            outletContext.setStateStep(1)
-        }
-    }, [outletContext?.setStateStep])
     return (
         <>
             {/* lớp phủ */}
