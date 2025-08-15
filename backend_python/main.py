@@ -9,7 +9,7 @@ from pdfMaker import makePDF
 
 app = FastAPI()
 
-IP = "196.168.110.40"
+IP = "127.0.0.1"
 PORT = "8000"
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
@@ -57,9 +57,7 @@ def checkInsurrance(citizen_id:str):
             content={}
         )
     else:
-        print("[DEBUG] isHad:", isHad)
         if isHad:
-            print("[DEBUG] Patient đã tồn tại → cập nhật is_insurrance")
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
             savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
@@ -159,7 +157,6 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
         order = getOrder(order_id)
-        print(order)
         return {
             "citizen_id": order[0],
             "fullname": order[1],
@@ -175,8 +172,8 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "price": order[12],
             "price_insur": order[13],
             "order_id": order_id,
-            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
