@@ -5,12 +5,13 @@ import NonInsurrance from './components/Modal/non-insurrance'
 import InfoInsurrance from './components/Modal/insurrance_info'
 import NonInsurranceInfo from './components/Modal/non-insurrance-info'
 import { InsurranceProvider } from './components/context/insurrance_context'
-import RegisterSuccess from './components/service/register-success'
+import RegisterSuccess from './components/Modal/register-success'
 import { ServiceProvider } from './components/context/service_context'
 import UpdateInfoPatientInsurrance from './components/Modal/update_insurrance_info'
 import LayoutDefault from './components/Layout/LayoutDefault'
 import HomePage from './components/Modal/homepage'
 import { useNavigate } from 'react-router-dom'
+import PaymentWithQR from './components/Modal/payment'
 
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
                         </Route>
                         <Route path='service' element={<Service></Service>}></Route>
                         <Route path='non-insur' element={<InputCCCD onClose={() => navigate('/')}
-                            onShowInputNonInsuranceInfo={() =>navigate('/non-insur/info')}
+                            onShowInputNonInsuranceInfo={() => navigate('/non-insur/info')}
                             isInsurance={false}></InputCCCD>}>
                             <Route path='register' element={<NonInsurrance onClose={() => navigate('/')}></NonInsurrance>}></Route>
                             <Route path='info' element={<NonInsurranceInfo></NonInsurranceInfo>}></Route>
@@ -37,6 +38,7 @@ function App() {
                         <Route path='confirm-registration' element={<RegisterSuccess></RegisterSuccess>}></Route>
 
                     </Route>
+                    <Route path='payment' element={<PaymentWithQR></PaymentWithQR>}></Route>
                 </Routes>
             </ServiceProvider>
         </InsurranceProvider>
