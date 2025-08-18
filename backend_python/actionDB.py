@@ -304,13 +304,13 @@ def getTransferState(order_id:str):
         cursor.execute(query, (order_id,))
         state = cursor.fetchone()
         if not state:
-            return None
+            return False, "Không tìm thấy order"
         if state[0] == "UNPAID":
-            return False
-        return True
+            return False, "Chưa thanh toán"
+        return True, ""
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        return False, "Lỗi backend"
     finally:
         disconnect(conn, cursor)
 

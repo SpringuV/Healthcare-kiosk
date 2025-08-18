@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Request, Header, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +6,8 @@ from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceStat
 
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
+
+import asyncio
 
 app = FastAPI()
 
@@ -200,21 +202,22 @@ def downloadPDF(order_id:str):
             headers={"Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"}
         )
 
-# Kiểm tra tình trạng thanh toán
-@app.get("/api/checkTransferState/{order_id}")
-def getStateTransfer(order_id:str):
-    state = getTransferState(order_id)
-    if state is None:
-        return JSONResponse(
-            status_code=400,
-            content={"detail": "Lỗi backend"}
-        )
-    else:
-        # state = True|False
-        return JSONResponse(
-            status_code=200,
-            content={"state": state}
-        )
+# websocket kiểm tra 
+@app.websocket("/ws/checkTransfer")
+async def checkBankTransfer(websocket:WebSocket):
+    await websocket.accept()
+    data = await websocket.receive_json()
+    order_id = data["order_id"]
+    while True:
+        try:
+            state, detail = getTransferState(order_id)
+            await websocket.send_json({"result": state, "detail": detail})
+            if state and detail == "":
+                break
+            await asyncio.sleep(3)
+        except WebSocketDisconnect:
+            break
+
 
 # Xử lý webhook thông báo chuyển tiền từ SePay
 # https://healthcare-kiosk.onrender.com/api/payOrder
@@ -242,7 +245,5 @@ async def payOrder(request:Request, authorization: str = Header(None)):
         raise HTTPException(status_code=200, detail="Success")
     else:
         raise HTTPException(status_code=400, detail="Incorrect money transfer")
-
-
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
