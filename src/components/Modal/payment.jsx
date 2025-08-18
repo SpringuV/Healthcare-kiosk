@@ -118,10 +118,11 @@ function PaymentWithQR() {
                     {/* time countdown */}
                     {showTimeDown && (
                         <CountdownTimer minutes={5} onTimeout={() => {
-                            alert("Hết thời gian thanh toán!");
-                            handleShowButtonReturn();
-                            setTextSuccess("Thanh toán thất bại !, Hết thời gian thanh toán !");
+                            alert("Hết thời gian thanh toán!")
+                            handleShowButtonReturn()
+                            setTextSuccess("Thanh toán thất bại !, Hết thời gian thanh toán !")
                             setIsFailPayment(true)
+                            setShowTimeDown(false)
                         }} onSuccess={handleShowButtonReturn} success={showButtonReturn} />
                     )}
 
