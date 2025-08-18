@@ -7,9 +7,12 @@ import CountdownTimer from "./countdown_timer"
 function PaymentWithQR() {
     const [showButtonReturn, setShowButtonReturn] = useState(false)
     const [showTimeDown, setShowTimeDown] = useState(true)
+    const [textSuccess, setTextSuccess] = useState("")
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
+
+    const [isFailPayment, setIsFailPayment] = useState(false)
 
     const location = useLocation()
     const state = location.state
@@ -57,6 +60,7 @@ function PaymentWithQR() {
             //hiện trạng thái thanh toán
             if (data.result) {
                 alert("Thanh toán thành công!");
+                setTextSuccess("Bạn đã thanh toán thành công, vui lòng trở lại trang chủ !")
                 setShowTimeDown(false)
                 setShowButtonReturn(true)
                 ws.close(); // Đóng socket khi đã có kết quả
@@ -97,7 +101,7 @@ function PaymentWithQR() {
                         </div>
                         <div className="text-left ml-2">
                             <div>NGUYEN NGO AN</div>
-                            <div>12345556666</div>
+                            <div>VQRQADTJG7282</div>
                             <div>MB Bank</div>
                             <div>{state.is_insurrance ? (`${(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`) : (`${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`)}</div>
                         </div>
@@ -115,13 +119,15 @@ function PaymentWithQR() {
                     {showTimeDown && (
                         <CountdownTimer minutes={5} onTimeout={() => {
                             alert("Hết thời gian thanh toán!");
-                            handleShowButtonReturn()
+                            handleShowButtonReturn();
+                            setTextSuccess("Thanh toán thất bại !, Hết thời gian thanh toán !");
+                            setIsFailPayment(true)
                         }} onSuccess={handleShowButtonReturn} success={showButtonReturn} />
                     )}
 
                     {showButtonReturn && (
                         <>
-                            <h1 className="italic text-green-700 text-center">Bạn đã thanh toán thành công, vui lòng trở lại trang chủ !</h1>
+                            <h1 className={`italic ${isFailPayment ? " text-red-700 ": " text-green-700 "} text-center`}>{textSuccess}</h1>
                             <div className="flex justify-center items-center mt-2">
                                 <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700' onClick={handleConfirmAndReturnHome} type='button' >Xác nhận và về trang chủ</button>
                             </div>
