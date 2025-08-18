@@ -15,6 +15,7 @@ IP = "127.0.0.1"
 PORT = "8000"
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
+SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
 
 origins = [
     "https://healthcare-kiosk.vercel.app",
@@ -223,7 +224,7 @@ async def checkBankTransfer(websocket:WebSocket):
 # https://healthcare-kiosk.onrender.com/api/payOrder
 @app.post("/api/payOrder")
 async def payOrder(request:Request, authorization: str = Header(None)):
-    auth = f"Apikey {SEPAY_API_KEY}"
+    auth = f"Apikey {SEPAY_API_KEY_2}"
     if authorization != auth:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
