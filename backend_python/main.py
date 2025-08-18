@@ -224,7 +224,7 @@ async def checkBankTransfer(websocket:WebSocket):
 # https://healthcare-kiosk.onrender.com/api/payOrder
 @app.post("/api/payOrder")
 async def payOrder(request:Request, authorization: str = Header(None)):
-    auth = f"Apikey {SEPAY_API_KEY_2}"
+    auth = f"Apikey {SEPAY_API_KEY}"
     if authorization != auth:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
