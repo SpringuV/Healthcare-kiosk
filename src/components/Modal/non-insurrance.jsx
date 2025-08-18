@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from 'react'
+import { useNavigate, useOutletContext } from "react-router-dom"
+import { useState } from 'react'
 import { useForm } from "../context/form_context"
 import Provinces from "./provinces"
+import { DOMAIN } from "../../data/port"
+import { useEffect } from 'react'
 function NonInsurrance({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
@@ -80,8 +82,7 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            // const response = await fetch("http://196.168.110.40:8000/patient/non-insurrance", {
-            const response = await fetch("https://healthcare-kiosk.onrender.com/patient/non-insurrance", {
+            const response = await fetch(`${DOMAIN}/patient/non-insurrance`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -90,7 +91,7 @@ function NonInsurrance({ onClose }) {
             })
 
             if (response.ok) {
-                navigate('/non-bhyt/info')
+                navigate('/non-insur/info')
             } else {
                 const errorData = await response.json() // Lấy thông tin lỗi chi tiết
                 console.error("Error response:", errorData)
@@ -109,6 +110,12 @@ function NonInsurrance({ onClose }) {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"]
 
+    const context = useOutletContext()
+    const { stateStep, setStateStep } = context
+    useEffect(() => {
+        console.log('Current step:', stateStep) // Debug
+        setStateStep(1) 
+    }, [setStateStep])
     return (
         <>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">

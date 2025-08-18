@@ -1,9 +1,17 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ServiceItem from "./service_selection"
+import { useOutletContext } from "react-router-dom"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
     const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
 
+    const context = useOutletContext()
+    const { stateStep, setStateStep } = context || {}
+    
+    useEffect(() => {
+        console.log('Service - Current step:', stateStep)
+        setStateStep?.(2) // Step cho chọn dịch vụ
+    }, [setStateStep])
     return (
         <>
             <div className='h-screen flex flex-col items-center'>

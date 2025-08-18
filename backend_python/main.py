@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Header, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo
+from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, getTransferState, getOrderInfo, updateTransferState
+
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
@@ -11,12 +12,19 @@ app = FastAPI()
 IP = "196.168.110.40"
 PORT = "8000"
 
+SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
+
+origins = [
+    "https://healthcare-kiosk.vercel.app",
+    "http://localhost:5173",  # để test local
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # địa trỉ cho phép truy cập api, http://localhost:5173"
+    allow_origins=origins,  
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Cho tất cả method
+    allow_headers=["*"],  # Cho tất cả header
 )
 
 class PatientInfo(BaseModel):
@@ -131,7 +139,7 @@ def getServicesList():
         services.append({
             "service_name": service[0],
             "service_description": service[1],
-            "price": service[2],
+            "price": float(service[2]),
         })
     return JSONResponse(
         status_code=200,
@@ -151,6 +159,7 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
         order = getOrder(order_id)
+        print(order)
         return {
             "citizen_id": order[0],
             "fullname": order[1],
@@ -166,25 +175,9 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "price": order[12],
             "price_insur": order[13],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            # "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
-# {
-#     "citizen_id": "000000000001",
-#     "fullname": "Nguyễn Ngô An",
-#     "gender": "Nam",
-#     "dob": "2002-11-22",
-#     "service_name": "Khám cảm cúm nhi",
-#     "clinic_name": "Phòng khám nhi",
-#     "address_room": "phòng 001, tầng 1, tòa nhà A",
-#     "doctor_name": "Trịnh Bảo Anh",
-#     "queue_number": 3,
-#     "is_insurrance": "Có",
-#     "time_order": "2025-07-24T16:02:26",
-#     "price": 5.35,
-#     "order_id": 5,
-#     "QRCode": "iVBORw0KGgoAAAANSUhEUgAAASIAAAEiAQAAAAB1xeIbAAABkElEQVR4nO1aQWrEMAyUnECPCfQB+xTnB31S6c/ip/QBC8mxkKAiKQrbpdBenMSJ5rAbZwcsJHs8MosEfyOFf5AAnGVwlsFZBmcZnLU3CxfUPJgRu9HedLvGdQlWJMbA56oWoJIXVEb0hbPGdY03RNTrXqj3j+tSrPiJuO2Mv+KyLOy2nvGSrHr5bljaRwBcn6iA6MMZWElMTSuaU/O6n9Xm7B3XBdY9rWNKt4mHVET0oWgWqJWMNAH1UFnKm0l/UPRHjT6cgjW+EL5zAdjki8dUHfLeKrvmpNsXUsJqUoUX0Qew4WGjDyfIPUIjH9zYNgOnndHc/azNr/ckUh+HRe9Fc4hEglzvc+d+hRTgoRRy0eO5z+lzFkjaWe9lB6xmx3Ofs6+NkvLxFTBKIbSvnXPMGJz17DFR/SR9YA3a4fI2cI+5IQvF5Pcwo9Rjgxmvy6qfxpTQLhTSG5nbPGr04VT3mBCHlkV//nHRc9Towxlyn3SBV9rNQmrvcgZ47nOy0P8btcBZBmcZnGVwlqFs1jd8Zbmp6iToMgAAAABJRU5ErkJggg=="
-# }
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
 @app.get("/showPDF/{order_id}")
@@ -209,5 +202,50 @@ def downloadPDF(order_id:str):
             media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"}
         )
+
+# Kiểm tra tình trạng thanh toán
+@app.get("/api/checkTransferState/{order_id}")
+def getStateTransfer(order_id:str):
+    state = getTransferState(order_id)
+    if state is None:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Lỗi backend"}
+        )
+    else:
+        # state = True|False
+        return JSONResponse(
+            status_code=200,
+            content={"state": state}
+        )
+
+# Xử lý webhook thông báo chuyển tiền từ SePay
+# https://healthcare-kiosk.onrender.com/api/payOrder
+@app.post("/api/payOrder")
+async def payOrder(request:Request, authorization: str = Header(None)):
+    auth = f"Apikey {SEPAY_API_KEY}"
+    if authorization != auth:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    code = payload.get("code", "")
+    money = payload.get("transferAmount", 0)
+    order_id = code.replace("ORDER", "")
+
+    order = getOrderInfo(order_id)
+    if order is None:
+        raise HTTPException(status_code=400, detail="Unknow order")
+    
+    if int(round(order[8] * 26181)) == int(money):
+        updateTransferState(order_id)
+        raise HTTPException(status_code=200, detail="Success")
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect money transfer")
+
+
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
