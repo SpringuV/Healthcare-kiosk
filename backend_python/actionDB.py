@@ -186,7 +186,7 @@ def getClinicServiceID(service_name:str):
 def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
     conn, cursor = connect()
     try:
-        query = '''SELECT s.price, s.price_isnsurrance 
+        query = '''SELECT s.price, s.price_insurrance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
@@ -260,7 +260,6 @@ def getOrder(order_id:str):
             print(f"Error info1")
             return None
         clinic_service_id = info1[-1]
-        print(clinic_service_id)
         query2 = '''SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
@@ -305,13 +304,13 @@ def getTransferState(order_id:str):
         cursor.execute(query, (order_id,))
         state = cursor.fetchone()
         if not state:
-            return None
+            return False, "Không tìm thấy order"
         if state[0] == "UNPAID":
-            return False
-        return True
+            return False, "Chưa thanh toán"
+        return True, ""
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        return False, "Lỗi backend"
     finally:
         disconnect(conn, cursor)
 

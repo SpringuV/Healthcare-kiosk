@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Request, Header, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,9 +7,11 @@ from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceStat
 from qrMaker import makeQRCode
 from pdfMaker import makePDF
 
+import asyncio
+
 app = FastAPI()
 
-IP = "196.168.110.40"
+IP = "127.0.0.1"
 PORT = "8000"
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
@@ -57,9 +59,7 @@ def checkInsurrance(citizen_id:str):
             content={}
         )
     else:
-        print("[DEBUG] isHad:", isHad)
         if isHad:
-            print("[DEBUG] Patient đã tồn tại → cập nhật is_insurrance")
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
             savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
@@ -159,7 +159,6 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
         order = getOrder(order_id)
-        print(order)
         return {
             "citizen_id": order[0],
             "fullname": order[1],
@@ -203,21 +202,22 @@ def downloadPDF(order_id:str):
             headers={"Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"}
         )
 
-# Kiểm tra tình trạng thanh toán
-@app.get("/api/checkTransferState/{order_id}")
-def getStateTransfer(order_id:str):
-    state = getTransferState(order_id)
-    if state is None:
-        return JSONResponse(
-            status_code=400,
-            content={"detail": "Lỗi backend"}
-        )
-    else:
-        # state = True|False
-        return JSONResponse(
-            status_code=200,
-            content={"state": state}
-        )
+# websocket kiểm tra 
+@app.websocket("/ws/checkTransfer")
+async def checkBankTransfer(websocket:WebSocket):
+    await websocket.accept()
+    data = await websocket.receive_json()
+    order_id = data["order_id"]
+    while True:
+        try:
+            state, detail = getTransferState(order_id)
+            await websocket.send_json({"result": state, "detail": detail})
+            if state and detail == "":
+                break
+            await asyncio.sleep(3)
+        except WebSocketDisconnect:
+            break
+
 
 # Xử lý webhook thông báo chuyển tiền từ SePay
 # https://healthcare-kiosk.onrender.com/api/payOrder
@@ -245,7 +245,5 @@ async def payOrder(request:Request, authorization: str = Header(None)):
         raise HTTPException(status_code=200, detail="Success")
     else:
         raise HTTPException(status_code=400, detail="Incorrect money transfer")
-
-
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

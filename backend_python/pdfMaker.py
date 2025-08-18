@@ -1,10 +1,13 @@
 from fpdf import FPDF
-import io
+import io, math
 from datetime import datetime, date
 
 def info_line(pdf, label, value):
     pdf.cell(60, 10, txt=label, align="L")
     pdf.cell(0, 10, txt=value, align="R", ln=True)
+
+def round_like_js(value):
+    return math.floor(float(value) + 0.5)
 
 def to_str(value):
     if isinstance(value, (datetime, date)):
@@ -37,7 +40,7 @@ def makePDF(info):
     info_line(pdf, "Bác sĩ:", info[11])
     info_line(pdf, "Thời gian đăng ký:", to_str(info[5]))
     price = info[13] if info[6] == 1 else info[12]
-    info_line(pdf, "Giá dịch vụ:", str(f"{round(price * 26181):,} VNĐ"))
+    info_line(pdf, "Giá dịch vụ:", str(f"{round_like_js(price * 26181):,} VNĐ"))
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     pdf_buffer = io.BytesIO(pdf_bytes)
