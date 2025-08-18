@@ -43,8 +43,8 @@ function PaymentWithQR() {
 
     useEffect(() => {
         // Tạo kết nối tới WebSocket backend
-        const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local: 
-        // const ws = new WebSocket("wss://healthcare-kiosk.onrender.com/ws/checkTransfer");
+        // const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local: 
+        const ws = new WebSocket("wss://healthcare-kiosk.onrender.com/ws/checkTransfer");
         ws.onopen = () => {
             console.log("✅ Kết nối WebSocket thành công");
             // Gửi order_id sang backend
@@ -85,7 +85,7 @@ function PaymentWithQR() {
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
                     <div className="w-full flex justify-center">
-                        {state && (<img key={amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=BIDV&amount=${amount}&des=${state.order_id}`}></img>)}
+                        {state && (<img key={amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${amount}&des=${state.order_id}`}></img>)}
                     </div>
                     <h1 className="text-center font-bold text-[20px]">Thông tin chuyển khoản ngân hàng</h1>
                     <div className="grid grid-cols-2">
