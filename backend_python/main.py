@@ -174,8 +174,8 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "price": order[12],
             "price_insur": order[13],
             "order_id": order_id,
-            "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            # "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
         }
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
@@ -239,7 +239,6 @@ async def payOrder(request:Request, authorization: str = Header(None)):
     order = getOrderInfo(order_id)
     if order is None:
         raise HTTPException(status_code=400, detail="Unknow order")
-    print(round_like_js(order[8] * 26181), int(money))
     if round_like_js(order[8] * 26181) == int(money):
         updateTransferState(order_id)
         raise HTTPException(status_code=200, detail="Success")
