@@ -3,6 +3,7 @@ import { useForm } from "../context/form_context"
 import { useInsurrance } from "../context/insurrance_context"
 import { useEffect, useState } from "react"
 import CountdownTimer from "./countdown_timer"
+import Header from "../Header"
 
 function PaymentWithQR() {
     const [showButtonReturn, setShowButtonReturn] = useState(false)
@@ -84,6 +85,7 @@ function PaymentWithQR() {
     // 962471907021002
     return (
         <>
+            <Header/>
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
