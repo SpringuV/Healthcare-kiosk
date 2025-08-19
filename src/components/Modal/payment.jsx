@@ -49,13 +49,13 @@ function PaymentWithQR() {
         // const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local: 
         const ws = new WebSocket("wss://healthcare-kiosk.onrender.com/ws/checkTransfer");
         ws.onopen = () => {
-            console.log("✅ Kết nối WebSocket thành công");
+            console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend
             ws.send(JSON.stringify({ order_id: state.order_id }));
         };
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log("📩 Nhận từ server:", data);
+            console.log("Nhận từ server:", data);
 
             //hiện trạng thái thanh toán
             if (data.result) {
@@ -67,10 +67,10 @@ function PaymentWithQR() {
             }
         };
         ws.onclose = () => {
-            console.log("❌ WebSocket đã đóng");
+            console.log("WebSocket đã đóng");
         };
         ws.onerror = (error) => {
-            console.error("⚠️ Lỗi WebSocket:", error);
+            console.error("Lỗi WebSocket:", error);
         };
         // cleanup khi component unmount
         return () => {
@@ -89,7 +89,7 @@ function PaymentWithQR() {
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
                     <div className="w-full flex justify-center">
-                        {state && (<img key={amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${amount}&des=${state.order_id}`}></img>)}
+                        {state && (<img key={amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${amount}&des=ORDER${state.order_id}`}></img>)}
                     </div>
                     <h1 className="text-center font-bold text-[20px]">Thông tin chuyển khoản ngân hàng</h1>
                     <div className="grid grid-cols-2">
@@ -103,7 +103,7 @@ function PaymentWithQR() {
                             <div>NGUYEN NGO AN</div>
                             <div>VQRQADTJG7282</div>
                             <div>MB Bank</div>
-                            <div>{state.is_insurrance ? (`${(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`) : (`${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`)}</div>
+                            <div>{(amount).toLocaleString('vi-VN')} VNĐ</div>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ function PaymentWithQR() {
                     <ul className="flex flex-col justify-center mx-[5%]">
                         <li><span className="font-semibold">Mã đơn hàng:</span> {state.order_id}</li>
                         <li><span className="font-semibold">Ngày:</span> {formattedDate}</li>
-                        <li><span className="font-semibold mr-2">Tổng tiền:</span>{state.is_insurrance ? (`${(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`) : (`${(state.price * 26181).toLocaleString('vi-VN')} VNĐ`)}</li>
+                        <li><span className="font-semibold mr-2">Tổng tiền:</span>{`${(amount).toLocaleString('vi-VN')} VNĐ`}</li>
                         <li><span className="font-semibold">Phương thức thanh toán:</span> Chuyển khoản ngân hàng (Quét QR)</li>
                     </ul>
                     {/* time countdown */}

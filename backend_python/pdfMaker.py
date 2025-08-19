@@ -7,7 +7,7 @@ def info_line(pdf, label, value):
     pdf.cell(0, 10, txt=value, align="R", ln=True)
 
 def round_like_js(value):
-    return math.floor(float(value) + 0.5)
+    return int(math.floor(float(value) + 0.5))
 
 def to_str(value):
     if isinstance(value, (datetime, date)):
