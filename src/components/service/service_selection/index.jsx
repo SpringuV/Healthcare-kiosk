@@ -103,7 +103,7 @@ function ServiceItem() {
                                     color: isFocused || isSelected ? "white" : "black",
                                     fontWeight: 'bold'
                                 }}>
-                                    {(option.price * 26181).toLocaleString('vi-VN')} VNĐ
+                                    {(Math.round(option.price * 26181)).toLocaleString('vi-VN')} VNĐ
                                 </span>
                             </div>
                         )}
