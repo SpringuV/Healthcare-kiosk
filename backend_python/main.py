@@ -214,7 +214,7 @@ async def checkBankTransfer(websocket:WebSocket):
             await websocket.send_json({"result": state, "detail": detail})
             if state and detail == "":
                 break
-            await asyncio.sleep(3)
+            await asyncio.sleep(5)
         except WebSocketDisconnect:
             break
 
