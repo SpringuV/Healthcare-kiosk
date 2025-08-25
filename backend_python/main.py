@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Header, HTTPException, WebSocket, WebSocke
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, getTransferState, getOrderInfo, updateTransferState
+from actionDB import getPatientHistory, isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, getTransferState, getOrderInfo, updateTransferState
 
 from qrMaker import makeQRCode
 from pdfMaker import makePDF, round_like_js
@@ -244,5 +244,35 @@ async def payOrder(request:Request, authorization: str = Header(None)):
         raise HTTPException(status_code=200, detail="Success")
     else:
         raise HTTPException(status_code=400, detail="Incorrect money transfer")
+
+# Lấy lịch sử khám bệnh của 1 bệnh nhân
+@app.get("/patient/history/{citizen_id}")
+def getPatientHistoryAPI(citizen_id: str):
+    history = getPatientHistory(citizen_id)
+    if not history:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Không tìm thấy lịch sử khám bệnh"}
+        )
+    
+    results = []
+    for row in history:
+        results.append({
+            "order_id": row[0],
+            "time_order": str(row[1]),
+            "queue_number": row[2],
+            "service_name": row[3],
+            "clinic_name": row[4],
+            "address_room": row[5],
+            "doctor_name": row[6],
+            "payment_status": row[7],
+            "price": row[8]
+        })
+    
+    return JSONResponse(
+        status_code=200,
+        content={"history": results}
+    )
+
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

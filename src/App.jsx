@@ -12,6 +12,7 @@ import LayoutDefault from './components/Layout/LayoutDefault'
 import HomePage from './components/Modal/homepage'
 import { useNavigate } from 'react-router-dom'
 import PaymentWithQR from './components/Modal/payment'
+import ResultSearch from './components/result_search'
 
 
 function App() {
@@ -27,6 +28,9 @@ function App() {
                             isInsurance={true}></InputCCCD>}>
                             <Route path='info' element={<InfoInsurrance onClose={() => navigate('/service')}></InfoInsurrance>}></Route>
                             <Route path='update-info' element={<UpdateInfoPatientInsurrance></UpdateInfoPatientInsurrance>}></Route>
+                        </Route>
+                        <Route path='result-search' element={<InputCCCD onClose={() => navigate(-1)} onShowInputCheckResult={() => navigate('/result-search/result')}></InputCCCD>}>
+                            <Route path='result' element={<ResultSearch onClose={() => navigate(-1)}></ResultSearch>}></Route>
                         </Route>
                         <Route path='service' element={<Service></Service>}></Route>
                         <Route path='non-insur' element={<InputCCCD onClose={() => navigate('/')}

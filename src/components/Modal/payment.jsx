@@ -4,6 +4,7 @@ import { useInsurrance } from "../context/insurrance_context"
 import { useEffect, useState } from "react"
 import CountdownTimer from "./countdown_timer"
 import Header from "../Header"
+import { DOMAIN } from "../../data/port"
 
 function PaymentWithQR() {
     const [showButtonReturn, setShowButtonReturn] = useState(false)
@@ -48,7 +49,7 @@ function PaymentWithQR() {
     useEffect(() => {
         // Tạo kết nối tới WebSocket backend
         // const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local: 
-        const ws = new WebSocket("wss://healthcare-kiosk.onrender.com/ws/checkTransfer");
+        const ws = new WebSocket(`wss://${DOMAIN}/ws/checkTransfer`);
         ws.onopen = () => {
             console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend

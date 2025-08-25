@@ -4,6 +4,7 @@ import { useForm } from "../context/form_context"
 import Provinces from "./provinces"
 import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
+import { post } from "../../utils/request"
 function NonInsurrance({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
@@ -82,20 +83,11 @@ function NonInsurrance({ onClose }) {
             job: localFormData.job,
         }
         try {
-            const response = await fetch(`${DOMAIN}/patient/non-insurrance`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            })
-
+            const response = await post(`/patient/non-insurrance`, payload)
             if (response.ok) {
                 navigate('/non-insur/info')
             } else {
-                const errorData = await response.json() // Lấy thông tin lỗi chi tiết
-                console.error("Error response:", errorData)
-                alert(`Lưu thông tin thất bại: ${errorData.reason}`)
+                alert(`Lưu thông tin thất bại`)
             }
         } catch (error) {
             console.error("Lỗi gửi API:", error)

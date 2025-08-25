@@ -2,10 +2,11 @@ from datetime import datetime
 from connectDB import connect, disconnect
 from mysql.connector import Error
 
-def isInsurrance(citizen_id:str):
+
+def isInsurrance(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT * FROM heath_insurrance WHERE citizen_id = %s'''
+        query = """SELECT * FROM heath_insurrance WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         result = cursor.fetchone()
         if result:
@@ -22,10 +23,11 @@ def isInsurrance(citizen_id:str):
     finally:
         disconnect(conn, cursor)
 
-def getInsurrance(citizen_id:str):
+
+def getInsurrance(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT * FROM heath_insurrance WHERE citizen_id = %s'''
+        query = """SELECT * FROM heath_insurrance WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         insurrance = cursor.fetchone()
         if insurrance:
@@ -38,10 +40,11 @@ def getInsurrance(citizen_id:str):
     finally:
         disconnect(conn, cursor)
 
-def isHasPatientInfo(citizen_id:str):
+
+def isHasPatientInfo(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT * FROM patient WHERE citizen_id = %s'''
+        query = """SELECT * FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         result = cursor.fetchone()
         if result:
@@ -54,16 +57,17 @@ def isHasPatientInfo(citizen_id:str):
     finally:
         disconnect(conn, cursor)
 
-def updatePatientInsurranceState(citizen_id:str, state:bool):
+
+def updatePatientInsurranceState(citizen_id: str, state: bool):
     conn, cursor = connect()
     try:
         state_int = 1 if state else 0
-        query = '''SELECT is_insurrance FROM patient WHERE citizen_id = %s'''
+        query = """SELECT is_insurrance FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         data_state = cursor.fetchone()[0]
         if data_state == state_int:
             return True
-        query = '''UPDATE patient SET is_insurrance = %s WHERE citizen_id = %s'''
+        query = """UPDATE patient SET is_insurrance = %s WHERE citizen_id = %s"""
         cursor.execute(query, (state_int, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
@@ -73,12 +77,28 @@ def updatePatientInsurranceState(citizen_id:str, state:bool):
     finally:
         disconnect(conn, cursor)
 
-def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance):
+
+def savePatientInfo(
+    citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance
+):
     conn, cursor = connect()
     try:
         insur_int = 1 if is_insurrance else 0
-        query = '''INSERT INTO patient (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
-        cursor.execute(query, (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, insur_int))
+        query = """INSERT INTO patient (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        cursor.execute(
+            query,
+            (
+                citizen_id,
+                fullname,
+                gender,
+                dob,
+                address,
+                phone_number,
+                ethnic,
+                job,
+                insur_int,
+            ),
+        )
         conn.commit()
         if cursor.rowcount != 0:
             return True, ""
@@ -93,10 +113,11 @@ def savePatientInfo(citizen_id, fullname, gender, dob, address, phone_number, et
     finally:
         disconnect(conn, cursor)
 
+
 def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
     conn, cursor = connect()
     try:
-        query = '''UPDATE patient SET address = %s, ethnic = %s, job = %s, is_insurrance = 1 WHERE citizen_id = %s'''
+        query = """UPDATE patient SET address = %s, ethnic = %s, job = %s, is_insurrance = 1 WHERE citizen_id = %s"""
         cursor.execute(query, (address, ethnic, job, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
@@ -106,10 +127,11 @@ def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
     finally:
         disconnect(conn, cursor)
 
-def getPatient(citizen_id:str):
+
+def getPatient(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT * FROM patient WHERE citizen_id = %s'''
+        query = """SELECT * FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         info = cursor.fetchone()
         if info:
@@ -122,10 +144,11 @@ def getPatient(citizen_id:str):
     finally:
         disconnect(conn, cursor)
 
+
 def getServices():
     conn, cursor = connect()
     try:
-        query = '''SELECT
+        query = """SELECT
         s.service_name,
         s.service_description,
         s.price
@@ -133,7 +156,7 @@ def getServices():
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE cs.service_status = 1
         GROUP BY s.service_name, s.service_description, s.price
-        ORDER BY s.service_name;'''
+        ORDER BY s.service_name;"""
         cursor.execute(query)
         services = cursor.fetchall()
         return services
@@ -143,14 +166,15 @@ def getServices():
     finally:
         disconnect(conn, cursor)
 
-def getNextQueueNumber(clinic_service_id:str):
+
+def getNextQueueNumber(clinic_service_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT o.queue_number 
+        query = """SELECT o.queue_number 
         FROM orders o
         WHERE o.clinic_service_id = %s
         ORDER BY o.create_at DESC
-        LIMIT 1'''
+        LIMIT 1"""
         cursor.execute(query, (clinic_service_id,))
         max_queue = cursor.fetchone()
         current = max_queue[0] if max_queue else None
@@ -164,17 +188,51 @@ def getNextQueueNumber(clinic_service_id:str):
     finally:
         disconnect(conn, cursor)
 
-def getClinicServiceID(service_name:str):
+
+# Lấy lịch sử khám bệnh theo id
+def getPatientHistory(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT cs.clinic_service_id
+        query = """
+        SELECT 
+            o.order_id,
+            o.create_at,
+            o.queue_number,
+            s.service_name,
+            c.clinic_name,
+            c.address_room,
+            st.fullname AS doctor_name,
+            o.payment_status,
+            o.price
+        FROM orders o
+        JOIN clinic_service cs ON o.clinic_service_id = cs.clinic_service_id
+        JOIN service s ON cs.service_id = s.service_id
+        JOIN clinic c ON cs.clinic_id = c.clinic_id
+        LEFT JOIN staff st ON cs.clinic_id = st.clinic_id AND st.staff_position = "DOCTOR"
+        WHERE o.citizen_id = %s
+        ORDER BY o.create_at DESC
+        """
+        cursor.execute(query, (citizen_id,))
+        history = cursor.fetchall()
+        return history
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+    finally:
+        disconnect(conn, cursor)
+
+
+def getClinicServiceID(service_name: str):
+    conn, cursor = connect()
+    try:
+        query = """SELECT cs.clinic_service_id
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
         LEFT JOIN orders o ON cs.clinic_service_id = o.clinic_service_id AND o.order_status = 0
         WHERE s.service_name = %s AND cs.service_status = 1
         GROUP BY cs.clinic_service_id
         ORDER BY COUNT(o.order_id) ASC LIMIT 1;
-        '''
+        """
         cursor.execute(query, (service_name,))
         clinic_service_id = cursor.fetchone()[0]
         return clinic_service_id
@@ -183,19 +241,20 @@ def getClinicServiceID(service_name:str):
     finally:
         disconnect(conn, cursor)
 
-def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
+
+def getPrice(citizen_id: str, clinic_service_id: str, service_name: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT s.price, s.price_insurrance 
+        query = """SELECT s.price, s.price_insurrance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
-        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
+        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1"""
         cursor.execute(query, (service_name, clinic_service_id))
         price_values = cursor.fetchone()
         if not price_values:
             return 0
         price, price_insur = price_values
-        query = '''SELECT is_insurrance FROM patient WHERE citizen_id = %s'''
+        query = """SELECT is_insurrance FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         state = cursor.fetchone()[0]
         if state == 1:
@@ -208,13 +267,14 @@ def getPrice(citizen_id:str, clinic_service_id:str, service_name:str):
     finally:
         disconnect(conn, cursor)
 
-def getPrices(clinic_service_id:str, service_name:str):
+
+def getPrices(clinic_service_id: str, service_name: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT s.price, s.price_insurrance 
+        query = """SELECT s.price, s.price_insurrance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
-        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1'''
+        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1"""
         cursor.execute(query, (service_name, clinic_service_id))
         price_values = cursor.fetchone()
         if not price_values:
@@ -227,16 +287,27 @@ def getPrices(clinic_service_id:str, service_name:str):
     finally:
         disconnect(conn, cursor)
 
-def createOrder(citizen_id:str, service_name:str):
+
+def createOrder(citizen_id: str, service_name: str):
     conn, cursor = connect()
     try:
         clinic_service_id = getClinicServiceID(service_name)
-        query = '''INSERT INTO orders 
+        query = """INSERT INTO orders 
         (queue_number, citizen_id, clinic_service_id, payment_method, payment_status, price)
         VALUES
         (%s, %s, %s, %s, %s, %s)
-        '''
-        cursor.execute(query, (getNextQueueNumber(clinic_service_id), citizen_id, clinic_service_id, 'CASH', 'UNPAID', getPrice(citizen_id, clinic_service_id, service_name)))
+        """
+        cursor.execute(
+            query,
+            (
+                getNextQueueNumber(clinic_service_id),
+                citizen_id,
+                clinic_service_id,
+                "CASH",
+                "UNPAID",
+                getPrice(citizen_id, clinic_service_id, service_name),
+            ),
+        )
         conn.commit()
         new_id = cursor.lastrowid
         return new_id
@@ -246,30 +317,31 @@ def createOrder(citizen_id:str, service_name:str):
     finally:
         disconnect(conn, cursor)
 
-def getOrder(order_id:str):
+
+def getOrder(order_id: str):
     conn, cursor = connect()
     try:
-        query1 = '''SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
+        query1 = """SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
         WHERE o.order_id = %s LIMIT 1
-        '''
+        """
         cursor.execute(query1, (order_id,))
         info1 = cursor.fetchone()
         if info1 is None:
             print(f"Error info1")
             return None
         clinic_service_id = info1[-1]
-        query2 = '''SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
+        query2 = """SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
         JOIN clinic c ON cs.clinic_id = c.clinic_id
         JOIN staff st ON cs.clinic_id = st.clinic_id
         WHERE st.staff_position = "DOCTOR" AND cs.clinic_service_id = %s LIMIT 1
-        '''
+        """
         cursor.execute(query2, (clinic_service_id,))
         info2 = cursor.fetchone()
-        
+
         if info2 is None:
             print(f"Error info2")
             return None
@@ -282,10 +354,11 @@ def getOrder(order_id:str):
     finally:
         disconnect(conn, cursor)
 
-def getOrderInfo(order_id:str):
+
+def getOrderInfo(order_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT * FROM orders WHERE order_id = %s LIMIT 1'''
+        query = """SELECT * FROM orders WHERE order_id = %s LIMIT 1"""
         cursor.execute(query, (order_id,))
         order = cursor.fetchone()
         if not order:
@@ -297,10 +370,11 @@ def getOrderInfo(order_id:str):
     finally:
         disconnect(conn, cursor)
 
-def getTransferState(order_id:str):
+
+def getTransferState(order_id: str):
     conn, cursor = connect()
     try:
-        query = '''SELECT payment_status FROM orders WHERE order_id = %s LIMIT 1'''
+        query = """SELECT payment_status FROM orders WHERE order_id = %s LIMIT 1"""
         cursor.execute(query, (order_id,))
         state = cursor.fetchone()
         if not state:
@@ -314,10 +388,11 @@ def getTransferState(order_id:str):
     finally:
         disconnect(conn, cursor)
 
-def updateTransferState(order_id:str):
+
+def updateTransferState(order_id: str):
     conn, cursor = connect()
     try:
-        query = '''UPDATE orders SET payment_method = %s, payment_status = %s WHERE order_id = %s'''
+        query = """UPDATE orders SET payment_method = %s, payment_status = %s WHERE order_id = %s"""
         cursor.execute(query, ("BANKING", "PAID", order_id))
         conn.commit()
         return cursor.rowcount != 0

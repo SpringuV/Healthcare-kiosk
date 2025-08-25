@@ -4,7 +4,7 @@ import { useInsurrance } from "../context/insurrance_context"
 import Alert from '../alert/Alert'
 import { useForm } from '../context/form_context'
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
-import { DOMAIN } from '../../data/port'
+import {get} from '../../utils/request'
 
 function InputCCCD(props) {
     const { isInsurance, onShowInputCheckInfo, onShowInputNonInsuranceInfo, onClose } = props
@@ -58,8 +58,7 @@ function InputCCCD(props) {
         try {
             // khám có bảo hiểm
             if (isInsurance) {
-                const response = await fetch(`${DOMAIN}/health-insurrances/${inputValue}`)
-                // const response = await fetch(`http://196.168.110.40:8000/health-insurrances/${inputValue}`)
+                const response = await get(`/health-insurrances/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Bạn không có bảo hiểm y tế, vui lòng kiểm tra lại thông tin hoặc chọn khám dịch vụ!",
@@ -71,16 +70,14 @@ function InputCCCD(props) {
                     })
                     return
                 }
-                const data = await response.json();
                 // luu vao context
-                setInsurranceInfo(data)
+                setInsurranceInfo(response.data)
                 setErrorMessage("")
                 onShowInputCheckInfo()
             } else { // khám không có bảo hiểm
-                const response = await fetch(`${DOMAIN}/patient/check/${inputValue}`)
+                const response = await get(`/patient/check/${inputValue}`)
                 if (response.ok) {
-                    const data = await response.json()
-                    setFormData(data)
+                    setFormData(response.data)
                     onShowInputNonInsuranceInfo()
                 } else if (response.status === 404) {
                     showAlertWithConfig({

@@ -4,6 +4,7 @@ import { useInsurrance } from "../context/insurrance_context"
 import Provinces from "./provinces"
 import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
+import { put } from "../../utils/request"
 function UpdateInfoPatientInsurrance() {
     const { insurranceInfo } = useInsurrance()
     const navigate = useNavigate()
@@ -39,16 +40,7 @@ function UpdateInfoPatientInsurrance() {
             is_insurrance: 1
         }
         try {
-            const response = await fetch(`${DOMAIN}/patient/insurrance-info/${citizen_id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            })
-            // in ra
-            console.log(JSON.stringify(payload))
-
+            const response = await put(`/patient/insurrance-info/${citizen_id}`, payload)
             if (response.ok) {
                 navigate('/service')
             } else {

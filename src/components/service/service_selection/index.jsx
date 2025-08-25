@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useService } from "../../context/service_context";
 import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
-import { DOMAIN } from "../../../data/port";
+import { get, post } from "../../../utils/request";
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -24,9 +24,8 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await fetch(`${DOMAIN}/api/services`)
-                const data = await response.json()
-                const services = data.services || []
+                const response = await get(`/api/services`)
+                const services = response.data.services || []
                 // format for react-select
                 const formattedOptions = services.map((service) => ({
                     value: service.service_name,
@@ -53,20 +52,13 @@ function ServiceItem() {
             return
         }
         try {
-            const response = await fetch(`${DOMAIN}/orders/create/${citizen_id}`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
+            const response = await post(`/orders/create/${citizen_id}`, payload)
 
             if (!response.ok) {
                 alert("Đăng ký thất bại.");
                 return;
             }
-            const result = await response.json()
-            navigate('/confirm-registration', { state: result })
+            navigate('/confirm-registration', { state: response.data })
 
         } catch (err) {
             console.error("Lỗi khi gọi API tạo order:", err);
