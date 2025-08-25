@@ -254,7 +254,7 @@ def getPatientHistoryAPI(citizen_id: str):
     for row in history:
         results.append({
             "order_id": row[0],
-            "time_order": str(row[1]),
+            "time_order": row[1].isoformat() if hasattr(row[1], "isoformat") else str(row[1]),
             "queue_number": row[2],
             "service_name": row[3],
             "clinic_name": row[4],
