@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Header, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
+from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from actionDB import getPatientHistory, isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, getTransferState, getOrderInfo, updateTransferState
@@ -261,7 +262,7 @@ def getPatientHistoryAPI(citizen_id: str):
             "address_room": row[5],
             "doctor_name": row[6],
             "payment_status": row[7],
-            "price": row[8]
+            "price": float(row[8]) if isinstance(row[8], Decimal) else row[8]
         })
     
     return JSONResponse(

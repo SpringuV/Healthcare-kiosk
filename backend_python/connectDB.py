@@ -125,7 +125,7 @@ def connect():
     try:
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
-        print("Connected to Railway MySQL successfully!")
+        print("Connected to MySQL successfully!")
         return conn, cursor
     except mysql.connector.Error as err:
         print("Error connecting to database:", err)
