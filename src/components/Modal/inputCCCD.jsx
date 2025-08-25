@@ -55,48 +55,48 @@ function InputCCCD(props) {
         try {
             let response;
             if (props.mode === "insurance") {
-                response = await get(`/health-insurrances/${inputValue}`);
+                response = await get(`/health-insurrances/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Bạn không có bảo hiểm y tế...",
                         confirmText: "Ok",
                         onConfirm: () => {
-                            setShowAlert(false);
-                            props.onClose();
+                            setShowAlert(false)
+                            props.onClose()
                         }
-                    });
-                    return;
+                    })
+                    return
                 }
             }
             else if (props.mode === "non-insurance") {
-                response = await get(`/patient/check/${inputValue}`);
+                response = await get(`/patient/check/${inputValue}`)
                 if (response.status === 404) {
                     showAlertWithConfig({
                         text: "Không tìm thấy thông tin bệnh nhân...",
                         confirmText: "Đăng ký mới",
                         cancelText: "Nhập lại CCCD",
                         onConfirm: () => {
-                            setShowAlert(false);
-                            navigate('/non-insur/register');
+                            setShowAlert(false)
+                            navigate('/non-insur/register')
                         }
-                    });
-                    return;
+                    })
+                    return
                 }
             }
             else if (props.mode === "history") {
-                response = await get(`/patient/history/${inputValue}`);
+                response = await get(`/patient/history/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Không tìm thấy lịch sử khám bệnh!",
                         showConfirmButton: false,
                         cancelText: "Đóng"
-                    });
-                    return;
+                    })
+                    return
                 }
             }
 
             // nếu ok → gọi callback onSuccess để parent xử lý
-            props.onSuccess?.(response.data);
+            props.onSuccess?.(response.data)
 
         } catch (err) {
             console.error(err);
@@ -104,20 +104,20 @@ function InputCCCD(props) {
                 text: "Lỗi kết nối tới máy chủ",
                 showConfirmButton: false,
                 cancelText: "Đóng"
-            });
+            })
         }
     }
 
     const handleKeyDownInput = (e) => {
-        const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"];
-        const inputValue = inputRef.current.value;
+        const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"]
+        const inputValue = inputRef.current.value
 
         // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
         if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
             console.log(e.key)
-            e.preventDefault();
+            e.preventDefault()
             setErrorMessage("Không nhập kí tự chữ")
-            return;
+            return
         }
 
         // Nếu là số và đã đủ 12 ký tự → ngăn không cho nhập thêm
