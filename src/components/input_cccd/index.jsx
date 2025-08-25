@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import NumberPad from './number_pad'
+import NumberPad from '../number_pad'
 import Alert from '../alert/Alert'
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
 import { get } from '../../utils/request'

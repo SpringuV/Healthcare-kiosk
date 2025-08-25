@@ -1,7 +1,7 @@
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { useState } from 'react'
 import { useForm } from "../context/form_context"
-import Provinces from "./provinces"
+import Provinces from "../provinces"
 import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
 import { post } from "../../utils/request"

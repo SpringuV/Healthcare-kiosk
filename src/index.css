@@ -11,7 +11,24 @@
 }
 
 @layer components {
-  .print-pdf {
-    @apply text-sm p-4 w-[148mm] h-[210mm] bg-white text-black;
-  }
+    .print-pdf {
+        @apply text-sm p-4 w-[148mm] h-[210mm] bg-white text-black;
+    }
+
+    @keyframes wiggle {
+
+        0%,
+        100% {
+            transform: rotate(-40deg);
+        }
+
+        50% {
+            transform: rotate(40deg);
+        }
+    }
+
+    .animate-wiggle {
+        display: inline-block;
+        animation: wiggle 3s infinite;
+    }
 }

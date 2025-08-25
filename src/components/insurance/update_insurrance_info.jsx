@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { useInsurrance } from "../context/insurrance_context"
-import Provinces from "./provinces"
+import Provinces from "../provinces"
 import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
 import { put } from "../../utils/request"

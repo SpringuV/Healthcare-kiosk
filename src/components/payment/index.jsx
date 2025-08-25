@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { useForm } from "../context/form_context"
 import { useInsurrance } from "../context/insurrance_context"
 import { useEffect, useState } from "react"
-import CountdownTimer from "./countdown_timer"
+import CountdownTimer from '../count_down_timer'
 import Header from "../Header"
 import { DOMAIN } from "../../data/port"
 
