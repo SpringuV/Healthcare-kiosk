@@ -16,14 +16,9 @@ PORT = "8000"
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 
-origins = [
-    "https://healthcare-kiosk.vercel.app",
-    "http://localhost:5173",  # để test local
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],  # Cho tất cả method
     allow_headers=["*"],  # Cho tất cả header
