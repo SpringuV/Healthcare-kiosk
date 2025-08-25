@@ -1,16 +1,13 @@
 import { useState, useRef } from 'react'
 import NumberPad from './number_pad'
-import { useInsurrance } from "../context/insurrance_context"
 import Alert from '../alert/Alert'
-import { useForm } from '../context/form_context'
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
-import {get} from '../../utils/request'
+import { get } from '../../utils/request'
 
 function InputCCCD(props) {
-    const { isInsurance, onShowInputCheckInfo, onShowInputNonInsuranceInfo, onClose } = props
+    const { onClose } = props
     // const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
-    const { setFormData } = useForm()
     const [showAlert, setShowAlert] = useState(false)
     const [alertConfig, setAlertConfig] = useState({
         text: "",
@@ -22,7 +19,6 @@ function InputCCCD(props) {
     const navigate = useNavigate()
     const inputRef = useRef(null)
 
-    const { setInsurranceInfo } = useInsurrance()
 
     // const handleInput = (value) => {
     //     if (inputRef.current) {
@@ -50,61 +46,65 @@ function InputCCCD(props) {
     const handleCheckInfo = async (e) => {
         e.preventDefault()
         const inputValue = inputRef.current.value.trim()
+
         if (inputValue.length !== 12) {
             setErrorMessage("Căn cước công dân gồm 12 chữ số")
             return
         }
 
         try {
-            // khám có bảo hiểm
-            if (isInsurance) {
-                const response = await get(`/health-insurrances/${inputValue}`)
+            let response;
+            if (props.mode === "insurance") {
+                response = await get(`/health-insurrances/${inputValue}`);
                 if (!response.ok) {
                     showAlertWithConfig({
-                        text: "Bạn không có bảo hiểm y tế, vui lòng kiểm tra lại thông tin hoặc chọn khám dịch vụ!",
+                        text: "Bạn không có bảo hiểm y tế...",
                         confirmText: "Ok",
                         onConfirm: () => {
-                            setShowAlert(false)
-                            navigate('/')
+                            setShowAlert(false);
+                            props.onClose();
                         }
-                    })
-                    return
+                    });
+                    return;
                 }
-                // luu vao context
-                setInsurranceInfo(response.data)
-                setErrorMessage("")
-                onShowInputCheckInfo()
-            } else { // khám không có bảo hiểm
-                const response = await get(`/patient/check/${inputValue}`)
-                if (response.ok) {
-                    setFormData(response.data)
-                    onShowInputNonInsuranceInfo()
-                } else if (response.status === 404) {
+            }
+            else if (props.mode === "non-insurance") {
+                response = await get(`/patient/check/${inputValue}`);
+                if (response.status === 404) {
                     showAlertWithConfig({
-                        text: "Không tìm thấy thông tin bệnh nhân. Bạn có muốn đăng ký thông tin mới không?",
+                        text: "Không tìm thấy thông tin bệnh nhân...",
                         confirmText: "Đăng ký mới",
                         cancelText: "Nhập lại CCCD",
                         onConfirm: () => {
-                            setShowAlert(false)
-                            navigate('/non-insur')
+                            setShowAlert(false);
+                            navigate('/non-insur/register');
                         }
-                    })
-                } else {
+                    });
+                    return;
+                }
+            }
+            else if (props.mode === "history") {
+                response = await get(`/patient/history/${inputValue}`);
+                if (!response.ok) {
                     showAlertWithConfig({
-                        text: "Có lỗi xảy ra khi kiểm tra thông tin. Vui lòng thử lại!",
+                        text: "Không tìm thấy lịch sử khám bệnh!",
                         showConfirmButton: false,
                         cancelText: "Đóng"
-                    })
+                    });
+                    return;
                 }
             }
 
-        } catch (error) {
-            console.error("Lỗi khi gọi API:", error);
+            // nếu ok → gọi callback onSuccess để parent xử lý
+            props.onSuccess?.(response.data);
+
+        } catch (err) {
+            console.error(err);
             showAlertWithConfig({
-                text: "Lỗi kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại!",
+                text: "Lỗi kết nối tới máy chủ",
                 showConfirmButton: false,
                 cancelText: "Đóng"
-            })
+            });
         }
     }
 
