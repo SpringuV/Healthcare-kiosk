@@ -11,7 +11,7 @@ import LayoutDefault from './components/Layout/LayoutDefault'
 import HomePage from './components/homepage'
 import { useNavigate } from 'react-router-dom'
 import PaymentWithQR from './components/payment'
-import ResultSearch from './components/result_search'
+import ResultSearch from './components/history_check'
 import { useForm } from './components/context/form_context'
 
 
