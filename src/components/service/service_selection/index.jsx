@@ -5,6 +5,7 @@ import { useService } from "../../context/service_context";
 import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
 import { get, post } from "../../../utils/request";
+import { Spin } from "antd";
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -14,6 +15,8 @@ function ServiceItem() {
     const navigate = useNavigate()
     const { formData } = useForm()
     const { insurranceInfo } = useInsurrance()
+
+    const [spinning, setSpinning] = useState(false)
 
     const handleChange = (option) => {
         setSelectedOption(option)
@@ -51,16 +54,20 @@ function ServiceItem() {
             alert("Vui lòng chọn dịch vụ.")
             return
         }
+        setSpinning(true)
         try {
             const response = await post(`/orders/create/${citizen_id}`, payload)
 
             if (!response.ok) {
                 alert("Đăng ký thất bại.");
+                setSpinning(false)
                 return;
             }
+            setSpinning(false)
             navigate('/confirm-registration', { state: response.data })
 
         } catch (err) {
+            setSpinning(false)
             console.error("Lỗi khi gọi API tạo order:", err);
             alert("Đã có lỗi khi đăng ký.");
         }
@@ -139,7 +146,9 @@ function ServiceItem() {
                 </div>
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
-                    <a className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" onClick={handleRegister}>Đăng kí để khám</a>
+                    <Spin spinning={spinning}>
+                        <button disabled={spinning} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                    </Spin>
                 </div>
             </div>
         </>

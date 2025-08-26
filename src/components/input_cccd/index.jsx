@@ -3,6 +3,7 @@ import NumberPad from '../number_pad'
 import Alert from '../alert/Alert'
 import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
 import { get } from '../../utils/request'
+import { Spin } from 'antd'
 
 function InputCCCD(props) {
     const { onClose } = props
@@ -19,6 +20,7 @@ function InputCCCD(props) {
     const navigate = useNavigate()
     const inputRef = useRef(null)
 
+    const [spinning, setSpinning] = useState(false)
 
     // const handleInput = (value) => {
     //     if (inputRef.current) {
@@ -54,6 +56,7 @@ function InputCCCD(props) {
 
         try {
             let response;
+            setSpinning(true)
             if (props.mode === "insurance") {
                 response = await get(`/health-insurrances/${inputValue}`)
                 if (!response.ok) {
@@ -65,6 +68,7 @@ function InputCCCD(props) {
                             props.onClose()
                         }
                     })
+                    setSpinning(false)
                     return
                 }
             }
@@ -80,6 +84,7 @@ function InputCCCD(props) {
                             navigate('/non-insur/register')
                         }
                     })
+                    setSpinning(false)
                     return
                 }
             }
@@ -91,12 +96,14 @@ function InputCCCD(props) {
                         showConfirmButton: false,
                         cancelText: "Đóng"
                     })
+                    setSpinning(false)
                     return
                 }
             }
 
             // nếu ok → gọi callback onSuccess để parent xử lý
             props.onSuccess?.(response.data)
+            setSpinning(false)
 
         } catch (err) {
             console.error(err);
@@ -153,8 +160,10 @@ function InputCCCD(props) {
                                 <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
                             )}
                             {/* {showNumpad && <NumberPad onClose={() => setShowNumberPad(false)} onInput={handleInput} />} */}
-                            <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600"
-                                onClick={handleCheckInfo}>Kiểm tra thông tin</button>
+                            <Spin spinning={spinning}>
+                                <button className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600"
+                                    onClick={handleCheckInfo}>Kiểm tra thông tin</button>
+                            </Spin>
                         </form>
                     </div>
                 </div>

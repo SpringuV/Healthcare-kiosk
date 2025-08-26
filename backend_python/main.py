@@ -1,9 +1,31 @@
-from fastapi import FastAPI, Request, Header, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    FastAPI,
+    Request,
+    Header,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from pydantic import BaseModel
 from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from actionDB import getPatientHistory, isInsurrance, isHasPatientInfo, updatePatientInsurranceState, savePatientInfo, getServices, getPatient, createOrder, getOrder, updatePatientInfo, getTransferState, getOrderInfo, updateTransferState
+from actionDB import (
+    cancelOrder,
+    getPatientHistory,
+    isInsurrance,
+    isHasPatientInfo,
+    updatePatientInsurranceState,
+    savePatientInfo,
+    getServices,
+    getPatient,
+    createOrder,
+    getOrder,
+    updatePatientInfo,
+    getTransferState,
+    getOrderInfo,
+    updateTransferState,
+)
 
 from qrMaker import makeQRCode
 from pdfMaker import makePDF, round_like_js
@@ -19,46 +41,49 @@ SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],  # Cho tất cả method
     allow_headers=["*"],  # Cho tất cả header
 )
 
+
 class PatientInfo(BaseModel):
-    patient_id:str
-    full_name:str
-    dob:str
-    gender:bool
-    phone_number:str
-    address:str
-    ethnic:str
-    job:str
+    patient_id: str
+    full_name: str
+    dob: str
+    gender: bool
+    phone_number: str
+    address: str
+    ethnic: str
+    job: str
+
 
 class PatientInfoUpdate(BaseModel):
-    address:str
-    ethnic:str
-    job:str
-    is_insurrance:bool
+    address: str
+    ethnic: str
+    job: str
+    is_insurrance: bool
+
 
 class OrderInfo(BaseModel):
-    service_name:str
+    service_name: str
+
 
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
 @app.get("/health-insurrances/{citizen_id}", status_code=200)
-def checkInsurrance(citizen_id:str):
+def checkInsurrance(citizen_id: str):
     isActivate, state, insurrance = isInsurrance(citizen_id)
     isHad, _ = isHasPatientInfo(citizen_id)
     if insurrance is None:
-        return JSONResponse(
-            status_code=404,
-            content={}
-        )
+        return JSONResponse(status_code=404, content={})
     else:
         if isHad:
             updatePatientInsurranceState(citizen_id, isActivate)
         else:
-            savePatientInfo(*insurrance[:4], None, insurrance[5], None, None, isActivate)
+            savePatientInfo(
+                *insurrance[:4], None, insurrance[5], None, None, isActivate
+            )
         return {
             "citizen_id": insurrance[0],
             "full_name": insurrance[1],
@@ -69,49 +94,50 @@ def checkInsurrance(citizen_id:str):
             "phone_number": insurrance[4],
             "gender": "Nam" if insurrance[2] == 1 else "Nữ",
             "is_activate": isActivate,
-            "is_saved": isHad
+            "is_saved": isHad,
         }
-        
+
 
 # Tạo bảng ghi thông tin bệnh nhân
 @app.post("/patient/non-insurrance")
-def makePatientInfo(patient:PatientInfo):
-    result, reason = savePatientInfo(patient.patient_id, patient.full_name, patient.gender, patient.dob, patient.address, patient.phone_number, patient.ethnic, patient.job, False)
+def makePatientInfo(patient: PatientInfo):
+    result, reason = savePatientInfo(
+        patient.patient_id,
+        patient.full_name,
+        patient.gender,
+        patient.dob,
+        patient.address,
+        patient.phone_number,
+        patient.ethnic,
+        patient.job,
+        False,
+    )
     if not result:
-        return JSONResponse(
-            status_code=400,
-            content={"reason": reason}
-        )
+        return JSONResponse(status_code=400, content={"reason": reason})
     else:
-        return JSONResponse(
-            status_code=201,
-            content={}
-        )
-    
+        return JSONResponse(status_code=201, content={})
+
+
 # Cập nhật thông tin bệnh nhân
 @app.put("/patient/insurrance-info/{citizen_id}")
-def updatePatient(citizen_id:str, info:PatientInfoUpdate):
-    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job, info.is_insurrance):
-        return JSONResponse(
-            status_code=400,
-            content={}
-        )
+def updatePatient(citizen_id: str, info: PatientInfoUpdate):
+    if not updatePatientInfo(
+        citizen_id, info.address, info.ethnic, info.job, info.is_insurrance
+    ):
+        return JSONResponse(status_code=400, content={})
     else:
-        return JSONResponse(
-            status_code=201,
-            content={}
-        )
-    
+        return JSONResponse(status_code=201, content={})
+
+
 # Kiểm tra thông tin bệnh nhân
 @app.get("/patient/check/{citizen_id}")
 def checkPatient(citizen_id: str):
     patient = getPatient(citizen_id)
     if patient is None:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Không tìm thấy thông tin bệnh nhân"}
+            status_code=404, content={"message": "Không tìm thấy thông tin bệnh nhân"}
         )
-    
+
     return JSONResponse(
         status_code=200,
         content={
@@ -122,9 +148,10 @@ def checkPatient(citizen_id: str):
             "address": patient[4],
             "phone_number": patient[5],
             "ethnic": patient[6],
-            "job": patient[7]
-        }
+            "job": patient[7],
+        },
     )
+
 
 # Lấy danh sách dịch vụ (ko cần tham số)
 @app.get("/api/services")
@@ -132,25 +159,22 @@ def getServicesList():
     services = []
     listService = getServices()
     for service in listService:
-        services.append({
-            "service_name": service[0],
-            "service_description": service[1],
-            "price": float(service[2]),
-        })
-    return JSONResponse(
-        status_code=200,
-        content={"services": services}
-    )
+        services.append(
+            {
+                "service_name": service[0],
+                "service_description": service[1],
+                "price": float(service[2]),
+            }
+        )
+    return JSONResponse(status_code=200, content={"services": services})
+
 
 # Tạo phiếu khám
 @app.post("/orders/create/{citizen_id}", status_code=200)
-def makeOrder(citizen_id:str, orderInfo:OrderInfo):
+def makeOrder(citizen_id: str, orderInfo: OrderInfo):
     order_id = createOrder(citizen_id, orderInfo.service_name)
     if order_id is None:
-        return JSONResponse(
-            status_code=400,
-            content={}
-        )
+        return JSONResponse(status_code=400, content={})
     else:
         # Thông tin order
         # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
@@ -171,36 +195,43 @@ def makeOrder(citizen_id:str, orderInfo:OrderInfo):
             "price_insur": order[13],
             "order_id": order_id,
             # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
-            "QRCode": makeQRCode(f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}")
+            "QRCode": makeQRCode(
+                f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}"
+            ),
         }
+
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
 @app.get("/showPDF/{order_id}")
-def showPDF(order_id:str):
+def showPDF(order_id: str):
     order = getOrder(order_id)
     if order is not None:
         pdf_buffer = makePDF(order)
         return StreamingResponse(
             content=pdf_buffer,
             media_type="application/pdf",
-            headers={"Content-Disposition": 'inline; filename="phieu-kham-benh.pdf"'}
+            headers={"Content-Disposition": 'inline; filename="phieu-kham-benh.pdf"'},
         )
+
 
 # Tự download file pdf phiếu khám bệnh cho client
 @app.get("/downloadPDF/{order_id}")
-def downloadPDF(order_id:str):
+def downloadPDF(order_id: str):
     order = getOrder(order_id)
     if order is not None:
         pdf_buffer = makePDF(order)
         return StreamingResponse(
             content=pdf_buffer,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"}
+            headers={
+                "Content-Disposition": f"attachment; filename=phieu-kham-benh.pdf"
+            },
         )
 
-# websocket kiểm tra 
+
+# websocket kiểm tra
 @app.websocket("/ws/checkTransfer")
-async def checkBankTransfer(websocket:WebSocket):
+async def checkBankTransfer(websocket: WebSocket):
     await websocket.accept()
     data = await websocket.receive_json()
     order_id = data["order_id"]
@@ -218,16 +249,16 @@ async def checkBankTransfer(websocket:WebSocket):
 # Xử lý webhook thông báo chuyển tiền từ SePay
 # https://healthcare-kiosk.onrender.com/api/payOrder
 @app.post("/api/payOrder")
-async def payOrder(request:Request, authorization: str = Header(None)):
+async def payOrder(request: Request, authorization: str = Header(None)):
     auth = f"Apikey {SEPAY_API_KEY}"
     if authorization != auth:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
+
     try:
         payload = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
-    
+
     code = payload.get("code", "")
     money = payload.get("transferAmount", 0)
     order_id = code.replace("ORDER", "")
@@ -241,34 +272,85 @@ async def payOrder(request:Request, authorization: str = Header(None)):
     else:
         raise HTTPException(status_code=400, detail="Incorrect money transfer")
 
+
 # Lấy lịch sử khám bệnh của 1 bệnh nhân
 @app.get("/patient/history/{citizen_id}")
 def getPatientHistoryAPI(citizen_id: str):
     history = getPatientHistory(citizen_id)
     if not history:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Không tìm thấy lịch sử khám bệnh"}
+            status_code=404, content={"message": "Không tìm thấy lịch sử khám bệnh"}
         )
-    
+
+    # Lấy thông tin bệnh nhân từ bản ghi đầu tiên
+    first = history[0]
+    patient_info = {
+        "citizen_id": first["citizen_id"],
+        "fullname": first["fullname"],
+        "gender": "Nam" if first["gender"] == 1 else "Nữ",
+        "dob": first["dob"].isoformat() if first["dob"] else None,
+        "address": first["address"],
+        "phone_number": first["phone_number"],
+        "ethnic": first["ethnic"],
+        "job": first["job"],
+        "is_insurance": bool(first["is_insurrance"]),
+    }
+
+    # Chỉ lấy phần lịch sử khám
     results = []
     for row in history:
-        results.append({
-            "order_id": row[0],
-            "time_order": row[1].isoformat() if hasattr(row[1], "isoformat") else str(row[1]),
-            "queue_number": row[2],
-            "service_name": row[3],
-            "clinic_name": row[4],
-            "address_room": row[5],
-            "doctor_name": row[6],
-            "payment_status": row[7],
-            "price": float(row[8]) if isinstance(row[8], Decimal) else row[8]
-        })
-    
+        results.append(
+            {
+                "order_id": row["order_id"],
+                "time_order": (
+                    row["time_order"].isoformat()
+                    if hasattr(row["time_order"], "isoformat")
+                    else str(row["time_order"])
+                ),
+                "queue_number": row["queue_number"],
+                "service_name": row["service_name"],
+                "clinic_name": row["clinic_name"],
+                "address_room": row["address_room"],
+                "doctor_name": row["doctor_name"],
+                "payment_status": row["payment_status"],
+                "price": (
+                    float(row["price"])
+                    if isinstance(row["price"], Decimal)
+                    else row["price"]
+                ),
+            }
+        )
+
     return JSONResponse(
-        status_code=200,
-        content={"history": results}
+        status_code=200, content={"patient": patient_info, "history": results}
     )
+
+
+@app.put("/orders/cancel/{order_id}")
+def cancelOrderAPI(order_id: str):
+    order = getOrderInfo(order_id)
+    if order is None:
+        return JSONResponse(
+            status_code=404, content={"message": "Không tìm thấy đơn hàng"}
+        )
+
+    if order[7] == "PAID":  # cột payment_status
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Đơn hàng đã thanh toán, không thể hủy"},
+        )
+    if order[7] == "CANCELLED":
+        return JSONResponse(
+            status_code=400, content={"message": "Đơn hàng đã bị hủy trước đó"}
+        )
+
+    if cancelOrder(order_id):
+        return JSONResponse(
+            status_code=200,
+            content={"message": f"Đơn {order_id} đã được hủy thành công"},
+        )
+    else:
+        return JSONResponse(status_code=500, content={"message": "Lỗi khi hủy đơn"})
 
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

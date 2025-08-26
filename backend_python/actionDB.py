@@ -189,14 +189,23 @@ def getNextQueueNumber(clinic_service_id: str):
         disconnect(conn, cursor)
 
 
-# Lấy lịch sử khám bệnh theo id
+# Lấy lịch sử khám bệnh theo citizen_id
 def getPatientHistory(citizen_id: str):
     conn, cursor = connect()
     try:
         query = """
         SELECT 
+            p.citizen_id,
+            p.fullname,
+            p.gender,
+            p.dob,
+            p.address,
+            p.phone_number,
+            p.ethnic,
+            p.job,
+            p.is_insurrance,
             o.order_id,
-            o.create_at,
+            o.create_at AS time_order,
             o.queue_number,
             s.service_name,
             c.clinic_name,
@@ -205,6 +214,7 @@ def getPatientHistory(citizen_id: str):
             o.payment_status,
             o.price
         FROM orders o
+        JOIN patient p ON o.citizen_id = p.citizen_id
         JOIN clinic_service cs ON o.clinic_service_id = cs.clinic_service_id
         JOIN service s ON cs.service_id = s.service_id
         JOIN clinic c ON cs.clinic_id = c.clinic_id
@@ -214,13 +224,13 @@ def getPatientHistory(citizen_id: str):
         """
         cursor.execute(query, (citizen_id,))
         history = cursor.fetchall()
-        return history
+        columns = [col[0] for col in cursor.description]
+        return [dict(zip(columns, row)) for row in history]
     except Exception as e:
         print(f"Error: {e}")
         return []
     finally:
         disconnect(conn, cursor)
-
 
 def getClinicServiceID(service_name: str):
     conn, cursor = connect()
@@ -264,6 +274,20 @@ def getPrice(citizen_id: str, clinic_service_id: str, service_name: str):
     except Exception as e:
         print(f"Error: {e}")
         return 0
+    finally:
+        disconnect(conn, cursor)
+
+
+def cancelOrder(order_id: str):
+    conn, cursor = connect()
+    try:
+        query = """UPDATE orders SET payment_status = %s WHERE order_id = %s"""
+        cursor.execute(query, ("CANCELLED", order_id))
+        conn.commit()
+        return cursor.rowcount != 0
+    except Exception as e:
+        print(f"Error cancelOrder: {e}")
+        return False
     finally:
         disconnect(conn, cursor)
 
