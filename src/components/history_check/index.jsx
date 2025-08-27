@@ -86,11 +86,7 @@ function ResultSearch() {
 
                     if (response.ok) {
                         // Cập nhật trực tiếp UI
-                        const newOrders = orders.map((item) =>
-                            item.order_id === order.order_id
-                                ? { ...item, payment_status: "CANCELLED" }
-                                : item
-                        )
+                        const newOrders = orders.map((item) => item.order_id === order.order_id ? { ...item, payment_status: "CANCELLED" } : item)
                         setOrders(newOrders)
 
                         // Nếu đang mở modal chi tiết, cập nhật luôn
@@ -165,12 +161,7 @@ function ResultSearch() {
                     <>
                         <Tag color={color}>{label}</Tag>
                         {key === "UNPAID" && (
-                            <Button
-                                type="dashed"
-                                onClick={() => handleCancelOrder(record)}
-                                loading={loadingCancel}
-                                style={{ marginLeft: 8 }}
-                            >
+                            <Button type="dashed" onClick={() => handleCancelOrder(record)} loading={loadingCancel} style={{ marginLeft: 8 }}>
                                 Hủy
                             </Button>
                         )}
@@ -189,10 +180,7 @@ function ResultSearch() {
             key: "actions",
             align: "center",
             render: (record) => (
-                <span
-                    className="hover:cursor-pointer"
-                    onClick={() => onOpen(record)}
-                >
+                <span className="hover:cursor-pointer" onClick={() => onOpen(record)}>
                     <Tag color="magenta">Chi Tiết</Tag>
                 </span>
             ),

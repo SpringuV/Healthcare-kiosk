@@ -70,7 +70,7 @@ function StateStep() {
                     {steps.map((step, index) => (
                         <React.Fragment key={step.id}>
                             {/* Step Circle và Title */}
-                            <div className='w-28'>
+                            <div className='w-20 md:w-28'>
                                 <div className="flex flex-col items-center">
                                     {/* Circle hiển thị số bước */}
                                     <div className={` w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-sm md:text-base font-bold border-2 transition-all duration-1000 ${getStepClasses(getStepStatus(step.id))}`}>

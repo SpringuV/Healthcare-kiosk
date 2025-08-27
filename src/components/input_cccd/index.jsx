@@ -3,7 +3,7 @@ import NumberPad from '../number_pad'
 import Alert from '../alert/Alert'
 import { useNavigate } from 'react-router-dom'
 import { get } from '../../utils/request'
-import { Spin } from 'antd'
+import { Button, Spin } from 'antd'
 import { useStateStep } from '../context/state_step_context'
 
 function InputCCCD(props) {
@@ -130,22 +130,24 @@ function InputCCCD(props) {
     const handleKeyDownInput = (e) => {
         const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"]
         const inputValue = inputRef.current.value
+        let message = ""
 
-        // Nếu không phải số và không nằm trong các phím cho phép → ngăn chặn
         if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-            console.log(e.key)
             e.preventDefault()
-            setErrorMessage("Không nhập kí tự chữ")
-            return
+            message = "Chỉ được nhập số"
+        } else if (/[0-9]/.test(e.key) && inputValue.length >= 12) {
+            e.preventDefault()
+            message = "Căn cước công dân gồm 12 chữ số"
         }
 
-        // Nếu là số và đã đủ 12 ký tự → ngăn không cho nhập thêm
-        if (/[0-9]/.test(e.key) && inputValue.length >= 12) {
-            setErrorMessage("Căn cước công dân gồm 12 chữ số")
-            e.preventDefault();
+        if (message) {
+            setErrorMessage(message)
+            setTimeout(() => setErrorMessage(""), 3000) // 3 giây tự ẩn
+        } else {
+            setErrorMessage("")
         }
-        setErrorMessage("")
     }
+
 
     return (
         <>
@@ -156,12 +158,12 @@ function InputCCCD(props) {
                         <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">
                             <h2>Nhập thông tin</h2>
                         </div>
-                        <div className="w-6 lg:w-8 flex justify-center mr-1" onClick={onClose}>
-                            <i className="text-center fa-solid fa-xmark p-1 rounded-full h-6 w-6 bg-slate-300 hover:bg-slate-400"></i>
-                        </div>
+                        <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600'>Trở lại</Button>
                     </div>
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
+
                         <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
+                            <p className='mt-2 text-base'>Vui lòng nhập thẻ căn cước công dân để tiếp tục</p>
                             <input maxLength={12} onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} type="text"
                                 // onClick={() => setShowNumberPad(true)}
                                 className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive"
