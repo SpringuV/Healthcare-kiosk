@@ -1,10 +1,11 @@
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useState } from 'react'
 import { useForm } from "../context/form_context"
 import Provinces from "../provinces"
 import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
 import { post } from "../../utils/request"
+import { useStateStep } from "../context/state_step_context"
 function NonInsurrance({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
@@ -102,12 +103,10 @@ function NonInsurrance({ onClose }) {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"]
 
-    const context = useOutletContext()
-    const { stateStep, setStateStep } = context
+    const { setStateStep } = useStateStep();
     useEffect(() => {
-        console.log('Current step:', stateStep) // Debug
-        setStateStep(1) 
-    }, [setStateStep])
+        setStateStep(1);
+    }, [setStateStep]);
     return (
         <>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">

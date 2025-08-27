@@ -6,6 +6,8 @@ import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
 import { get, post } from "../../../utils/request";
 import { Spin } from "antd";
+import { useStateStep } from "../../context/state_step_context";
+import { usePatientRegister } from "../../context/patient_register_context"
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -15,8 +17,13 @@ function ServiceItem() {
     const navigate = useNavigate()
     const { formData } = useForm()
     const { insurranceInfo } = useInsurrance()
-
+    const { setPatientRegister } = usePatientRegister()
     const [spinning, setSpinning] = useState(false)
+    
+    const { setStateStep, flowType } = useStateStep()
+    useEffect(() => {
+        setStateStep(2)
+    }, [setStateStep])
 
     const handleChange = (option) => {
         setSelectedOption(option)
@@ -57,15 +64,18 @@ function ServiceItem() {
         setSpinning(true)
         try {
             const response = await post(`/orders/create/${citizen_id}`, payload)
-
             if (!response.ok) {
                 alert("Đăng ký thất bại.");
                 setSpinning(false)
                 return;
             }
             setSpinning(false)
-            navigate('/confirm-registration', { state: response.data })
-
+            setPatientRegister(response.data)
+            if (flowType === "insurance") {
+                navigate('/insur/confirm-registration')
+            } else {
+                navigate('/non-insur/payment')
+            }
         } catch (err) {
             setSpinning(false)
             console.error("Lỗi khi gọi API tạo order:", err);
@@ -147,7 +157,12 @@ function ServiceItem() {
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
                     <Spin spinning={spinning}>
-                        <button disabled={spinning} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                        {flowType === "insurance" ? (<div>
+                            <button disabled={spinning} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                        </div>) : (
+                            <button className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" disabled={spinning} onClick={handleRegister}>Bước tiếp theo: Thanh toán</button>
+                        )}
+
                     </Spin>
                 </div>
             </div>

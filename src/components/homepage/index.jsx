@@ -1,14 +1,9 @@
-import React, { useEffect } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
     const navigate = useNavigate()
 
-    const { setStateStep } = useOutletContext()
-    useEffect(() => {
-        setStateStep(1)
-    }, [])
     return (
         <>
             <div className='text-center px-7 py-8  rounded-lg'>

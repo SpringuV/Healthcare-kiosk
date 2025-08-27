@@ -1,18 +1,36 @@
+import { useNavigate } from 'react-router-dom'
+import { usePatientRegister } from '../context/patient_register_context'
+import { useStateStep } from '../context/state_step_context'
 import { useEffect } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useForm } from '../context/form_context'
+import { useInsurrance } from '../context/insurrance_context'
 function RegisterSuccess() {
     const navigate = useNavigate()
-    const location = useLocation()
-    const state = location.state
-
-    const context = useOutletContext()
-    // eslint-disable-next-line no-unused-vars
-    const { stateStep, setStateStep } = context || {}
-    
+    const { patientRegister, clearPatientRegister } = usePatientRegister()
+    const { flowType, setStateStep, clearStateStepAndFlowType } = useStateStep()
+    const { clearFormData } = useForm()
+    const { clearInsuranceInfo } = useInsurrance()
+    console.log(patientRegister)
     useEffect(() => {
-        setStateStep?.(3) // Step cho chọn dịch vụ
-    }, [setStateStep])
+        if (flowType === "insurance") {
+            setStateStep(3)
+        } else if (flowType === "non-insurance") {
+            setStateStep(4)
+        }
+    }, [flowType, setStateStep])
+
+    const handleReturnHomeInsur = () => {
+        clearStateStepAndFlowType()
+        clearPatientRegister()
+        clearFormData()
+        clearInsuranceInfo()
+        navigate("/", { replace: true })
+        window.history.pushState(null, null, "/")
+        window.onpopstate = () => {
+            navigate("/", { replace: true })
+        }
+    }
+
     return (
         <>
             {/* lớp phủ ngoài */}
@@ -27,18 +45,18 @@ function RegisterSuccess() {
                     <div className='px-5 py-2 flex-1'>
                         <span className='flex justify-center items-center text-[18px] sm:text-[20px] md:text-[23px] lg:text-[25px] font-bold w-full mb-2'>PHIẾU KHÁM BỆNH</span>
                         {[
-                            ['Họ và tên:', state.fullname],
-                            ['Giới tính:', state.gender],
-                            ['Ngày sinh:', state.dob],
-                            ['Dịch vụ khám:', state.service_name],
-                            ['CCCD:', state.citizen_id],
-                            ['Phòng khám:', state.address_room],
-                            ['Bác sĩ:', state.doctor_name],
-                            ['Số phiếu đợi:', state.queue_number],
-                            ['Bảo hiểm y tế:', state.is_insurrance ? 'Có' : 'Không'],
-                            ['Ngày đăng kí:', new Date(state.time_order).toLocaleString()],
-                            ['Giá khám dịch vụ:', `${Math.round(state.price * 26181).toLocaleString('vi-VN')} VNĐ`, state.is_insurrance === "Không" ? true : false ],
-                            ['Giá khám bảo hiểm:', `${Math.round(state.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, state.is_insurrance === "Có" ? true : false],
+                            ['Họ và tên:', patientRegister.fullname],
+                            ['Giới tính:', patientRegister.gender],
+                            ['Ngày sinh:', patientRegister.dob],
+                            ['Dịch vụ khám:', patientRegister.service_name],
+                            ['CCCD:', patientRegister.citizen_id],
+                            ['Phòng khám:', patientRegister.address_room],
+                            ['Bác sĩ:', patientRegister.doctor_name],
+                            ['Số phiếu đợi:', patientRegister.queue_number],
+                            ['Bảo hiểm y tế:', patientRegister.is_insurrance ? 'Có' : 'Không'],
+                            ['Ngày đăng kí:', new Date(patientRegister.time_order).toLocaleString()],
+                            ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
+                            ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
                         ].map(([label, value, isItalic], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>
@@ -49,10 +67,10 @@ function RegisterSuccess() {
                     {/* QR Code */}
                     <div className=' pt-3 flex flex-col items-center justify-center'>
                         <p className="text-center text-[16px] md:text-[17px] lg:text-[18px] font-medium mb-2">Quét mã QR để tải phiếu khám</p>
-                        <img src={`data:image/png;base64,${state.QRCode}`} alt="QR Code" className='rounded-lg' width={150} height={150} />
+                        <img src={`data:image/png;base64,${patientRegister.QRCode}`} alt="QR Code" className='rounded-lg' width={150} height={150} />
                     </div>
                     <div className=' flex justify-center items-center px-5 py-3'>
-                        <button className='text-[17px] text-white font-medium px-10 py-2 rounded-xl bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600' type='button' onClick={()=> navigate('/payment', {state: state})}>THANH TOÁN</button>
+                        <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700' onClick={handleReturnHomeInsur} type='button' >Xác nhận và quay về trang chủ</button>
                     </div>
                 </div>
             </div>

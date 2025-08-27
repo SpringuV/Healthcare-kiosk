@@ -1,23 +1,23 @@
 import { useInsurrance } from "../context/insurrance_context"
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import React, { useEffect } from 'react'
+import { useStateStep } from "../context/state_step_context"
 function InfoInsurrance() {
     const { insurranceInfo } = useInsurrance()
     const navigate = useNavigate()
 
     const handleChangePath = () => {
         if (insurranceInfo.is_saved) {
-            navigate('/service')
+            navigate('/insur/service')
         } else {
             navigate('/insur/update-info')
         }
     }
 
-    const context = useOutletContext()
-    const { stateStep, setStateStep } = context
+    const context = useStateStep()
+    const { setStateStep } = context
     useEffect(() => {
-        console.log('Current step:', stateStep) // Debug
-        setStateStep(1) 
+        setStateStep(1)
     }, [setStateStep])
     return (
         <>

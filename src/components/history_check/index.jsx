@@ -1,27 +1,25 @@
-import { useLocation, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col } from "antd"
 import dayjs from "dayjs"
 import { get, put } from "../../utils/request"
 import { useMemo, useState } from "react"
 import OrderDetail from "./order_detail"
+import { usePatientHistory } from "../context/patient_history_context"
 
 const { RangePicker } = DatePicker
 
 function ResultSearch() {
     const navigate = useNavigate()
-    const location = useLocation()
-    const initialOrders = location.state.history || []
-
+    const { patientHistory, clearPatientHistory } = usePatientHistory()
     // State quản lý
-    const [orders, setOrders] = useState(initialOrders)
+    const [orders, setOrders] = useState(patientHistory.history)
     const [isModalDetail, setIsModalDetail] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [dateRange, setDateRange] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [loadingTable, setLoadingTable] = useState(false)
 
-    const patient = location.state.patient
-    console.log(patient)
+    const patient = patientHistory.patient
 
     // Mở modal chi tiết
     const onOpen = (order) => {
@@ -32,7 +30,7 @@ function ResultSearch() {
     const handleReload = async () => {
         try {
             setLoadingTable(true)
-            const res = await get(`/patient/history/${location.state.patient.citizen_id}`)
+            const res = await get(`/patient/history/${patient.citizen_id}`)
             if (res.ok) {
                 setOrders(res.data.history)
             }
@@ -50,12 +48,13 @@ function ResultSearch() {
 
     // Về trang chủ
     const handleReturnHome = () => {
-        navigate("/", { replace: true });
+        navigate("/", { replace: true })
         window.history.pushState(null, null, "/")
         window.onpopstate = () => {
             navigate("/", { replace: true })
-        };
-    };
+        }
+        clearPatientHistory()
+    }
 
     // Bộ lọc dịch vụ
     const serviceFilter = [...new Set(orders.map((item) => item.service_name))].map((service) => ({ text: service, value: service }))
@@ -132,7 +131,9 @@ function ResultSearch() {
             key: "service_name",
             align: "center",
             filters: serviceFilter,
+            sorter: (a, b) => a.service_name.localeCompare(b.service_name),
             onFilter: (value, record) => record.service_name === value,
+            sortDirections: ["descend", "ascend"],
         },
         {
             title: "Giá tiền",

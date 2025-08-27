@@ -1,24 +1,18 @@
 import { useState, useEffect } from "react"
 import ServiceItem from "./service_selection"
-import { useOutletContext } from "react-router-dom"
+import { useStateStep } from "../context/state_step_context"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
     const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
 
-    const context = useOutletContext()
-    const { stateStep, setStateStep } = context || {}
-    
+    const context = useStateStep()
+    const { setStateStep } = context
     useEffect(() => {
-        console.log('Service - Current step:', stateStep)
-        setStateStep?.(2) // Step cho chọn dịch vụ
+        setStateStep(2)
     }, [setStateStep])
     return (
         <>
             <div className='h-screen flex flex-col items-center'>
-                {/* <div className='py-2 w-full flex justify-center'>
-                    <h2 className='text-center text-colorOne font-extrabold text-[22px] w-[80vw]'>Chào mừng bạn tới KIOSK phục vụ tự động, vui lòng
-                        chọn dịch vụ bạn muốn thực hiện!</h2>
-                </div> */}
                 <div className='overflow-y-auto p-3 w-full'>
                     <div className='flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 '>
                         {service.map((text, i) => (

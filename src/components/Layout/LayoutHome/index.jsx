@@ -1,10 +1,7 @@
 import Header from "../../Header"
 import StateStep from "../../state-step"
 import { Outlet } from "react-router-dom"
-import { useState } from "react"
-
-function LayoutWithStep() {
-    const [stateStep, setStateStep] = useState(1);
+function LayoutHome() {
 
     return (
         <>
@@ -13,15 +10,14 @@ function LayoutWithStep() {
             </header>
 
             <main>
-                <StateStep step={stateStep} />
-                <Outlet context={{ stateStep, setStateStep }}/>
+                {/* The main content will be rendered here */}
+                <Outlet />
             </main>
-
             <footer>
-                {/* Footer content */}
+                {/* Footer content can be added here */}
             </footer>
         </>
     )
 }
 
-export default LayoutWithStep
+export default LayoutHome

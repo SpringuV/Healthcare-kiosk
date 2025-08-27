@@ -1,12 +1,13 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import NumberPad from '../number_pad'
 import Alert from '../alert/Alert'
-import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { get } from '../../utils/request'
 import { Spin } from 'antd'
+import { useStateStep } from '../context/state_step_context'
 
 function InputCCCD(props) {
-    const { onClose } = props
+    const { onClose, mode, onSuccess } = props
     // const [showNumpad, setShowNumberPad] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
     const [showAlert, setShowAlert] = useState(false)
@@ -21,7 +22,18 @@ function InputCCCD(props) {
     const inputRef = useRef(null)
 
     const [spinning, setSpinning] = useState(false)
+    const { setFlowType, setStateStep } = useStateStep()
 
+    // set cho toàn trang input là step 1
+    useEffect(() => {
+        // set cho toàn trang input là step 1
+        setStateStep(1)
+        if (mode === "insurance") {
+            setFlowType("insurance")
+        } else if (mode === "non-insurance") {
+            setFlowType("non-insurance")
+        }
+    }, [setStateStep, mode, setFlowType])
     // const handleInput = (value) => {
     //     if (inputRef.current) {
     //         if (value === "delete") {
@@ -57,7 +69,7 @@ function InputCCCD(props) {
         try {
             let response;
             setSpinning(true)
-            if (props.mode === "insurance") {
+            if (mode === "insurance") {
                 response = await get(`/health-insurrances/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
@@ -72,7 +84,7 @@ function InputCCCD(props) {
                     return
                 }
             }
-            else if (props.mode === "non-insurance") {
+            else if (mode === "non-insurance") {
                 response = await get(`/patient/check/${inputValue}`)
                 if (response.status === 404) {
                     showAlertWithConfig({
@@ -88,7 +100,7 @@ function InputCCCD(props) {
                     return
                 }
             }
-            else if (props.mode === "history") {
+            else if (mode === "history") {
                 response = await get(`/patient/history/${inputValue}`)
                 if (!response.ok) {
                     showAlertWithConfig({
@@ -102,7 +114,7 @@ function InputCCCD(props) {
             }
 
             // nếu ok → gọi callback onSuccess để parent xử lý
-            props.onSuccess?.(response.data)
+            onSuccess?.(response.data)
             setSpinning(false)
 
         } catch (err) {
@@ -135,11 +147,10 @@ function InputCCCD(props) {
         setErrorMessage("")
     }
 
-    const outletContext = useOutletContext()
     return (
         <>
             {/* lớp phủ */}
-            <div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm">
+            <div className="fixed inset-0 flex justify-center items-center backdrop-blur-0">
                 <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
                         <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">
@@ -168,7 +179,7 @@ function InputCCCD(props) {
                     </div>
                 </div>
             </div>
-            <Outlet context={outletContext} />
+            {/* <Outlet context={outletContext} /> */}
             {showAlert && (
                 <Alert
                     textInput={alertConfig.text}
