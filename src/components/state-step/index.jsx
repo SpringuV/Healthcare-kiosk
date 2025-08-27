@@ -70,15 +70,17 @@ function StateStep() {
                     {steps.map((step, index) => (
                         <React.Fragment key={step.id}>
                             {/* Step Circle và Title */}
-                            <div className="flex flex-col items-center">
-                                {/* Circle hiển thị số bước */}
-                                <div className={` w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-sm md:text-base font-bold border-2 transition-all duration-1000 ${getStepClasses(getStepStatus(step.id))}`}>
-                                    {step.id}
+                            <div className='w-28'>
+                                <div className="flex flex-col items-center">
+                                    {/* Circle hiển thị số bước */}
+                                    <div className={` w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-sm md:text-base font-bold border-2 transition-all duration-1000 ${getStepClasses(getStepStatus(step.id))}`}>
+                                        {step.id}
+                                    </div>
+                                    {/* Title của bước */}
+                                    <span className={`mt-2 text-xs md:text-sm text-center max-w-[120px] leading-tight transition-all duration-1000 ${getTitleClasses(getStepStatus(step.id))}`}>
+                                        {step.title}
+                                    </span>
                                 </div>
-                                {/* Title của bước */}
-                                <span className={`mt-2 text-xs md:text-sm text-center max-w-[120px] leading-tight transition-all duration-1000 ${getTitleClasses(getStepStatus(step.id))}`}>
-                                    {step.title}
-                                </span>
                             </div>
 
                             {/* Đường nối giữa các bước (không hiển thị cho bước cuối) */}

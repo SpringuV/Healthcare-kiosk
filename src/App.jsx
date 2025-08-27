@@ -15,6 +15,7 @@ import ResultSearch from './components/history_check'
 import { useForm } from './components/context/form_context'
 import LayoutHome from './components/Layout/LayoutHome'
 import { usePatientHistory } from './components/context/patient_history_context'
+import { useStateStep } from './components/context/state_step_context'
 
 
 function App() {
@@ -22,18 +23,25 @@ function App() {
     const { setFormData } = useForm()
     const { setInsurranceInfo } = useInsurrance()
     const { setPatientHistory } = usePatientHistory()
+    const { clearStateStepAndFlowType } = useStateStep()
     return (
 
         <Routes>
             {/* Trang chủ: không có step */}
             <Route path="/" element={<LayoutHome />}>
                 <Route path='/' element={<HomePage />} />
-                <Route path="result-search" element={<InputCCCD mode="history" onClose={() => navigate(-1)} onSuccess={(data) => { setPatientHistory(data); navigate('/result') }} />} />
+                <Route path="result-search" element={<InputCCCD mode="history" onClose={() => {
+                    navigate(-1)
+                    clearStateStepAndFlowType()
+                }} onSuccess={(data) => { setPatientHistory(data); navigate('/result') }} />} />
                 <Route path="result" element={<ResultSearch onClose={() => navigate(-1)} />} />
             </Route>
             {/* Flow Bảo hiểm y tế */}
             <Route path="/insur" element={<LayoutDefault flowType="insurance" />}>
-                <Route index element={<InputCCCD mode="insurance" onClose={() => navigate('/')} onSuccess={(data) => { setInsurranceInfo(data); navigate('/insur/info') }} />} />
+                <Route index element={<InputCCCD mode="insurance" onClose={() => {
+                    navigate(-1)
+                    clearStateStepAndFlowType()
+                }} onSuccess={(data) => { setInsurranceInfo(data); navigate('/insur/info') }} />} />
                 <Route path="info" element={<InfoInsurrance onClose={() => navigate('/service')} />} />
                 <Route path="update-info" element={<UpdateInfoPatientInsurrance />} />
                 <Route path="service" element={<Service />} />
@@ -41,7 +49,10 @@ function App() {
             </Route>
             {/* Flow Dịch vụ (không BHYT) */}
             <Route path="/non-insur" element={<LayoutDefault flowType="non-insurance" />}>
-                <Route index element={<InputCCCD mode="non-insurance" onClose={() => navigate('/')} onSuccess={(data) => { setFormData(data); navigate('/non-insur/info') }} />} />
+                <Route index element={<InputCCCD mode="non-insurance" onClose={() => {
+                    navigate(-1)
+                    clearStateStepAndFlowType()
+                }} onSuccess={(data) => { setFormData(data); navigate('/non-insur/info') }} />} />
                 <Route path="register" element={<NonInsurrance onClose={() => navigate('/')} />} />
                 <Route path="info" element={<NonInsurranceInfo />} />
                 <Route path="service" element={<Service />} />
