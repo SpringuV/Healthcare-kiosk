@@ -20,7 +20,7 @@ function ResultSearch() {
     const [loadingTable, setLoadingTable] = useState(false)
 
     const patient = patientHistory.patient
-
+    console.log(patientHistory)
     // Mở modal chi tiết
     const onOpen = (order) => {
         setSelectedOrder(order)

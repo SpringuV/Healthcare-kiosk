@@ -313,6 +313,7 @@ def getPatientHistoryAPI(citizen_id: str):
                 "address_room": row["address_room"],
                 "doctor_name": row["doctor_name"],
                 "payment_status": row["payment_status"],
+                "payment_method": row["payment_method"],
                 "price": (
                     float(row["price"])
                     if isinstance(row["price"], Decimal)

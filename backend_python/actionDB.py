@@ -212,6 +212,7 @@ def getPatientHistory(citizen_id: str):
             c.address_room,
             st.fullname AS doctor_name,
             o.payment_status,
+            o.payment_method,
             o.price
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
