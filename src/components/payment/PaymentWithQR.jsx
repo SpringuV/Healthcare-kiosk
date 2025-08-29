@@ -4,6 +4,7 @@ import { usePatientRegister } from "../context/patient_register_context"
 import { useNavigate } from "react-router-dom"
 import { usePaymentAgain } from "../context/payment_again_context"
 import { useStateStep } from "../context/state_step_context"
+import { DOMAIN } from "../../data/port"
 
 function PaymentWithQR() {
     const navigate = useNavigate()
@@ -45,8 +46,8 @@ function PaymentWithQR() {
 
     useEffect(() => {
         // Tạo kết nối tới WebSocket backend
-        const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local:     
-        // const ws = new WebSocket(`wss://${DOMAIN}/ws/checkTransfer`);
+        // const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local:     
+        const ws = new WebSocket(`wss://${DOMAIN}/ws/checkTransfer`);
         ws.onopen = () => {
             console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend
