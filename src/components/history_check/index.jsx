@@ -5,21 +5,24 @@ import { get, put } from "../../utils/request"
 import { useMemo, useState } from "react"
 import OrderDetail from "./order_detail"
 import { usePatientHistory } from "../context/patient_history_context"
-import { usePatientRegister } from "../context/patient_register_context"
+import { usePaymentAgain } from "../context/payment_again_context"
+import { useStateStep } from "../context/state_step_context"
 
 const { RangePicker } = DatePicker
 
 function ResultSearch() {
     const navigate = useNavigate()
-    const { setPatientRegister } = usePatientRegister()
-    const { patientHistory, clearPatientHistory } = usePatientHistory()
+    
     // State quản lý
-    const [orders, setOrders] = useState(patientHistory.history)
     const [isModalDetail, setIsModalDetail] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [dateRange, setDateRange] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [loadingTable, setLoadingTable] = useState(false)
+    const { setPaymentAgain } = usePaymentAgain()
+    const { patientHistory, clearPatientHistory } = usePatientHistory()
+    const [orders, setOrders] = useState(patientHistory.history)
+    const {setFlowType} = useStateStep()
 
     const patient = patientHistory.patient
     console.log(patientHistory)
@@ -109,7 +112,11 @@ function ResultSearch() {
 
     // Thanh toán đơn
     const handlePaying = (order) => {
-        setPatientRegister(order)
+        setPaymentAgain({
+            info_user: patientHistory.patient,
+            info_order: order
+        })
+        setFlowType("non-insurance")
         navigate("/non-insur/banking")
     }
 
@@ -170,12 +177,8 @@ function ResultSearch() {
                         <Tag color={color}>{label}</Tag>
                         {key === "UNPAID" && (
                             <>
-                            <Button type="dashed" onClick={() => handleCancelOrder(record)} loading={loadingCancel} style={{ marginLeft: 8 }}>
-                                Hủy
-                            </Button>
-                            <Button type="dashed" onClick={() => handlePaying(record)} loading={loadingCancel} style={{ marginLeft: 8 }}>
-                                Thanh toán
-                            </Button>
+                                <Button className="mr-2" type="dashed" onClick={() => handleCancelOrder(record)} loading={loadingCancel}>Hủy</Button>
+                                <Button type="dashed" loading={loadingCancel} onClick={() => handlePaying(record)}>Thanh toán</Button>
                             </>
                         )}
                     </>

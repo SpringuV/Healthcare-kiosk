@@ -5,6 +5,7 @@ import { FormProvider } from "../form_context"
 import { StateStepProvider } from "../state_step_context"
 import { PatientRegisterProvider } from "../patient_register_context"
 import { PatientHistoryProvider } from "../patient_history_context"
+import { PaymentAgainProvider } from "../payment_again_context"
 
 function AppProviders({ children }) {
     return (
@@ -15,7 +16,9 @@ function AppProviders({ children }) {
                         <StateStepProvider>
                             <PatientRegisterProvider>
                                 <PatientHistoryProvider>
-                                    {children}
+                                    <PaymentAgainProvider>
+                                        {children}
+                                    </PaymentAgainProvider>
                                 </PatientHistoryProvider>
                             </PatientRegisterProvider>
                         </StateStepProvider>

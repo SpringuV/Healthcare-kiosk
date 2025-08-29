@@ -145,7 +145,6 @@ function InputCCCD(props) {
 
     const handleKeyDownInput = (e) => {
         const allowedKeys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"]
-        const inputValue = inputRef.current.value
         let message = ""
 
         if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
@@ -178,7 +177,7 @@ function InputCCCD(props) {
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
 
                         <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
-                            <p className='mt-2 text-base'>Vui lòng nhập thẻ căn cước công dân để tiếp tục</p>
+                            <p className='mt-2 text-base text-center'>Vui lòng nhập thẻ căn cước công dân để tiếp tục</p>
                             <input maxLength={12} onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} type="text"
                                 // onClick={() => setShowNumberPad(true)}
                                 className="w-[80%] font-medium border-none outline-none text-white rounded-lg bg-[#006709] text-center my-3 p-2 hover:bg-colorFive focus:bg-colorFive"

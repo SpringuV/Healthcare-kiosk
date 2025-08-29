@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react"
 import CountdownTimer from '../count_down_timer'
-import { DOMAIN } from "../../data/port"
 import { usePatientRegister } from "../context/patient_register_context"
 import { useNavigate } from "react-router-dom"
+import { usePaymentAgain } from "../context/payment_again_context"
+import { useStateStep } from "../context/state_step_context"
 
 function PaymentWithQR() {
     const navigate = useNavigate()
     const [showButtonReturn, setShowButtonReturn] = useState(false)
     const [showTimeDown, setShowTimeDown] = useState(true)
     const [textSuccess, setTextSuccess] = useState("")
+    const { paymentAgain } = usePaymentAgain()
+    const { flowType, setStateStep } = useStateStep()
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
 
     const [isFailPayment, setIsFailPayment] = useState(false)
     const { patientRegister } = usePatientRegister()
-
     const today = new Date()
     const formattedDate = today.toLocaleDateString("vi-VN", {
         day: "2-digit",
@@ -36,13 +38,22 @@ function PaymentWithQR() {
     }
 
     useEffect(() => {
+        if(flowType === "non-insurance"){
+            setStateStep(3)
+        }
+    }, [flowType, setStateStep])
+
+    useEffect(() => {
         // Tạo kết nối tới WebSocket backend
-        // const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local:     
-        const ws = new WebSocket(`wss://${DOMAIN}/ws/checkTransfer`);
+        const ws = new WebSocket("ws://localhost:8000/ws/checkTransfer"); // local:     
+        // const ws = new WebSocket(`wss://${DOMAIN}/ws/checkTransfer`);
         ws.onopen = () => {
             console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend
-            ws.send(JSON.stringify({ order_id: patientRegister.order_id }));
+            const orderId = patientRegister?.order_id || paymentAgain?.info_order?.order_id;
+            if (orderId) {
+                ws.send(JSON.stringify({ order_id: orderId }));
+            }
         };
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -66,18 +77,23 @@ function PaymentWithQR() {
         return () => {
             ws.close();
         };
-    }, [patientRegister.order_id]);
+    }, [patientRegister?.order_id, paymentAgain?.info_order?.order_id]);
 
-    const amount = Math.round(patientRegister.price * 26181)
     // VQRQADTJG7282
     // 962471907021002
+
+    const payment = {
+        order_id: patientRegister.order_id ? patientRegister.order_id : paymentAgain.info_order.order_id,
+        amount: Math.round(patientRegister.price ? patientRegister.price * 26181 : paymentAgain.info_order.price * 26181),
+    }
+
     return (
         <>
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
                     <div className="w-full flex justify-center">
-                        {patientRegister && (<img key={amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${amount}&des=ORDER${patientRegister.order_id}`}></img>)}
+                        {(patientRegister?.order_id || paymentAgain?.info_order?.order_id) && (<img key={payment.amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${payment.amount}&des=ORDER${payment.order_id}`}></img>)}
                     </div>
                     <h1 className="text-center font-bold text-[20px]">Thông tin chuyển khoản ngân hàng</h1>
                     <div className="grid grid-cols-2">
@@ -91,16 +107,16 @@ function PaymentWithQR() {
                             <div>NGUYEN NGO AN</div>
                             <div>VQRQADTJG7282</div>
                             <div>MB Bank</div>
-                            <div>{(amount).toLocaleString('vi-VN')} VNĐ</div>
+                            <div>{(payment.amount).toLocaleString('vi-VN')} VNĐ</div>
                         </div>
                     </div>
                 </div>
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Thông tin</h1>
                     <ul className="flex flex-col justify-center mx-[5%]">
-                        <li><span className="font-semibold">Mã đơn hàng:</span> {patientRegister.order_id}</li>
+                        <li><span className="font-semibold">Mã đơn hàng:</span> {payment.order_id}</li>
                         <li><span className="font-semibold">Ngày:</span> {formattedDate}</li>
-                        <li><span className="font-semibold mr-2">Tổng tiền:</span>{`${(amount).toLocaleString('vi-VN')} VNĐ`}</li>
+                        <li><span className="font-semibold mr-2">Tổng tiền:</span>{`${(payment.amount).toLocaleString('vi-VN')} VNĐ`}</li>
                         <li><span className="font-semibold">Phương thức thanh toán:</span> Chuyển khoản ngân hàng (Quét QR)</li>
                     </ul>
                     {/* time countdown */}

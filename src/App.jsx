@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Service from './components/service'
 import InputCCCD from './components/input_cccd'
-import Register from './components/register'
+import Register from './components/register-user'
 import InfoInsurrance from './components/insurance/insurrance_info'
 import NonInsurranceInfo from './components/insurance_not/non-insurrance-info'
 import { useInsurrance } from './components/context/insurrance_context'

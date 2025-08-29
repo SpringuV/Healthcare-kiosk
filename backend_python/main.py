@@ -108,7 +108,7 @@ def makePatientInfo(patient: PatientInfo):
         patient.phone_number,
         patient.ethnic,
         patient.job,
-        patient.is_insur
+        patient.is_insur,
     )
     if not result:
         return JSONResponse(status_code=400, content={"reason": reason})
@@ -119,9 +119,7 @@ def makePatientInfo(patient: PatientInfo):
 # Cập nhật thông tin bệnh nhân
 @app.put("/patient/insurrance-info/{citizen_id}")
 def updatePatient(citizen_id: str, info: PatientInfoUpdate):
-    if not updatePatientInfo(
-        citizen_id, info.address, info.ethnic, info.job
-    ):
+    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job):
         return JSONResponse(status_code=400, content={})
     else:
         return JSONResponse(status_code=201, content={})
@@ -197,6 +195,18 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo):
                 f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}"
             ),
         }
+
+
+@app.get("/showQR/{order_id}")
+def show_qr(order_id: str):
+    # Link tải PDF hoặc link tuỳ ý bạn muốn encode
+    link = f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}"
+
+    qr_code_base64 = makeQRCode(link)
+
+    return JSONResponse(
+        content={"order_id": order_id, "QRCode": qr_code_base64}, status_code=200
+    )
 
 
 # Hiện thị file pdf phiếu khám bệnh (ko phải tải về)
