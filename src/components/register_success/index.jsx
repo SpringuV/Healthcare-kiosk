@@ -54,9 +54,11 @@ function RegisterSuccess() {
                             ['Bác sĩ:', patientRegister.doctor_name],
                             ['Số phiếu đợi:', patientRegister.queue_number],
                             ['Bảo hiểm y tế:', patientRegister.is_insurrance ? 'Có' : 'Không'],
+                            ['Sử dụng bảo hiểm y tế:', patientRegister.use_insurrance ? 'Có' : 'Không'],
                             ['Ngày đăng kí:', new Date(patientRegister.time_order).toLocaleString()],
-                            ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
-                            ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
+                            ['Giá khám:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`],
+                            // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
+                            // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
                         ].map(([label, value, isItalic], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>

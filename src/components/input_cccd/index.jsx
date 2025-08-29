@@ -61,7 +61,7 @@ function InputCCCD(props) {
         e.preventDefault()
         const inputValue = inputRef.current.value.trim()
 
-        if (inputValue.length !== 12) {
+        if (inputValue.length != 12) {
             setErrorMessage("Căn cước công dân gồm 12 chữ số")
             return
         }
@@ -82,6 +82,21 @@ function InputCCCD(props) {
                     })
                     setSpinning(false)
                     return
+                }
+                else {
+                    if (!response.data["is_saved"]) {
+                        showAlertWithConfig({
+                            text: "Không tìm thấy thông tin bệnh nhân...",
+                            confirmText: "Đăng ký mới",
+                            cancelText: "Nhập lại CCCD",
+                            onConfirm: () => {
+                                setShowAlert(false)
+                                navigate('/insur/register')
+                            }
+                        })
+                        setSpinning(false)
+                        return
+                    }
                 }
             }
             else if (mode === "non-insurance") {
@@ -136,9 +151,6 @@ function InputCCCD(props) {
         if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
             e.preventDefault()
             message = "Chỉ được nhập số"
-        } else if (/[0-9]/.test(e.key) && inputValue.length >= 12) {
-            e.preventDefault()
-            message = "Căn cước công dân gồm 12 chữ số"
         }
 
         if (message) {
@@ -159,7 +171,9 @@ function InputCCCD(props) {
                         <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">
                             <h2>Nhập thông tin</h2>
                         </div>
-                        <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600'>Trở lại</Button>
+                        <div>
+                            <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600'>Trở lại</Button>
+                        </div>
                     </div>
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
 

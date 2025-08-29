@@ -25,6 +25,7 @@ from actionDB import (
     getTransferState,
     getOrderInfo,
     updateTransferState,
+    setPaymentMethod,
 )
 
 from qrMaker import makeQRCode
@@ -57,33 +58,30 @@ class PatientInfo(BaseModel):
     address: str
     ethnic: str
     job: str
+    is_insur: bool
 
 
 class PatientInfoUpdate(BaseModel):
     address: str
     ethnic: str
     job: str
-    is_insurrance: bool
 
 
 class OrderInfo(BaseModel):
     service_name: str
+    type: str
 
 
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
 @app.get("/health-insurrances/{citizen_id}", status_code=200)
 def checkInsurrance(citizen_id: str):
-    isActivate, state, insurrance = isInsurrance(citizen_id)
+    isActivate, _, insurrance = isInsurrance(citizen_id)
     isHad, _ = isHasPatientInfo(citizen_id)
     if insurrance is None:
         return JSONResponse(status_code=404, content={})
     else:
         if isHad:
             updatePatientInsurranceState(citizen_id, isActivate)
-        else:
-            savePatientInfo(
-                *insurrance[:4], None, insurrance[5], None, None, isActivate
-            )
         return {
             "citizen_id": insurrance[0],
             "full_name": insurrance[1],
@@ -99,7 +97,7 @@ def checkInsurrance(citizen_id: str):
 
 
 # Tạo bảng ghi thông tin bệnh nhân
-@app.post("/patient/non-insurrance")
+@app.post("/patient/register")
 def makePatientInfo(patient: PatientInfo):
     result, reason = savePatientInfo(
         patient.patient_id,
@@ -110,7 +108,7 @@ def makePatientInfo(patient: PatientInfo):
         patient.phone_number,
         patient.ethnic,
         patient.job,
-        False,
+        patient.is_insur
     )
     if not result:
         return JSONResponse(status_code=400, content={"reason": reason})
@@ -122,7 +120,7 @@ def makePatientInfo(patient: PatientInfo):
 @app.put("/patient/insurrance-info/{citizen_id}")
 def updatePatient(citizen_id: str, info: PatientInfoUpdate):
     if not updatePatientInfo(
-        citizen_id, info.address, info.ethnic, info.job, info.is_insurrance
+        citizen_id, info.address, info.ethnic, info.job
     ):
         return JSONResponse(status_code=400, content={})
     else:
@@ -172,12 +170,12 @@ def getServicesList():
 # Tạo phiếu khám
 @app.post("/orders/create/{citizen_id}", status_code=200)
 def makeOrder(citizen_id: str, orderInfo: OrderInfo):
-    order_id = createOrder(citizen_id, orderInfo.service_name)
+    order_id = createOrder(citizen_id, orderInfo.service_name, orderInfo.type)
     if order_id is None:
         return JSONResponse(status_code=400, content={})
     else:
         # Thông tin order
-        # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
+        # order = [ o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance]
         order = getOrder(order_id)
         return {
             "citizen_id": order[0],
@@ -186,13 +184,13 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo):
             "dob": order[3],
             "queue_number": order[4],
             "time_order": order[5],
-            "is_insurrance": True if order[6] == 1 else False,
-            "service_name": order[8],
-            "clinic_name": order[9],
-            "address_room": order[10],
-            "doctor_name": order[11],
-            "price": order[12],
-            "price_insur": order[13],
+            "is_insurrance": order[7],
+            "use_insurrance": order[13],
+            "service_name": order[9],
+            "clinic_name": order[10],
+            "address_room": order[11],
+            "doctor_name": order[12],
+            "price": order[6],
             "order_id": order_id,
             # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
             "QRCode": makeQRCode(
@@ -235,6 +233,7 @@ async def checkBankTransfer(websocket: WebSocket):
     await websocket.accept()
     data = await websocket.receive_json()
     order_id = data["order_id"]
+    setPaymentMethod(order_id, "BANKING")
     while True:
         try:
             state, detail = getTransferState(order_id)

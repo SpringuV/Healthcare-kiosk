@@ -114,7 +114,7 @@ def savePatientInfo(
         disconnect(conn, cursor)
 
 
-def updatePatientInfo(citizen_id, address, ethnic, job, is_insurrance):
+def updatePatientInfo(citizen_id, address, ethnic, job):
     conn, cursor = connect()
     try:
         query = """UPDATE patient SET address = %s, ethnic = %s, job = %s, is_insurrance = 1 WHERE citizen_id = %s"""
@@ -253,7 +253,7 @@ def getClinicServiceID(service_name: str):
         disconnect(conn, cursor)
 
 
-def getPrice(citizen_id: str, clinic_service_id: str, service_name: str):
+def getPrice(citizen_id: str, clinic_service_id: str, service_name: str, type_order: str):
     conn, cursor = connect()
     try:
         query = """SELECT s.price, s.price_insurrance 
@@ -268,7 +268,7 @@ def getPrice(citizen_id: str, clinic_service_id: str, service_name: str):
         query = """SELECT is_insurrance FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         state = cursor.fetchone()[0]
-        if state == 1:
+        if state == 1 and type_order == "insurance":
             return price_insur
         else:
             return price
@@ -292,30 +292,13 @@ def cancelOrder(order_id: str):
     finally:
         disconnect(conn, cursor)
 
-
-def getPrices(clinic_service_id: str, service_name: str):
+def createOrder(citizen_id: str, service_name: str, type_order: str):
     conn, cursor = connect()
     try:
-        query = """SELECT s.price, s.price_insurrance 
-        FROM service s
-        JOIN clinic_service cs ON s.service_id = cs.service_id
-        WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1"""
-        cursor.execute(query, (service_name, clinic_service_id))
-        price_values = cursor.fetchone()
-        if not price_values:
-            return [0, 0]
-        price, price_insur = price_values
-        return [price, price_insur]
-    except Exception as e:
-        print(f"Error: {e}")
-        return [0, 0]
-    finally:
-        disconnect(conn, cursor)
-
-
-def createOrder(citizen_id: str, service_name: str):
-    conn, cursor = connect()
-    try:
+        if type_order == "insurance":
+            activate, _, _ = isInsurrance(citizen_id)
+            if not activate:
+                return None
         clinic_service_id = getClinicServiceID(service_name)
         query = """INSERT INTO orders 
         (queue_number, citizen_id, clinic_service_id, payment_method, payment_status, price)
@@ -330,7 +313,7 @@ def createOrder(citizen_id: str, service_name: str):
                 clinic_service_id,
                 "CASH",
                 "UNPAID",
-                getPrice(citizen_id, clinic_service_id, service_name),
+                getPrice(citizen_id, clinic_service_id, service_name, type_order),
             ),
         )
         conn.commit()
@@ -346,7 +329,7 @@ def createOrder(citizen_id: str, service_name: str):
 def getOrder(order_id: str):
     conn, cursor = connect()
     try:
-        query1 = """SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id
+        query1 = """SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
         WHERE o.order_id = %s LIMIT 1
@@ -357,7 +340,7 @@ def getOrder(order_id: str):
             print(f"Error info1")
             return None
         clinic_service_id = info1[-1]
-        query2 = """SELECT s.service_name, c.clinic_name, c.address_room, st.fullname
+        query2 = """SELECT s.service_name, c.clinic_name, c.address_room, st.fullname, s.price_insurrance
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
         JOIN clinic c ON cs.clinic_id = c.clinic_id
@@ -370,9 +353,9 @@ def getOrder(order_id: str):
         if info2 is None:
             print(f"Error info2")
             return None
-        info3 = getPrices(info1[-1], info2[0])
-        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur
-        return list(info1) + list(info2) + info3
+        use_insurrance = True if float(info1[-3]) == float(info2[-1]) else False
+        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance
+        return list(info1) + list(info2[0:-1]) + [use_insurrance]
     except Exception as e:
         print(f"Error: {e}")
         return None
@@ -395,6 +378,18 @@ def getOrderInfo(order_id: str):
     finally:
         disconnect(conn, cursor)
 
+def setPaymentMethod(order_id: str, method: str):
+    conn, cursor = connect()
+    try:
+        query = """UPDATE orders SET payment_method = %s WHERE order_id = %s"""
+        cursor.execute(query, (method, order_id))
+        conn.commit()
+        return cursor.rowcount != 0
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
 
 def getTransferState(order_id: str):
     conn, cursor = connect()

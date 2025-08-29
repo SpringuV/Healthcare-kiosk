@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import CountdownTimer from '../count_down_timer'
 import { DOMAIN } from "../../data/port"
-import { useStateStep } from "../context/state_step_context"
 import { usePatientRegister } from "../context/patient_register_context"
 import { useNavigate } from "react-router-dom"
 
@@ -69,20 +68,9 @@ function PaymentWithQR() {
         };
     }, [patientRegister.order_id]);
 
-    const amount = Math.round(patientRegister.is_insurrance
-        ? (patientRegister.price_insur * 26181)
-        : (patientRegister.price * 26181));
+    const amount = Math.round(patientRegister.price * 26181)
     // VQRQADTJG7282
     // 962471907021002
-
-    // step
-    const { stateStep, setStateStep } = useStateStep()
-    useEffect(() => {
-        if (stateStep !== 3) {
-            setStateStep(3)
-        }
-        
-    }, [stateStep, setStateStep])
     return (
         <>
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">

@@ -1,16 +1,16 @@
 import { Routes, Route } from 'react-router-dom'
 import Service from './components/service'
 import InputCCCD from './components/input_cccd'
-import NonInsurrance from './components/insurance_not/non-insurrance'
+import Register from './components/register'
 import InfoInsurrance from './components/insurance/insurrance_info'
 import NonInsurranceInfo from './components/insurance_not/non-insurrance-info'
 import { useInsurrance } from './components/context/insurrance_context'
 import RegisterSuccess from './components/register_success'
-import UpdateInfoPatientInsurrance from './components/insurance/update_insurrance_info'
 import LayoutDefault from './components/Layout/LayoutDefault'
 import HomePage from './components/homepage'
 import { useNavigate } from 'react-router-dom'
-import PaymentWithQR from './components/payment'
+import PaymentControl from './components/payment/PaymentControl'
+import PaymentWithQR from './components/payment/PaymentWithQR'
 import ResultSearch from './components/history_check'
 import { useForm } from './components/context/form_context'
 import LayoutHome from './components/Layout/LayoutHome'
@@ -43,7 +43,7 @@ function App() {
                     clearStateStepAndFlowType()
                 }} onSuccess={(data) => { setInsurranceInfo(data); navigate('/insur/info') }} />} />
                 <Route path="info" element={<InfoInsurrance onClose={() => navigate('/service')} />} />
-                <Route path="update-info" element={<UpdateInfoPatientInsurrance />} />
+                <Route path="register" element={<Register onClose={() => navigate('/')} />} />
                 <Route path="service" element={<Service />} />
                 <Route path="confirm-registration" element={<RegisterSuccess />} />
             </Route>
@@ -53,11 +53,12 @@ function App() {
                     navigate(-1)
                     clearStateStepAndFlowType()
                 }} onSuccess={(data) => { setFormData(data); navigate('/non-insur/info') }} />} />
-                <Route path="register" element={<NonInsurrance onClose={() => navigate('/')} />} />
+                <Route path="register" element={<Register onClose={() => navigate('/')} />} />
                 <Route path="info" element={<NonInsurranceInfo />} />
                 <Route path="service" element={<Service />} />
                 <Route path="confirm-registration" element={<RegisterSuccess />} />
-                <Route path="payment" element={<PaymentWithQR />} />
+                <Route path="payment" element={<PaymentControl />} />
+                <Route path="banking" element={<PaymentWithQR />} />
             </Route>
         </Routes>
     )
