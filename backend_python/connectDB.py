@@ -114,18 +114,24 @@ load_dotenv()
 # server
 
 def connect():
+    # config = {
+    #     'user': os.getenv("DB_USER"),
+    #     'password': os.getenv("DB_PASSWORD"),
+    #     'host': os.getenv("DB_HOST"),
+    #     'port': int(os.getenv("DB_PORT", "3306")),  # default 3306
+    #     'database': os.getenv("DB_NAME")
+    # }
     config = {
-        'user': os.getenv("DB_USER"),
-        'password': os.getenv("DB_PASSWORD"),
-        'host': os.getenv("DB_HOST"),
-        'port': int(os.getenv("DB_PORT", "3306")),  # default 3306
-        'database': os.getenv("DB_NAME")
+        "host" : "bvzlpklndmvt6imexmcc-mysql.services.clever-cloud.com",
+        "user" : "ukmex2unsdzcu15u",
+        "password" : "cPA7RIsY53e6Co0ZzD0Q",
+        "port" : 3306,
+        "database" : "bvzlpklndmvt6imexmcc"
     }
 
     try:
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
-        print("Connected to MySQL successfully!")
         return conn, cursor
     except mysql.connector.Error as err:
         print("Error connecting to database:", err)

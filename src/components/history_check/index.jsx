@@ -5,11 +5,13 @@ import { get, put } from "../../utils/request"
 import { useMemo, useState } from "react"
 import OrderDetail from "./order_detail"
 import { usePatientHistory } from "../context/patient_history_context"
+import { usePatientRegister } from "../context/patient_register_context"
 
 const { RangePicker } = DatePicker
 
 function ResultSearch() {
     const navigate = useNavigate()
+    const { setPatientRegister } = usePatientRegister()
     const { patientHistory, clearPatientHistory } = usePatientHistory()
     // State quản lý
     const [orders, setOrders] = useState(patientHistory.history)
@@ -105,6 +107,12 @@ function ResultSearch() {
         })
     }
 
+    // Thanh toán đơn
+    const handlePaying = (order) => {
+        setPatientRegister(order)
+        navigate("/non-insur/banking")
+    }
+
     // Table columns
     const columns = [
         {
@@ -161,9 +169,14 @@ function ResultSearch() {
                     <>
                         <Tag color={color}>{label}</Tag>
                         {key === "UNPAID" && (
+                            <>
                             <Button type="dashed" onClick={() => handleCancelOrder(record)} loading={loadingCancel} style={{ marginLeft: 8 }}>
                                 Hủy
                             </Button>
+                            <Button type="dashed" onClick={() => handlePaying(record)} loading={loadingCancel} style={{ marginLeft: 8 }}>
+                                Thanh toán
+                            </Button>
+                            </>
                         )}
                     </>
                 );

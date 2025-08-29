@@ -2,11 +2,10 @@ import { useNavigate } from "react-router-dom"
 import { useState } from 'react'
 import { useForm } from "../context/form_context"
 import Provinces from "../provinces"
-import { DOMAIN } from "../../data/port"
 import { useEffect } from 'react'
 import { post } from "../../utils/request"
 import { useStateStep } from "../context/state_step_context"
-function NonInsurrance({ onClose }) {
+function Register({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
     const [localFormData, setLocalFormData] = useState({
@@ -19,6 +18,10 @@ function NonInsurrance({ onClose }) {
         ethnic: '',
         phone_number: ''
     })
+    const { setStateStep, flowType } = useStateStep();
+    useEffect(() => {
+        setStateStep(1);
+    }, [setStateStep]);
 
     const handleChange = (e) => {
         setLocalFormData({
@@ -82,19 +85,26 @@ function NonInsurrance({ onClose }) {
             phone_number: localFormData.phone_number,
             ethnic: localFormData.ethnic,
             job: localFormData.job,
+            is_insur: flowType === 'insurance'
         }
         try {
-            const response = await post(`/patient/non-insurrance`, payload)
-            if (response.ok) {
-                navigate('/non-insur/info')
-            } else {
-                alert(`Lưu thông tin thất bại`)
+            const response = await post(`/patient/register`, payload)
+            console.log(flowType, flowType === 'insurance')
+                if (response.ok) {
+                    if (flowType === 'insurance') {
+                        navigate('/insur/service')
+                    }
+                    else {
+                        navigate('/non-insur/info')
+                    }
+                } else {
+                    alert(`Lưu thông tin thất bại`)
+                }
+            } catch (error) {
+                console.error("Lỗi gửi API:", error)
             }
-        } catch (error) {
-            console.error("Lỗi gửi API:", error)
+            setFormData(localFormData)
         }
-        setFormData(localFormData)
-    }
 
     const ethnicArr = ["Kinh", "Tày", "Thái", "Mường", "Khmer", "Hoa", "Nùng", "H'Mông", "Dao", "Gia Rai",
         "Ê Đê", "Ba Na", "Chăm", "Sán Dìu", "Cơ Ho", "Xơ Đăng", "Sán Chay", "Ra Glai", "Mnông",
@@ -103,10 +113,6 @@ function NonInsurrance({ onClose }) {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"]
 
-    const { setStateStep } = useStateStep();
-    useEffect(() => {
-        setStateStep(1);
-    }, [setStateStep]);
     return (
         <>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
@@ -185,4 +191,4 @@ function NonInsurrance({ onClose }) {
     )
 }
 
-export default NonInsurrance
+export default Register

@@ -55,6 +55,7 @@ function ServiceItem() {
     const handleRegister = async () => {
         const payload = {
             service_name: selectedOption.value,
+            type: flowType,
         }
         const citizen_id = insurranceInfo?.citizen_id || formData?.patient_id
         if (selectedOption === "none") {
