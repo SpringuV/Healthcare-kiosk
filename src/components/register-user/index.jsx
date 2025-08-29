@@ -1,10 +1,11 @@
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useState } from 'react'
 import { useForm } from "../context/form_context"
-import Provinces from "./provinces"
-import { DOMAIN } from "../../data/port"
+import Provinces from "../provinces"
 import { useEffect } from 'react'
-function NonInsurrance({ onClose }) {
+import { post } from "../../utils/request"
+import { useStateStep } from "../context/state_step_context"
+function Register({ onClose }) {
     const { setFormData } = useForm()
     const navigate = useNavigate()
     const [localFormData, setLocalFormData] = useState({
@@ -17,6 +18,10 @@ function NonInsurrance({ onClose }) {
         ethnic: '',
         phone_number: ''
     })
+    const { setStateStep, flowType } = useStateStep();
+    useEffect(() => {
+        setStateStep(1);
+    }, [setStateStep]);
 
     const handleChange = (e) => {
         setLocalFormData({
@@ -80,28 +85,26 @@ function NonInsurrance({ onClose }) {
             phone_number: localFormData.phone_number,
             ethnic: localFormData.ethnic,
             job: localFormData.job,
+            is_insur: flowType === 'insurance'
         }
         try {
-            const response = await fetch(`${DOMAIN}/patient/non-insurrance`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            })
-
-            if (response.ok) {
-                navigate('/non-insur/info')
-            } else {
-                const errorData = await response.json() // Lấy thông tin lỗi chi tiết
-                console.error("Error response:", errorData)
-                alert(`Lưu thông tin thất bại: ${errorData.reason}`)
+            const response = await post(`/patient/register`, payload)
+            console.log(flowType, flowType === 'insurance')
+                if (response.ok) {
+                    if (flowType === 'insurance') {
+                        navigate('/insur/service')
+                    }
+                    else {
+                        navigate('/non-insur/info')
+                    }
+                } else {
+                    alert(`Lưu thông tin thất bại`)
+                }
+            } catch (error) {
+                console.error("Lỗi gửi API:", error)
             }
-        } catch (error) {
-            console.error("Lỗi gửi API:", error)
+            setFormData(localFormData)
         }
-        setFormData(localFormData)
-    }
 
     const ethnicArr = ["Kinh", "Tày", "Thái", "Mường", "Khmer", "Hoa", "Nùng", "H'Mông", "Dao", "Gia Rai",
         "Ê Đê", "Ba Na", "Chăm", "Sán Dìu", "Cơ Ho", "Xơ Đăng", "Sán Chay", "Ra Glai", "Mnông",
@@ -110,12 +113,6 @@ function NonInsurrance({ onClose }) {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"]
 
-    const context = useOutletContext()
-    const { stateStep, setStateStep } = context
-    useEffect(() => {
-        console.log('Current step:', stateStep) // Debug
-        setStateStep(1) 
-    }, [setStateStep])
     return (
         <>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
@@ -131,7 +128,7 @@ function NonInsurrance({ onClose }) {
                             <div className="text-[16px]">
                                 <div className="flex flex-col p-1 ">
                                     <label htmlFor="txtFullName">Họ và Tên:</label>
-                                    <input name="full_name" value={localFormData.full_name} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
+                                    <input name="full_name" value={localFormData.full_name} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-200 focus:bg-slate-200 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
                                 </div>
                                 <div className="flex flex-col p-1">
                                     <label htmlFor="inputDob">Ngày/Tháng/Năm sinh:</label>
@@ -194,4 +191,4 @@ function NonInsurrance({ onClose }) {
     )
 }
 
-export default NonInsurrance
+export default Register

@@ -1,10 +1,8 @@
 import Header from "../../Header"
 import StateStep from "../../state-step"
 import { Outlet } from "react-router-dom"
-import { useState } from "react"
-function LayoutDefault({ flowType }) {
+function LayoutHome() {
 
-    const [stateStep, setStateStep] = useState(1);
     return (
         <>
             <header>
@@ -12,9 +10,8 @@ function LayoutDefault({ flowType }) {
             </header>
 
             <main>
-                <StateStep step={stateStep} flowType={flowType} />
                 {/* The main content will be rendered here */}
-                <Outlet context={{ stateStep, setStateStep, flowType  }}/>
+                <Outlet />
             </main>
             <footer>
                 {/* Footer content can be added here */}
@@ -23,4 +20,4 @@ function LayoutDefault({ flowType }) {
     )
 }
 
-export default LayoutDefault
+export default LayoutHome

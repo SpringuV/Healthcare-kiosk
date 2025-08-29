@@ -7,7 +7,7 @@ def info_line(pdf, label, value):
     pdf.cell(0, 10, txt=value, align="R", ln=True)
 
 def round_like_js(value):
-    return math.floor(float(value) + 0.5)
+    return int(math.floor(float(value) + 0.5))
 
 def to_str(value):
     if isinstance(value, (datetime, date)):
@@ -15,7 +15,7 @@ def to_str(value):
     return str(value)
 
 def makePDF(info):
-    # info = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, p.is_insurrance, o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, price, price_insur]
+    # order = [o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance]
     pdf = FPDF()
     pdf.add_page()
     pdf.add_font("DejaVu", "", "font/dejavu-sans.ttf", uni=True)
@@ -32,15 +32,15 @@ def makePDF(info):
     info_line(pdf, "Giới tính:", "Nam" if info[2] == 1 else "Nữ")
     info_line(pdf, "Ngày sinh:", to_str(info[3]))
     info_line(pdf, "CCCD:", info[0])
-    info_line(pdf, "Bảo hiểm y tế:", "Có" if info[6] == 1 else "Không")
-    info_line(pdf, "Dịch vụ:", info[8])
-    info_line(pdf, "Phòng khám:", info[9])
-    info_line(pdf, "Địa chỉ phòng:", info[10])
+    info_line(pdf, "Bảo hiểm y tế:", "Có" if info[7] == 1 else "Không")
+    info_line(pdf, "Phiếu áp dụng bảo hiểm y tế:", "Có" if info[13] == 1 else "Không")
+    info_line(pdf, "Dịch vụ:", info[9])
+    info_line(pdf, "Phòng khám:", info[10])
+    info_line(pdf, "Địa chỉ phòng:", info[11])
     info_line(pdf, "Số phiếu đợi:", str(info[4]))
-    info_line(pdf, "Bác sĩ:", info[11])
+    info_line(pdf, "Bác sĩ:", info[12])
     info_line(pdf, "Thời gian đăng ký:", to_str(info[5]))
-    price = info[13] if info[6] == 1 else info[12]
-    info_line(pdf, "Giá dịch vụ:", str(f"{round_like_js(price * 26181):,} VNĐ"))
+    info_line(pdf, "Giá dịch vụ:", str(f"{round_like_js(info[6] * 26181):,} VNĐ"))
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     pdf_buffer = io.BytesIO(pdf_bytes)

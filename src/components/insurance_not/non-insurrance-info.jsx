@@ -1,15 +1,15 @@
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from '../context/form_context'
 import { useEffect } from 'react'
+import { useStateStep } from '../context/state_step_context'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
     const { formData } = useForm()
 
-    const context = useOutletContext()
-    const { stateStep, setStateStep } = context
+    const context = useStateStep()
+    const { setStateStep } = context
     useEffect(() => {
-        console.log('Current step:', stateStep) // Debug
-        setStateStep(1) 
+        setStateStep(1)
     }, [setStateStep])
     return (
         <>
@@ -53,7 +53,7 @@ function NonInsurranceInfo() {
                         </div>
                     </div>
                     <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                        <button className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={() => navigate('/service')}>Bước tiếp theo</button>
+                        <button className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white" onClick={() => navigate('/non-insur/service')}>Bước tiếp theo</button>
                     </div>
                 </div>
             </div>

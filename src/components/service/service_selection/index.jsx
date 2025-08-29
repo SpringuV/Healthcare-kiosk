@@ -4,7 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useService } from "../../context/service_context";
 import { useForm } from "../../context/form_context";
 import { useInsurrance } from "../../context/insurrance_context";
-import { DOMAIN } from "../../../data/port";
+import { get, post } from "../../../utils/request";
+import { Spin } from "antd";
+import { useStateStep } from "../../context/state_step_context";
+import { usePatientRegister } from "../../context/patient_register_context"
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -14,6 +17,13 @@ function ServiceItem() {
     const navigate = useNavigate()
     const { formData } = useForm()
     const { insurranceInfo } = useInsurrance()
+    const { setPatientRegister } = usePatientRegister()
+    const [spinning, setSpinning] = useState(false)
+    
+    const { setStateStep, flowType } = useStateStep()
+    useEffect(() => {
+        setStateStep(2)
+    }, [setStateStep])
 
     const handleChange = (option) => {
         setSelectedOption(option)
@@ -24,9 +34,8 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await fetch(`${DOMAIN}/api/services`)
-                const data = await response.json()
-                const services = data.services || []
+                const response = await get(`/api/services`)
+                const services = response.data.services || []
                 // format for react-select
                 const formattedOptions = services.map((service) => ({
                     value: service.service_name,
@@ -46,29 +55,30 @@ function ServiceItem() {
     const handleRegister = async () => {
         const payload = {
             service_name: selectedOption.value,
+            type: flowType,
         }
         const citizen_id = insurranceInfo?.citizen_id || formData?.patient_id
         if (selectedOption === "none") {
             alert("Vui lòng chọn dịch vụ.")
             return
         }
+        setSpinning(true)
         try {
-            const response = await fetch(`${DOMAIN}/orders/create/${citizen_id}`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-
+            const response = await post(`/orders/create/${citizen_id}`, payload)
             if (!response.ok) {
                 alert("Đăng ký thất bại.");
+                setSpinning(false)
                 return;
             }
-            const result = await response.json()
-            navigate('/confirm-registration', { state: result })
-
+            setSpinning(false)
+            setPatientRegister(response.data)
+            if (flowType === "insurance") {
+                navigate('/insur/confirm-registration')
+            } else {
+                navigate('/non-insur/payment')
+            }
         } catch (err) {
+            setSpinning(false)
             console.error("Lỗi khi gọi API tạo order:", err);
             alert("Đã có lỗi khi đăng ký.");
         }
@@ -103,7 +113,7 @@ function ServiceItem() {
                                     color: isFocused || isSelected ? "white" : "black",
                                     fontWeight: 'bold'
                                 }}>
-                                    {(option.price * 26181).toLocaleString('vi-VN')} VNĐ
+                                    {(Math.round(option.price * 26181)).toLocaleString('vi-VN')} VNĐ
                                 </span>
                             </div>
                         )}
@@ -147,7 +157,14 @@ function ServiceItem() {
                 </div>
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
-                    <a className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600" onClick={handleRegister}>Đăng kí để khám</a>
+                    <Spin spinning={spinning}>
+                        {flowType === "insurance" ? (<div>
+                            <button disabled={spinning} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                        </div>) : (
+                            <button className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" disabled={spinning} onClick={handleRegister}>Bước tiếp theo: Thanh toán</button>
+                        )}
+
+                    </Spin>
                 </div>
             </div>
         </>
