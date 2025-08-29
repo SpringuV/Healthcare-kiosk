@@ -122,7 +122,7 @@ function NonInsurrance({ onClose }) {
                             <div className="text-[16px]">
                                 <div className="flex flex-col p-1 ">
                                     <label htmlFor="txtFullName">Họ và Tên:</label>
-                                    <input name="full_name" value={localFormData.full_name} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
+                                    <input name="full_name" value={localFormData.full_name} onChange={handleChange} className="text-colorOne outline-none px-2 py-1 bg-colorBody hover:bg-slate-200 focus:bg-slate-200 rounded-lg" type="text" id="txtFullName" placeholder="Nhập họ và tên của bạn" ></input>
                                 </div>
                                 <div className="flex flex-col p-1">
                                     <label htmlFor="inputDob">Ngày/Tháng/Năm sinh:</label>

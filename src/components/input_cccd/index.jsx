@@ -118,7 +118,8 @@ function InputCCCD(props) {
             setSpinning(false)
 
         } catch (err) {
-            console.error(err);
+            console.error(err)
+            setSpinning(false)
             showAlertWithConfig({
                 text: "Lỗi kết nối tới máy chủ",
                 showConfirmButton: false,

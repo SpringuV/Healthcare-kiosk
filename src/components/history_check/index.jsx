@@ -180,8 +180,8 @@ function ResultSearch() {
             key: "actions",
             align: "center",
             render: (record) => (
-                <span className="hover:cursor-pointer" onClick={() => onOpen(record)}>
-                    <Tag color="magenta">Chi Tiết</Tag>
+                <span className="hover:cursor-pointer" >
+                    <Button onClick={() => onOpen(record)} color="magenta">Chi Tiết</Button>
                 </span>
             ),
         },
