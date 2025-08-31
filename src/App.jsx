@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Service from './components/service'
+import Service from './components/service_selection'
 import InputCCCD from './components/input_cccd'
 import Register from './components/register-user'
 import InfoInsurrance from './components/insurance/insurrance_info'

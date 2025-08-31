@@ -2,13 +2,17 @@ import { useState, useRef, useEffect } from 'react'
 import NumberPad from '../number_pad'
 import Alert from '../alert/Alert'
 import { useNavigate } from 'react-router-dom'
-import { get } from '../../utils/request'
 import { Button, Spin } from 'antd'
 import { useStateStep } from '../context/state_step_context'
+import { check_insurance } from '../../services/insurance_service'
+import { check_patient_none_insurance } from '../../services/non_insurance_service'
+import { patient_get_history_check } from '../../services/patient'
+// import { useDispatch } from "react-redux"
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
     // const [showNumpad, setShowNumberPad] = useState(false)
+    // const dispatch = useDispatch()
     const [errorMessage, setErrorMessage] = useState("");
     const [showAlert, setShowAlert] = useState(false)
     const [alertConfig, setAlertConfig] = useState({
@@ -70,7 +74,7 @@ function InputCCCD(props) {
             let response;
             setSpinning(true)
             if (mode === "insurance") {
-                response = await get(`/health-insurrances/${inputValue}`)
+                response = await check_insurance(inputValue)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Bạn không có bảo hiểm y tế...",
@@ -100,7 +104,7 @@ function InputCCCD(props) {
                 }
             }
             else if (mode === "non-insurance") {
-                response = await get(`/patient/check/${inputValue}`)
+                response = await check_patient_none_insurance(inputValue)
                 if (response.status === 404) {
                     showAlertWithConfig({
                         text: "Không tìm thấy thông tin bệnh nhân...",
@@ -116,7 +120,7 @@ function InputCCCD(props) {
                 }
             }
             else if (mode === "history") {
-                response = await get(`/patient/history/${inputValue}`)
+                response = await patient_get_history_check(inputValue)
                 if (!response.ok) {
                     showAlertWithConfig({
                         text: "Không tìm thấy lịch sử khám bệnh!",

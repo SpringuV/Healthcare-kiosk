@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from '../context/form_context'
 import { useInsurrance } from '../context/insurrance_context'
 import { usePaymentAgain } from '../context/payment_again_context'
-import { get } from '../../utils/request'
+import { patient_get_qr_code } from '../../services/patient'
 function RegisterSuccess() {
     const [qrCode, setQrCode] = useState("")
     const navigate = useNavigate()
@@ -51,7 +51,7 @@ function RegisterSuccess() {
         const fetchQRCode = async () => {
             const orderId = patientRegister?.order_id || paymentAgain?.info_order?.order_id
             if (orderId) {
-                const res = await get(`/showQR/${orderId}`)
+                const res = await patient_get_qr_code(orderId)
                 setQrCode(res.data.QRCode) // API trả về { order_id, QRCode }
             }
         }

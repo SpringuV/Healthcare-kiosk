@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import Select from "react-select";
-import { useNavigate } from "react-router-dom";
-import { useService } from "../../context/service_context";
-import { useForm } from "../../context/form_context";
-import { useInsurrance } from "../../context/insurrance_context";
-import { get, post } from "../../../utils/request";
-import { Spin } from "antd";
-import { useStateStep } from "../../context/state_step_context";
-import { usePatientRegister } from "../../context/patient_register_context"
+import { useEffect, useState } from "react"
+import Select from "react-select"
+import { useNavigate } from "react-router-dom"
+import { useService } from "../context/service_context"
+import { useForm } from "../context/form_context"
+import { useInsurrance } from "../context/insurrance_context"
+import { Spin } from "antd"
+import { useStateStep } from "../context/state_step_context"
+import { usePatientRegister } from "../context/patient_register_context"
+import { get_service_list, post_register_service_check } from "../../services/healcare_service"
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -19,7 +19,7 @@ function ServiceItem() {
     const { insurranceInfo } = useInsurrance()
     const { setPatientRegister } = usePatientRegister()
     const [spinning, setSpinning] = useState(false)
-    
+
     const { setStateStep, flowType } = useStateStep()
     useEffect(() => {
         setStateStep(2)
@@ -34,7 +34,7 @@ function ServiceItem() {
     useEffect(() => {
         const fetchApiService = async () => {
             try {
-                const response = await get(`/api/services`)
+                const response = await get_service_list()
                 const services = response.data.services || []
                 // format for react-select
                 const formattedOptions = services.map((service) => ({
@@ -58,13 +58,14 @@ function ServiceItem() {
             type: flowType,
         }
         const citizen_id = insurranceInfo?.citizen_id || formData?.patient_id
-        if (selectedOption === "none") {
+        // check
+        if (!selectedOption) {
             alert("Vui lòng chọn dịch vụ.")
             return
         }
         setSpinning(true)
         try {
-            const response = await post(`/orders/create/${citizen_id}`, payload)
+            const response = await post_register_service_check(citizen_id, payload)
             if (!response.ok) {
                 alert("Đăng ký thất bại.");
                 setSpinning(false)

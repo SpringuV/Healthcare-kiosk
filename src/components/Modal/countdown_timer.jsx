@@ -18,7 +18,7 @@ function CountdownTimer({ minutes = 5, onTimeout, onSuccess, success }) {
         }, 1000);
 
         return () => clearInterval(interval); // cleanup
-    }, [timeLeft, onTimeout]);
+    }, [timeLeft, onTimeout, onSuccess, success]);
 
     // format mm:ss
     const formatTime = (seconds) => {
