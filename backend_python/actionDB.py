@@ -84,13 +84,29 @@ def savePatientInfo(
     conn, cursor = connect()
     try:
         insur_int = 1 if is_insurrance else 0
-        query = """INSERT INTO patient (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        gender_int = 1 if gender else 0  # Convert boolean to int
+
+        query = """INSERT INTO patient 
+                   (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) 
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+
+        print(f"Executing query with data:")
+        print(f"citizen_id: {citizen_id}")
+        print(f"fullname: {fullname}")
+        print(f"gender: {gender} -> {gender_int}")
+        print(f"dob: {dob}")
+        print(f"address: {address}")
+        print(f"phone_number: {phone_number}")
+        print(f"ethnic: {ethnic}")
+        print(f"job: {job}")
+        print(f"is_insurrance: {is_insurrance} -> {insur_int}")
+
         cursor.execute(
             query,
             (
                 citizen_id,
                 fullname,
-                gender,
+                gender_int,  # Sử dụng gender_int thay vì gender
                 dob,
                 address,
                 phone_number,
@@ -100,16 +116,23 @@ def savePatientInfo(
             ),
         )
         conn.commit()
-        if cursor.rowcount != 0:
-            return True, ""
+
+        if cursor.rowcount > 0:  # Sử dụng > 0 thay vì != 0
+            print("Insert successful")
+            return True, "Success"
+        else:
+            print("Insert failed - no rows affected")
+            return False, "Không thể lưu thông tin"
+
     except Error as e:
+        print(f"Database Error: {e}")
         if e.errno == 1062:
             return False, f"Công dân với ID '{citizen_id}' đã tồn tại"
         else:
-            return False, f"Lỗi cơ sở dữ liệu"
+            return False, f"Lỗi cơ sở dữ liệu: {str(e)}"
     except Exception as e:
-        print(f"False: {e}")
-        return False, ""
+        print(f"Unexpected Error: {e}")
+        return False, f"Lỗi hệ thống: {str(e)}"
     finally:
         disconnect(conn, cursor)
 
@@ -233,6 +256,7 @@ def getPatientHistory(citizen_id: str):
     finally:
         disconnect(conn, cursor)
 
+
 def getClinicServiceID(service_name: str):
     conn, cursor = connect()
     try:
@@ -253,7 +277,9 @@ def getClinicServiceID(service_name: str):
         disconnect(conn, cursor)
 
 
-def getPrice(citizen_id: str, clinic_service_id: str, service_name: str, type_order: str):
+def getPrice(
+    citizen_id: str, clinic_service_id: str, service_name: str, type_order: str
+):
     conn, cursor = connect()
     try:
         query = """SELECT s.price, s.price_insurrance 
@@ -291,6 +317,7 @@ def cancelOrder(order_id: str):
         return False
     finally:
         disconnect(conn, cursor)
+
 
 def createOrder(citizen_id: str, service_name: str, type_order: str):
     conn, cursor = connect()
@@ -378,6 +405,7 @@ def getOrderInfo(order_id: str):
     finally:
         disconnect(conn, cursor)
 
+
 def setPaymentMethod(order_id: str, method: str):
     conn, cursor = connect()
     try:
@@ -390,6 +418,7 @@ def setPaymentMethod(order_id: str, method: str):
         return False
     finally:
         disconnect(conn, cursor)
+
 
 def getTransferState(order_id: str):
     conn, cursor = connect()

@@ -1,42 +1,47 @@
+import { Col, Form, Row, Select } from "antd"
 import { useState, useEffect } from "react"
 
 function Provinces({ onSelect }) {
-    // address
     const [provinces, setProvinces] = useState([])
     const [districts, setDistricts] = useState([])
     const [wards, setWards] = useState([])
 
-    const [selectedProvince, setSelectedProvince] = useState("")
-    const [selectedDistrict, setSelectedDistrict] = useState("")
-    const [selectedWard, setSelectedWard] = useState("")
+    const [selectedProvince, setSelectedProvince] = useState(null)
+    const [selectedDistrict, setSelectedDistrict] = useState(null)
+    const [selectedWard, setSelectedWard] = useState(null)
 
+    // Lấy danh sách tỉnh
     useEffect(() => {
         fetch("https://provinces.open-api.vn/api/?depth=1")
             .then(res => res.json())
             .then(data => setProvinces(data))
     }, [])
 
+    // Khi chọn tỉnh → load quận/huyện
     useEffect(() => {
         if (selectedProvince) {
             fetch(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`)
                 .then(res => res.json())
-                .then(data => {
-                    console.log(data)
-                    setDistricts(data.districts)
-                }
-                )
+                .then(data => setDistricts(data.districts || []))
+        } else {
+            setDistricts([])
+            setWards([])
         }
     }, [selectedProvince])
 
+    // Khi chọn huyện → load xã/phường
     useEffect(() => {
         if (selectedDistrict) {
             fetch(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
                 .then(res => res.json())
-                .then(data => setWards(data.wards))
+                .then(data => setWards(data.wards || []))
+        } else {
+            setWards([])
         }
     }, [selectedDistrict])
 
-    useEffect(() => { // người dùng chọn đủ 3 cấp thì gọi onSelect(fullAddress)
+    // Khi chọn đủ 3 cấp → gọi callback trả về địa chỉ
+    useEffect(() => {
         if (selectedProvince && selectedDistrict && selectedWard) {
             const province = provinces.find(p => p.code === +selectedProvince)?.name
             const district = districts.find(d => d.code === +selectedDistrict)?.name
@@ -46,37 +51,40 @@ function Provinces({ onSelect }) {
                 onSelect(fullAddress)
             }
         }
-    }, [selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards])
-    
+    }, [selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards, onSelect])
+
     return (
         <>
-            <div className="flex flex-col p-1">
-                <label htmlFor="selectProvince">Tỉnh: </label>
-                <select id="selectProvince" className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" value={selectedProvince} onChange={(e) => { setSelectedProvince(e.target.value); setSelectedDistrict(""); setSelectedWard("") }}>
-                    <option value={""}>--- Chọn tỉnh ---</option>
-                    {provinces.map((province) => (
-                        <option key={province.code} value={province.code}>{province.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div className="flex flex-col p-1">
-                <label htmlFor="selectDistrict">Chọn Quận/Huyện:</label>
-                <select id="selectDistrict" className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" value={selectedDistrict} onChange={(e) => { setSelectedDistrict(e.target.value); setSelectedWard("") }}>
-                    <option value={""}>--- Chọn Quận/Huyện ---</option>
-                    {districts.map((district) => (
-                        <option value={district.code} key={district.code}>{district.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div className="flex flex-col p-1">
-                <label htmlFor="selectWard">Chọn Phường/Xã:</label>
-                <select id="selectWard" className="outline-none text-colorOne px-2 py-1 bg-colorBody hover:bg-slate-300 focus:bg-slate-300 rounded-lg" value={selectedWard} onChange={(e) => { setSelectedWard(e.target.value) }}>
-                    <option value={""}>--- Chọn Phường/Xã ---</option>
-                    {wards.map((ward) => (
-                        <option value={ward.code} key={ward.code}>{ward.name}</option>
-                    ))}
-                </select>
-            </div>
+            <Row gutter={[10]} >
+                <Col xs={24} sm={24} md={8} lg={8} xl={8} xxl={8}>
+                    <Form.Item label="Tỉnh:" rules={[{required: true}]}>
+                        <Select placeholder="Chọn Tỉnh" allowClear value={selectedProvince} onChange={(value) => {
+                            setSelectedProvince(value)
+                            setSelectedDistrict(null)
+                            setSelectedWard(null)
+                        }}
+                            options={provinces.map(p => ({ label: p.name, value: p.code }))} />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} sm={24} md={8} lg={8} xl={8} xxl={8}>
+                    <Form.Item label="Chọn Quận/Huyện:">
+                        <Select placeholder="Chọn Quận/Huyện" allowClear value={selectedDistrict} onChange={(value) => {
+                            setSelectedDistrict(value)
+                            setSelectedWard(null)
+                        }}
+                            options={districts.map(d => ({ label: d.name, value: d.code }))}
+                            disabled={!selectedProvince} />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} sm={24} md={8} lg={8} xl={8} xxl={8}>
+                    <Form.Item label="Chọn Phường/Xã:">
+                        <Select placeholder="Chọn Phường/Xã" allowClear value={selectedWard}
+                            onChange={(value) => setSelectedWard(value)}
+                            options={wards.map(w => ({ label: w.name, value: w.code }))}
+                            disabled={!selectedDistrict} />
+                    </Form.Item>
+                </Col>
+            </Row>
         </>
     )
 }

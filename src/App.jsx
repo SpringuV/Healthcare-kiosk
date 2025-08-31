@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Service from './components/service'
+import Service from './components/service_selection'
 import InputCCCD from './components/input_cccd'
 import Register from './components/register-user'
 import InfoInsurrance from './components/insurance/insurrance_info'
@@ -18,6 +18,7 @@ import { usePatientHistory } from './components/context/patient_history_context'
 import { useStateStep } from './components/context/state_step_context'
 
 
+
 function App() {
     const navigate = useNavigate()
     const { setFormData } = useForm()
@@ -25,7 +26,6 @@ function App() {
     const { setPatientHistory } = usePatientHistory()
     const { clearStateStepAndFlowType } = useStateStep()
     return (
-
         <Routes>
             {/* Trang chủ: không có step */}
             <Route path="/" element={<LayoutHome />}>

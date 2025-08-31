@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import ServiceItem from "./service_selection"
+import ServiceItem from "./service_item"
 import { useStateStep } from "../context/state_step_context"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)

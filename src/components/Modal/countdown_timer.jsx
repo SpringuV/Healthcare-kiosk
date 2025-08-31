@@ -18,7 +18,7 @@ function CountdownTimer({ minutes = 5, onTimeout, onSuccess, success }) {
         }, 1000);
 
         return () => clearInterval(interval); // cleanup
-    }, [timeLeft, onTimeout]);
+    }, [timeLeft, onTimeout, onSuccess, success]);
 
     // format mm:ss
     const formatTime = (seconds) => {
@@ -30,7 +30,7 @@ function CountdownTimer({ minutes = 5, onTimeout, onSuccess, success }) {
     return (
         <>
             <div className="text-center font-bold text-red-600 text-xl">
-                <span className="animate-wiggle inline-block ease-in-out">⏳</span> Thời gian còn lại: {formatTime(timeLeft)}
+                ⏳ Thời gian còn lại: {formatTime(timeLeft)}
             </div>
         </>
     );
