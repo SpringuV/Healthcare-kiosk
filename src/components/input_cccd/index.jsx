@@ -179,7 +179,6 @@ function InputCCCD(props) {
                         </div>
                     </div>
                     <div className="flex justify-center text-[16px] sm:text-[17px] md:text-[18px] lg:text-[19px]">
-
                         <form className="flex flex-col w-full sm:w-[90%] md:w-[80%] justify-center items-center">
                             <p className='mt-2 text-base text-center'>Vui lòng nhập thẻ căn cước công dân để tiếp tục</p>
                             <input maxLength={12} onKeyDown={handleKeyDownInput} inputMode='numeric' pattern='[0-9]*' ref={inputRef} type="text"

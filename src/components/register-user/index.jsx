@@ -67,7 +67,7 @@ function Register({ onClose }) {
     // Theo dõi registration success
     useEffect(() => {
         if (dataState.isRegistered && !dataState.loading && !dataState.error) {
-            console.log("Registration successful, navigating...")
+            // console.log("Registration successful, navigating...")
             navigate(flowType === "insurance" ? "/insur/service" : "/non-insur/info")
         }
     }, [dataState.isRegistered, dataState.loading, dataState.error, navigate, flowType])
@@ -134,7 +134,11 @@ function Register({ onClose }) {
                                         { required: true, message: "Vui lòng nhập CCCD" },
                                         { len: 12, message: "CCCD phải đủ 12 số" },
                                     ]}>
-                                    <Input placeholder="Nhập căn cước công dân" maxLength={12} />
+                                    <Input onKeyDown={(e)=>{
+                                        if(!/[0-9]/.test(e.key)){
+                                            e.preventDefault()
+                                        }
+                                    }} placeholder="Nhập căn cước công dân"  maxLength={12} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
@@ -178,7 +182,11 @@ function Register({ onClose }) {
                                         { required: true, message: "Vui lòng nhập số điện thoại" },
                                         { len: 10, message: "Số điện thoại phải đủ 10 số" },
                                     ]}>
-                                    <Input placeholder="Nhập số điện thoại" maxLength={10} />
+                                    <Input onKeyDown={(e) => {
+                                        if(!/[0-9]/.test(e.key)){
+                                            e.preventDefault()
+                                        }
+                                    }} placeholder="Nhập số điện thoại" maxLength={10} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
