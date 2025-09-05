@@ -1,2 +1,2 @@
-export const DOMAIN = import.meta.env.VITE_DOMAIN
-export const WS_PROTOCOL = import.meta.env.VITE_WS_PROTOCOL
+export const DOMAIN = import.meta.env.VITE_API_URL
+export const WS_URL = import.meta.env.VITE_WS_URL
