@@ -5,5 +5,5 @@ export const register_user_non_insurance = async (payload) => {
 }
 
 export const check_patient_none_insurance = async (citizen_id) => {
-    return get(`/patient/check/${citizen_id}`)
+    return await get(`/patient/check/${citizen_id}`)
 }

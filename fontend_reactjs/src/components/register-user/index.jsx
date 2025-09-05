@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useStateStep } from "../context/state_step_context"
-import { clearRegisterError, registerUser } from "../../actions/non_insurance"
+import { clearRegisterError, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
 import { Form, Input, Select, Button, DatePicker, Row, Col } from "antd"
 import dayjs from "dayjs"
@@ -62,7 +62,7 @@ function Register({ onClose }) {
                 dob: dobValue,
             })
         }
-    }, [setStateStep, dataState, form, dispatch])
+    }, [setStateStep, dataState, form, dispatch, flowType])
 
     // Theo dõi registration success
     useEffect(() => {
@@ -87,7 +87,7 @@ function Register({ onClose }) {
         console.log("Payload gửi đi:", JSON.stringify(payload, null, 2))
 
         try {
-            await dispatch(registerUser(payload))
+            await dispatch(register_user(payload))
             // Navigation sẽ được xử lý trong useEffect
         } catch (error) {
             console.error("Registration error:", error)

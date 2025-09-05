@@ -74,27 +74,38 @@ class OrderInfo(BaseModel):
 
 
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
-@app.get("/health-insurrances/{citizen_id}", status_code=200)
-def checkInsurrance(citizen_id: str):
-    isActivate, _, insurrance = isInsurrance(citizen_id)
-    isHad, _ = isHasPatientInfo(citizen_id)
-    if insurrance is None:
-        return JSONResponse(status_code=404, content={})
-    else:
-        if isHad:
-            updatePatientInsurranceState(citizen_id, isActivate)
+@app.get("/health-insurances/{citizen_id}", status_code=200)  # Sửa đường dẫn
+def check_insurance(citizen_id: str):
+    try:
+        is_activate, message, insurance = isInsurrance(citizen_id)  # Sửa tên function
+        is_had, _ = isHasPatientInfo(citizen_id)  # Sửa tên function
+
+        if insurance is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Không tìm thấy thông tin bảo hiểm"},
+            )
+
+        # Nếu bệnh nhân đã có thông tin, cập nhật trạng thái bảo hiểm
+        if is_had:
+            updatePatientInsurranceState(citizen_id, is_activate)
+
         return {
-            "citizen_id": insurrance[0],
-            "full_name": insurrance[1],
-            "dob": insurrance[3],
-            "valid_from": insurrance[6],
-            "expired": insurrance[7],
-            "registration_place": insurrance[5],
-            "phone_number": insurrance[4],
-            "gender": "Nam" if insurrance[2] == 1 else "Nữ",
-            "is_activate": isActivate,
-            "is_saved": isHad,
+            "citizen_id": insurance[0],
+            "full_name": insurance[1],
+            "dob": insurance[3].isoformat() if insurance[3] else None,  # Format date
+            "valid_from": insurance[6].isoformat() if insurance[6] else None,
+            "expired": insurance[7].isoformat() if insurance[7] else None,
+            "registration_place": insurance[5],
+            "phone_number": insurance[4],
+            "gender": "Nam" if insurance[2] == 1 else "Nữ",
+            "is_activate": is_activate,
+            "is_saved": is_had,
+            "message": message,
         }
+    except Exception as e:
+        print(f"Error in check_insurance: {e}")
+        return JSONResponse(status_code=500, content={"message": "Lỗi hệ thống"})
 
 
 # Tạo bảng ghi thông tin bệnh nhân
