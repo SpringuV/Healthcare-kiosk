@@ -24,6 +24,12 @@ dist-ssr
 *.sw?
 get-pip.py
 kiosk
-__pycache__
-.venv
+/backend_python/__pycache__/
+.venv/
+*.pyc
+*.pyo
+*.pyd
 .env
+/backend_python/.env
+/backend_python/.venv
+/backend_go/.env
