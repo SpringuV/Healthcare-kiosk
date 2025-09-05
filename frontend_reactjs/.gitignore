@@ -30,6 +30,5 @@ kiosk
 *.pyo
 *.pyd
 .env
-/backend_python/.env
-/backend_python/.venv
-/backend_go/.env
+**/.env
+**/.venv
