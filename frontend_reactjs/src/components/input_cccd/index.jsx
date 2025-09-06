@@ -4,19 +4,15 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button, Spin } from 'antd'
 import Alert from '../alert/Alert'
-import { useStateStep } from '../context/state_step_context'
 import { check_insurance_user, check_patient_existed, clear_insurance_check } from '../../actions/patient'
 import { patient_get_history_check } from '../../services/patient'
 import {
     select_insurance_loading,
     select_insurance_error,
-    select_insurance_check_data,
-    select_need_register,
-    select_check_patient_exist_need_register,
     select_check_patient_exist_loading,
-    select_check_patient_exist_data,
     select_check_patient_exist_error
 } from '../../reducers'
+import { useGlobalContext } from '../context/provider'
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
@@ -26,9 +22,7 @@ function InputCCCD(props) {
     // insurance
     const insurance_loading = useSelector(select_insurance_loading)
     const insurance_error = useSelector(select_insurance_error)
-    const need_register = useSelector(select_need_register)
     // check patient exist 
-    const check_patient_exist_need_register = useSelector(select_check_patient_exist_need_register)
     const check_patient_exist_loading = useSelector(select_check_patient_exist_loading)
     const check_patient_exist_error = useSelector(select_check_patient_exist_error)
     // Local state
@@ -41,11 +35,12 @@ function InputCCCD(props) {
         cancelText: "Nhập lại thông tin",
         onConfirm: null
     })
-
+    const ctx = useGlobalContext()
+    console.log("GlobalContext value:", ctx)
     // Hooks
     const navigate = useNavigate()
     const inputRef = useRef(null)
-    const { setFlowType, setStateStep } = useStateStep()
+    const { setFlowType, setStateStep } = useGlobalContext()
 
     // Local loading cho các mode khác (non-insurance, history)
     const [local_loading, set_local_loading] = useState(false)

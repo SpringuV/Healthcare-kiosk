@@ -1,18 +1,18 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { useStateStep } from "../context/state_step_context"
 import { clearRegisterError, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
 import { Form, Input, Select, Button, DatePicker, Row, Col } from "antd"
 import dayjs from "dayjs"
+import { select_patient_register_data } from "../../reducers"
+import { useGlobalContext } from "../context/provider"
 const { Option } = Select
 function Register({ onClose }) {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { setStateStep, flowType } = useStateStep()
-    const dataState = useSelector((state) => state.non_insurance_reducer)
-    console.log(dataState)
+    const { setStateStep, flowType } = useGlobalContext()
+    const dataState = useSelector(select_patient_register_data)
     const [form] = Form.useForm()
 
     useEffect(() => {

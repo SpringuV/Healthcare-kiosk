@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom"
-import React, { useEffect } from 'react'
-import { useStateStep } from "../context/state_step_context"
+import { useEffect } from 'react'
 import { useSelector } from "react-redux"
 import { select_insurance_check_data } from "../../reducers"
+import { useGlobalContext } from "../context/provider"
 function InfoInsurrance() {
     const navigate = useNavigate()
     const insurance_info = useSelector(select_insurance_check_data)
@@ -15,8 +15,7 @@ function InfoInsurrance() {
         }
     }
 
-    const context = useStateStep()
-    const { setStateStep } = context
+    const { setStateStep } = useGlobalContext()
     useEffect(() => {
         setStateStep(1)
     }, [setStateStep])

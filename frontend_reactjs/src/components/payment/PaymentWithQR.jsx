@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react"
 import CountdownTimer from '../Modal/countdown_timer'
-import { usePatientRegister } from "../context/patient_register_context"
 import { useNavigate } from "react-router-dom"
-import { usePaymentAgain } from "../context/payment_again_context"
-import { useStateStep } from "../context/state_step_context"
 import { WS_URL } from "../../data/port"
+import { useSelector } from "react-redux"
+import { select_patient_booking_service_data } from "../../reducers"
+import { useGlobalContext } from "../context/provider"
 
 function PaymentWithQR() {
     const navigate = useNavigate()
     const [showButtonReturn, setShowButtonReturn] = useState(false)
     const [showTimeDown, setShowTimeDown] = useState(true)
     const [textSuccess, setTextSuccess] = useState("")
-    const { paymentAgain } = usePaymentAgain()
-    const { flowType, setStateStep } = useStateStep()
+    const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
 
     const [isFailPayment, setIsFailPayment] = useState(false)
-    const { patientRegister } = usePatientRegister()
+    const patient_booking_service = useSelector(select_patient_booking_service_data)
     const today = new Date()
     const formattedDate = today.toLocaleDateString("vi-VN", {
         day: "2-digit",
@@ -39,7 +38,7 @@ function PaymentWithQR() {
     }
 
     useEffect(() => {
-        if(flowType === "non-insurance"){
+        if (flowType === "non-insurance") {
             setStateStep(3)
         }
     }, [flowType, setStateStep])
@@ -50,7 +49,7 @@ function PaymentWithQR() {
         ws.onopen = () => {
             console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend
-            const orderId = patientRegister?.order_id || paymentAgain?.info_order?.order_id;
+            const orderId = patient_booking_service?.order_id || paymentAgain?.info_order?.order_id;
             if (orderId) {
                 ws.send(JSON.stringify({ order_id: orderId }));
             }
@@ -77,14 +76,12 @@ function PaymentWithQR() {
         return () => {
             ws.close();
         };
-    }, [patientRegister?.order_id, paymentAgain?.info_order?.order_id]);
-
+    }, [patient_booking_service?.order_id, paymentAgain?.info_order?.order_id]);
     // VQRQADTJG7282
     // 962471907021002
-
     const payment = {
-        order_id: patientRegister.order_id ? patientRegister.order_id : paymentAgain.info_order.order_id,
-        amount: Math.round(patientRegister.price ? patientRegister.price * 26181 : paymentAgain.info_order.price * 26181),
+        order_id: patient_booking_service.order_id ? patient_booking_service.order_id : paymentAgain.info_order.order_id,
+        amount: Math.round(patient_booking_service.price ? patient_booking_service.price * 26181 : paymentAgain.info_order.price * 26181),
     }
 
     return (
@@ -93,7 +90,7 @@ function PaymentWithQR() {
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
                     <div className="w-full flex justify-center">
-                        {(patientRegister?.order_id || paymentAgain?.info_order?.order_id) && (<img key={payment.amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${payment.amount}&des=ORDER${payment.order_id}`}></img>)}
+                        {(patient_booking_service?.order_id || paymentAgain?.info_order?.order_id) && (<img key={payment.amount} className="w-60 md:w-fit h-auto" src={`https://qr.sepay.vn/img?acc=VQRQADTJG7282&bank=MBBank&amount=${payment.amount}&des=ORDER${payment.order_id}`}></img>)}
                     </div>
                     <h1 className="text-center font-bold text-[20px]">Thông tin chuyển khoản ngân hàng</h1>
                     <div className="grid grid-cols-2">

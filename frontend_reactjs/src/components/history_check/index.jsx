@@ -3,10 +3,8 @@ import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col } from "antd"
 import dayjs from "dayjs"
 import { useMemo, useState } from "react"
 import OrderDetail from "./order_detail"
-import { usePatientHistory } from "../context/patient_history_context"
-import { usePaymentAgain } from "../context/payment_again_context"
-import { useStateStep } from "../context/state_step_context"
 import { patient_get_history_check, patient_put_cancelled_payment } from "../../services/patient"
+import { useGlobalContext } from "../context/provider"
 
 const { RangePicker } = DatePicker
 
@@ -19,10 +17,8 @@ function ResultSearch() {
     const [dateRange, setDateRange] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [loadingTable, setLoadingTable] = useState(false)
-    const { setPaymentAgain } = usePaymentAgain()
-    const { patientHistory, clearPatientHistory } = usePatientHistory()
+    const { patientHistory, clearPatientHistory, setPaymentAgain , setFlowType} = useGlobalContext()
     const [orders, setOrders] = useState(patientHistory.history)
-    const { setFlowType } = useStateStep()
 
     const patient = patientHistory?.patient
     // console.log(patientHistory)

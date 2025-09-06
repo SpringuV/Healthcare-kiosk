@@ -1,31 +1,31 @@
 import { useNavigate } from 'react-router-dom'
-import { usePatientRegister } from '../context/patient_register_context'
-import { useStateStep } from '../context/state_step_context'
 import { useEffect, useState } from 'react'
-import { useForm } from '../context/form_context'
-import { useInsurrance } from '../context/insurrance_context'
-import { usePaymentAgain } from '../context/payment_again_context'
 import { patient_get_qr_code } from '../../services/patient'
+import { useSelector } from 'react-redux'
+import { select_patient_booking_service_data } from '../../reducers'
+import { useDispatch } from 'react-redux'
+import { clear_insurance_check, clear_patient_exist_check } from '../../actions/patient'
+import { clear_booking_service } from '../../actions/service'
+import { useGlobalContext } from '../context/provider'
 function RegisterSuccess() {
     const [qrCode, setQrCode] = useState("")
+    const dispatch = useDispatch()
     const navigate = useNavigate()
-    const { patientRegister, clearPatientRegister } = usePatientRegister()
-    const { flowType, setStateStep, clearStateStepAndFlowType } = useStateStep()
-    const { clearFormData } = useForm()
-    const { clearInsuranceInfo } = useInsurrance()
+    const { flowType, setStateStep, clearStateStepAndFlowType, paymentAgain } = useGlobalContext()
+    const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     useEffect(() => {
         if (flowType === "insurance") {
             setStateStep(3)
         } else if (flowType === "non-insurance") {
             setStateStep(4)
-        } 
+        }
     }, [flowType, setStateStep])
-    const { paymentAgain } = usePaymentAgain()
+
     const handleReturnHomeInsur = () => {
+        dispatch(clear_insurance_check())
+        dispatch(clear_patient_exist_check())
+        dispatch(clear_booking_service())
         clearStateStepAndFlowType()
-        clearPatientRegister()
-        clearFormData()
-        clearInsuranceInfo()
         navigate("/", { replace: true })
         window.history.pushState(null, null, "/")
         window.onpopstate = () => {
@@ -34,29 +34,29 @@ function RegisterSuccess() {
     }
 
     const displayInfoRegister = {
-        fullname: patientRegister?.fullname ?? paymentAgain?.info_user?.fullname,
-        gender: patientRegister?.gender ?? paymentAgain?.info_user?.gender,
-        dob: patientRegister?.dob ?? paymentAgain?.info_user?.dob,
-        service_name: patientRegister?.service_name ?? paymentAgain?.info_order?.service_name,
-        citizen_id: patientRegister?.citizen_id ?? paymentAgain?.info_user?.citizen_id,
-        address_room: patientRegister?.address_room ?? paymentAgain?.info_order?.address_room,
-        doctor_name: patientRegister?.doctor_name ?? paymentAgain?.info_order?.doctor_name,
-        queue_number: patientRegister?.queue_number ?? paymentAgain?.info_order?.queue_number,
-        is_insurrance: patientRegister?.is_insurrance ?? paymentAgain?.info_user?.is_insurrance,
-        time_order: patientRegister?.time_order ?? paymentAgain?.info_order?.time_order,
-        price: patientRegister?.price ?? paymentAgain?.info_order?.price,
+        fullname: patient_booking_service_data?.fullname ?? paymentAgain?.info_user?.fullname,
+        gender: patient_booking_service_data?.gender ?? paymentAgain?.info_user?.gender,
+        dob: patient_booking_service_data?.dob ?? paymentAgain?.info_user?.dob,
+        service_name: patient_booking_service_data?.service_name ?? paymentAgain?.info_order?.service_name,
+        citizen_id: patient_booking_service_data?.citizen_id ?? paymentAgain?.info_user?.citizen_id,
+        address_room: patient_booking_service_data?.address_room ?? paymentAgain?.info_order?.address_room,
+        doctor_name: patient_booking_service_data?.doctor_name ?? paymentAgain?.info_order?.doctor_name,
+        queue_number: patient_booking_service_data?.queue_number ?? paymentAgain?.info_order?.queue_number,
+        is_insurrance: patient_booking_service_data?.is_insurrance ?? paymentAgain?.info_user?.is_insurrance,
+        time_order: patient_booking_service_data?.time_order ?? paymentAgain?.info_order?.time_order,
+        price: patient_booking_service_data?.price ?? paymentAgain?.info_order?.price,
     }
 
     useEffect(() => {
         const fetchQRCode = async () => {
-            const orderId = patientRegister?.order_id || paymentAgain?.info_order?.order_id
+            const orderId = patient_booking_service_data?.order_id || paymentAgain?.info_order?.order_id
             if (orderId) {
                 const res = await patient_get_qr_code(orderId)
                 setQrCode(res.data.QRCode) // API trả về { order_id, QRCode }
             }
         }
         fetchQRCode()
-    }, [patientRegister, paymentAgain])
+    }, [patient_booking_service_data, paymentAgain])
 
     return (
         <>
@@ -99,7 +99,9 @@ function RegisterSuccess() {
                         <img src={`data:image/png;base64,${qrCode}`} alt="QR Code" className='rounded-lg' width={150} height={150} />
                     </div>
                     <div className=' flex justify-center items-center px-5 py-3'>
-                        <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700' onClick={handleReturnHomeInsur} type='button' >Xác nhận và quay về trang chủ</button>
+                        <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                            onClick={handleReturnHomeInsur}
+                            type='button' >Xác nhận và quay về trang chủ</button>
                     </div>
                 </div>
             </div>

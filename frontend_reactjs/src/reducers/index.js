@@ -1,12 +1,22 @@
 import { patient_register_reducer, check_insurance_reducer, check_patient_exist_reducer } from "./patient"
 import { combineReducers } from "redux"
 import { createSelector } from 'reselect'
+import { persistReducer } from "redux-persist"
+import storageSession from "redux-persist/lib/storage/session"
+import { patient_booking_service_reducer } from "./service"
 
 const allReducers = combineReducers({
     patient_register: patient_register_reducer,
     insurance_check: check_insurance_reducer,
     check_patient_exist: check_patient_exist_reducer,
+    patient_booking_service: patient_booking_service_reducer
 })
+
+const persistConfig = {
+  key: "root",
+  storage: storageSession, 
+}
+const persistedReducer = persistReducer(persistConfig, allReducers)
 
 // Patient Register selectors
 export const select_register_loading = (state) => state.patient_register.loading
@@ -15,8 +25,7 @@ export const select_is_registered = (state) => state.patient_register.is_registe
 export const select_register_message = (state) => state.patient_register.message
 export const select_patient_register_data = (state) => state.patient_register
 
-// Insurance Check selectors
-export const select_insurance_check = (state) => state.insurance_check
+//------------------- Insurance Check selectors
 export const select_insurance_loading = (state) => state.insurance_check.loading
 export const select_insurance_error = (state) => state.insurance_check.error
 export const select_has_insurance = (state) => state.insurance_check.has_insurance
@@ -42,4 +51,9 @@ export const select_check_patient_exist_message = (state) => state.check_patient
 export const select_check_patient_exist_need_register = (state) => state.check_patient_exist.need_register
 export const select_check_patient_exist_data = (state) => state.check_patient_exist
 
-export default allReducers
+//------------------- Patient booking service
+export const select_patient_booking_service_data = (state) => state.patient_booking_service
+export const select_patient_booking_service_error = (state) => state.patient_booking_service.error
+export const select_patient_booking_service_loading = (state) => state.patient_booking_service.loading
+
+export default persistedReducer

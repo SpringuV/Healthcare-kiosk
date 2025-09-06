@@ -1,9 +1,9 @@
 import React from 'react';
-import { useStateStep } from '../context/state_step_context';
+import { useGlobalContext } from '../context/provider';
 
 function StateStep() {
     // Lấy state hiện tại và loại flow từ context
-    const { stateStep, flowType } = useStateStep()
+    const { stateStep, flowType } = useGlobalContext()
 
     // Định nghĩa các bước theo loại flow
     const steps = flowType === "non-insurance"

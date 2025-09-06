@@ -34,8 +34,7 @@ const initialRegisterState = {
     // state management
     loading: false,
     error: null,
-    data: null,
-    isRegistered: false,
+    is_registered: false,
     message: null
 }
 
@@ -54,7 +53,7 @@ export const patient_register_reducer = (state = initialRegisterState, action) =
                 ...state,
                 loading: action.payload.loading,
                 data: action.payload,
-                isRegistered: action.payload.isRegistered,
+                is_registered: action.payload.is_registered,
                 message: action.payload.message,
                 error: action.payload.error,
                 // Cập nhật form data với data đã submit thành công
@@ -73,7 +72,7 @@ export const patient_register_reducer = (state = initialRegisterState, action) =
                 ...state,
                 loading: action.payload.loading,
                 error: action.payload.error,
-                isRegistered: action.payload.isRegistered,
+                is_registered: action.payload.is_registered,
                 message: action.payload.message
             }
 
@@ -133,8 +132,8 @@ export const check_insurance_reducer = (state = initialInsuranceState, action) =
                 message: action.payload.message,
                 need_register: action.payload.need_register
             }
-                
-                case CHECK_INSURANCE_SUCCESS:
+
+        case CHECK_INSURANCE_SUCCESS:
             return {
                 ...state,
                 loading: action.payload.loading,
@@ -263,7 +262,7 @@ export const check_patient_exist_reducer = (state = initial_patient_exist, actio
             }
         case CLEAR_PATIENT_EXIST_CHECK:
             return initial_patient_exist
-        
+
         default:
             return state
 

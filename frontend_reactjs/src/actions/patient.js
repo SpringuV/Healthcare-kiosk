@@ -40,7 +40,7 @@ export const register_user = (formData) => {
                         ...formData,
                         message: response.message || "Đăng ký thành công",
                         loading: false,
-                        isRegistered: true,
+                        is_registered: true,
                         error: null,
                     },
                 })
@@ -54,7 +54,7 @@ export const register_user = (formData) => {
                 payload: {
                     error: error.message,
                     loading: false,
-                    isRegistered: false,
+                    is_registered: false,
                     message: null
                 }
             })

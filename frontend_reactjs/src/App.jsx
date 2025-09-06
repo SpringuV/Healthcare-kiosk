@@ -4,7 +4,6 @@ import InputCCCD from './components/input_cccd'
 import Register from './components/register-user'
 import InfoInsurrance from './components/insurance/insurrance_info'
 import NonInsurranceInfo from './components/insurance_not/non-insurrance-info'
-import { useInsurrance } from './components/context/insurrance_context'
 import RegisterSuccess from './components/register_success'
 import LayoutDefault from './components/Layout/LayoutDefault'
 import HomePage from './components/homepage'
@@ -12,19 +11,12 @@ import { useNavigate } from 'react-router-dom'
 import PaymentControl from './components/payment/PaymentControl'
 import PaymentWithQR from './components/payment/PaymentWithQR'
 import ResultSearch from './components/history_check'
-import { useForm } from './components/context/form_context'
 import LayoutHome from './components/Layout/LayoutHome'
-import { usePatientHistory } from './components/context/patient_history_context'
-import { useStateStep } from './components/context/state_step_context'
-
-
+import { useGlobalContext } from './components/context/provider'
 
 function App() {
     const navigate = useNavigate()
-    const { setFormData } = useForm()
-    const { setInsurranceInfo } = useInsurrance()
-    const { setPatientHistory } = usePatientHistory()
-    const { clearStateStepAndFlowType } = useStateStep()
+    const { setPatientHistory, clearStateStepAndFlowType } = useGlobalContext()
     return (
         <Routes>
             {/* Trang chủ: không có step */}
@@ -41,7 +33,7 @@ function App() {
                 <Route index element={<InputCCCD mode="insurance" onClose={() => {
                     navigate(-1)
                     clearStateStepAndFlowType()
-                }} onSuccess={(data) => { setInsurranceInfo(data); navigate('/insur/info') }} />} />
+                }} onSuccess={() => { navigate('/insur/info') }} />} />
                 <Route path="info" element={<InfoInsurrance onClose={() => navigate('/service')} />} />
                 <Route path="register" element={<Register onClose={() => navigate('/')} />} />
                 <Route path="service" element={<Service />} />
@@ -52,7 +44,7 @@ function App() {
                 <Route index element={<InputCCCD mode="non-insurance" onClose={() => {
                     navigate(-1)
                     clearStateStepAndFlowType()
-                }} onSuccess={(data) => { setFormData(data); navigate('/non-insur/info') }} />} />
+                }} onSuccess={() => {navigate('/non-insur/info') }} />} />
                 <Route path="register" element={<Register onClose={() => navigate('/')} />} />
                 <Route path="info" element={<NonInsurranceInfo />} />
                 <Route path="service" element={<Service />} />

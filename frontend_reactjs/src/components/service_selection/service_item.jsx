@@ -1,29 +1,23 @@
 import { useEffect, useState } from "react"
 import Select from "react-select"
 import { useNavigate } from "react-router-dom"
-import { useService } from "../context/service_context"
-import { useForm } from "../context/form_context"
-import { useInsurrance } from "../context/insurrance_context"
 import { Spin } from "antd"
-import { useStateStep } from "../context/state_step_context"
-import { usePatientRegister } from "../context/patient_register_context"
-import { get_service_list, post_register_service_check } from "../../services/healcare_service"
+import { get_service_list } from "../../services/healcare_service"
+import { useDispatch, useSelector } from "react-redux"
+import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading } from "../../reducers"
+import { patient_booking_service } from "../../actions/service"
+import { useGlobalContext } from "../context/provider"
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
     const [selectedItemService, setSelectedItemService] = useState("Vui lòng chọn dịch vụ khám")
     const [selectedOption, setSelectedOption] = useState(null)
-    const { setSelectedService } = useService()
     const navigate = useNavigate()
-    const { formData } = useForm()
-    const { insurranceInfo } = useInsurrance()
-    const { setPatientRegister } = usePatientRegister()
-    const [spinning, setSpinning] = useState(false)
-
-    const { setStateStep, flowType } = useStateStep()
-    useEffect(() => {
-        setStateStep(2)
-    }, [setStateStep])
+    const insurance_check_data = useSelector(select_insurance_check_data)
+    const patient_exit_data = useSelector(select_check_patient_exist_data)
+    const { setStateStep, flowType, setSelectedService } = useGlobalContext()
+    const patient_booking_loading = useSelector(select_patient_booking_service_loading)
+    const dispatch = useDispatch()
 
     const handleChange = (option) => {
         setSelectedOption(option)
@@ -52,38 +46,38 @@ function ServiceItem() {
         fetchApiService()
     }, [])
 
+    useEffect(() => {
+        setStateStep(2)
+    }, [setStateStep])
+
     const handleRegister = async () => {
+        if (!selectedOption) {
+            alert("Vui lòng chọn dịch vụ.")
+            return
+        }
         const payload = {
             service_name: selectedOption.value,
             type: flowType,
         }
-        const citizen_id = insurranceInfo?.citizen_id || formData?.patient_id
+        const citizen_id = insurance_check_data?.citizen_id || patient_exit_data?.patient_id
         // check
         if (!selectedOption) {
             alert("Vui lòng chọn dịch vụ.")
             return
         }
-        setSpinning(true)
-        try {
-            const response = await post_register_service_check(citizen_id, payload)
-            if (!response.ok) {
-                alert("Đăng ký thất bại.");
-                setSpinning(false)
-                return;
-            }
-            setSpinning(false)
-            setPatientRegister(response.data)
+        dispatch(await patient_booking_service(citizen_id, payload))
+        .then(() => {
             if (flowType === "insurance") {
-                navigate('/insur/confirm-registration')
+                navigate("/insur/confirm-registration")
             } else {
-                navigate('/non-insur/payment')
+                navigate("/non-insur/payment")
             }
-        } catch (err) {
-            setSpinning(false)
-            console.error("Lỗi khi gọi API tạo order:", err);
-            alert("Đã có lỗi khi đăng ký.");
-        }
+        })
+        .catch((error) => {
+            console.error("Registration error:", error)
+        })
     }
+
     return (
         <>
             <div className="flex flex-col bg-white p-2 md:p-6 rounded-xl">
@@ -158,11 +152,11 @@ function ServiceItem() {
                 </div>
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
-                    <Spin spinning={spinning}>
+                    <Spin spinning={patient_booking_loading}>
                         {flowType === "insurance" ? (<div>
-                            <button disabled={spinning} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                            <button disabled={patient_booking_loading} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
                         </div>) : (
-                            <button className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" disabled={spinning} onClick={handleRegister}>Bước tiếp theo: Thanh toán</button>
+                            <button className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" disabled={patient_booking_loading} onClick={handleRegister}>Bước tiếp theo: Thanh toán</button>
                         )}
 
                     </Spin>

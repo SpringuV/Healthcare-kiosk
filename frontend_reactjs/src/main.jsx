@@ -1,18 +1,29 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import AppProviders from './components/context/provider/index.jsx'
-import allReducers from './reducers/index.js'
+import persistedReducer from './reducers/index.js'
 import { configureStore } from "@reduxjs/toolkit"
 import { Provider } from "react-redux"
+import { persistStore } from "redux-persist"
+import { PersistGate } from "redux-persist/integration/react"
+import { GlobalContextProvider } from './components/context/provider.jsx'
+import { BrowserRouter } from 'react-router-dom'
+
 const store = configureStore({
-  reducer: allReducers,
-  // thunk có sẵn, không cần thêm
+    reducer: persistedReducer,
+    // thunk có sẵn, không cần thêm
 })
+
+const persistor = persistStore(store)
+
 createRoot(document.getElementById('root')).render(
     <Provider store={store}>
-        <AppProviders>
-            <App />
-        </AppProviders>
+        <PersistGate loading={null} persistor={persistor}>
+            <BrowserRouter>
+                <GlobalContextProvider>
+                    <App />
+                </GlobalContextProvider>
+            </BrowserRouter>
+        </PersistGate>
     </Provider>
 )

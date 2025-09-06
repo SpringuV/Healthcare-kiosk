@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react"
 import ServiceItem from "./service_item"
-import { useStateStep } from "../context/state_step_context"
+import { useGlobalContext } from "../context/provider"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
     const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
 
-    const context = useStateStep()
+    const context = useGlobalContext()
     const { setStateStep } = context
     useEffect(() => {
         setStateStep(2)

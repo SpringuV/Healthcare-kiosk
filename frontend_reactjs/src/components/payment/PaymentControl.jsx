@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
-import { useStateStep } from "../context/state_step_context"
+import { useGlobalContext } from "../context/provider"
 
 function PaymentControl() {
     const button = ['Tiền mặt', 'Chuyển khoản']
     const info = ['|Thanh toán bằng tiền mặt tại quầy|', '|Chuyển khoản ngân hàng thông qua mã QR|']
     const navigate = useNavigate()
 
-    const { stateStep, setStateStep } = useStateStep()
+    const { stateStep, setStateStep } = useGlobalContext()
     useEffect(() => {
         if (stateStep !== 3) {
             setStateStep(3)
