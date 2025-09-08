@@ -11,6 +11,7 @@ function NonInsurranceInfo() {
         setStateStep(1)
     }, [setStateStep])
 
+    console.log(patient_exist)
     const handleNext = () => {
         navigate('/non-insur/service')
     }
@@ -36,7 +37,7 @@ function NonInsurranceInfo() {
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Giới tính:</label>
-                            <span className='text-center'>{patient_exist.gender}</span>
+                            <span className='text-center'>{patient_exist.gender == true ? "Nam" : "Nữ"}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Địa chỉ:</label>

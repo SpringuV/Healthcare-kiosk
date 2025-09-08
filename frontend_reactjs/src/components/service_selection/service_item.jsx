@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { Spin } from "antd"
 import { get_service_list } from "../../services/healcare_service"
 import { useDispatch, useSelector } from "react-redux"
-import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading } from "../../reducers"
+import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
 import { patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
 
@@ -17,6 +17,7 @@ function ServiceItem() {
     const patient_exit_data = useSelector(select_check_patient_exist_data)
     const { setStateStep, flowType, setSelectedService } = useGlobalContext()
     const patient_booking_loading = useSelector(select_patient_booking_service_loading)
+    const patient_register_initial = useSelector(select_patient_register_data)
     const dispatch = useDispatch()
 
     const handleChange = (option) => {
@@ -59,7 +60,7 @@ function ServiceItem() {
             service_name: selectedOption.value,
             type: flowType,
         }
-        const citizen_id = insurance_check_data?.citizen_id || patient_exit_data?.patient_id
+        const citizen_id = insurance_check_data?.citizen_id || patient_exit_data?.patient_id || patient_register_initial?.patient_id
         // check
         if (!selectedOption) {
             alert("Vui lòng chọn dịch vụ.")
