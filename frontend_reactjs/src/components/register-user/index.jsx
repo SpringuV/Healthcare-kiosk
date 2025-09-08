@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { clearRegisterError, register_user } from "../../actions/patient"
+import { clear_patient_register, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
 import { Form, Input, Select, Button, DatePicker, Row, Col } from "antd"
 import dayjs from "dayjs"
@@ -17,10 +17,9 @@ function Register({ onClose }) {
 
     useEffect(() => {
         setStateStep(1)
-
         // Clear error khi component mount
         if (dataState.error) {
-            dispatch(clearRegisterError())
+            dispatch(clear_patient_register())
         }
 
         // Fill form với data có sẵn
@@ -66,11 +65,11 @@ function Register({ onClose }) {
 
     // Theo dõi registration success
     useEffect(() => {
-        if (dataState.isRegistered && !dataState.loading && !dataState.error) {
+        if (dataState.is_registered && !dataState.loading && !dataState.error) {
             // console.log("Registration successful, navigating...")
             navigate(flowType === "insurance" ? "/insur/service" : "/non-insur/info")
         }
-    }, [dataState.isRegistered, dataState.loading, dataState.error, navigate, flowType])
+    }, [dataState.is_registered, dataState.loading, dataState.error, navigate, flowType])
 
     const handleAddressSelect = (fullAddress) => {
         form.setFieldsValue({ address: fullAddress })
@@ -102,6 +101,12 @@ function Register({ onClose }) {
         "Lự", "Lô Lô", "Chứt", "Mảng", "Cờ Lao", "Bố Y", "Ngái", "Si La", "Pu Péo", "Brâu",
         "Ơ Đu", "Rơ Măm", "Cống", "Cờ Tu", "Thành phần khác"
     ]
+    const allowed_keys = ["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"]
+    const handleKeyDown = (e) => {
+        if (!/[0-9]/.test(e.key) && !allowed_keys.includes(e.key)) {
+            e.preventDefault()
+        }
+    }
 
     return (
         <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
@@ -134,11 +139,7 @@ function Register({ onClose }) {
                                         { required: true, message: "Vui lòng nhập CCCD" },
                                         { len: 12, message: "CCCD phải đủ 12 số" },
                                     ]}>
-                                    <Input onKeyDown={(e)=>{
-                                        if(!/[0-9]/.test(e.key)){
-                                            e.preventDefault()
-                                        }
-                                    }} placeholder="Nhập căn cước công dân"  maxLength={12} />
+                                    <Input onKeyDown={handleKeyDown} placeholder="Nhập căn cước công dân"  maxLength={12} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
@@ -182,11 +183,7 @@ function Register({ onClose }) {
                                         { required: true, message: "Vui lòng nhập số điện thoại" },
                                         { len: 10, message: "Số điện thoại phải đủ 10 số" },
                                     ]}>
-                                    <Input onKeyDown={(e) => {
-                                        if(!/[0-9]/.test(e.key)){
-                                            e.preventDefault()
-                                        }
-                                    }} placeholder="Nhập số điện thoại" maxLength={10} />
+                                    <Input onKeyDown={handleKeyDown} placeholder="Nhập số điện thoại" maxLength={10} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>

@@ -12,7 +12,7 @@ import {
     CHECK_INSURANCE_SUCCESS,
     CHECK_INSURANCE_NOT_FOUND,
     CHECK_INSURANCE_FAILURE,
-    CLEAR_REGISTER_ERROR,
+    RESET_REGISTER_STATE,
     CLEAR_INSURANCE_CHECK,
     CLEAR_PATIENT_EXIST_CHECK,
 } from "../constants/user_constant"
@@ -203,6 +203,6 @@ export const check_patient_existed = (citizenId) => {
 }
 
 // Action sync
-export const clearRegisterError = () => ({ type: CLEAR_REGISTER_ERROR })
+export const clear_patient_register = () => ({ type: RESET_REGISTER_STATE })
 export const clear_insurance_check = () => ({ type: CLEAR_INSURANCE_CHECK })
 export const clear_patient_exist_check = () => ({ type: CLEAR_PATIENT_EXIST_CHECK })

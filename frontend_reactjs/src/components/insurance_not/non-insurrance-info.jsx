@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import { select_check_patient_exist_data } from '../../reducers'
+import { select_patient_register_data } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
-    const patient_exist = useSelector(select_check_patient_exist_data)
+    const patient_exist = useSelector(select_patient_register_data)
     const { setStateStep } = useGlobalContext()
     useEffect(() => {
         setStateStep(1)

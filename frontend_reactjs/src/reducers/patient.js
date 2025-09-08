@@ -52,7 +52,6 @@ export const patient_register_reducer = (state = initialRegisterState, action) =
             return {
                 ...state,
                 loading: action.payload.loading,
-                data: action.payload,
                 is_registered: action.payload.is_registered,
                 message: action.payload.message,
                 error: action.payload.error,

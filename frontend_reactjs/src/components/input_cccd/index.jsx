@@ -36,7 +36,6 @@ function InputCCCD(props) {
         onConfirm: null
     })
     const ctx = useGlobalContext()
-    console.log("GlobalContext value:", ctx)
     // Hooks
     const navigate = useNavigate()
     const inputRef = useRef(null)

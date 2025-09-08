@@ -1,9 +1,21 @@
+import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { clear_insurance_check, clear_patient_exist_check, clear_patient_register } from '../../actions/patient'
+import { clear_booking_service } from '../../actions/service'
 
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
     const navigate = useNavigate()
+    const dispatch = useDispatch()
 
+    useEffect(()=>{
+        dispatch(clear_patient_register())
+        dispatch(clear_insurance_check())
+        dispatch(clear_patient_exist_check())
+        dispatch(clear_booking_service())
+    },[dispatch])
+    
     return (
         <>
             <div className='text-center px-7 py-8  rounded-lg'>

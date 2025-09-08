@@ -13,10 +13,13 @@ import PaymentWithQR from './components/payment/PaymentWithQR'
 import ResultSearch from './components/history_check'
 import LayoutHome from './components/Layout/LayoutHome'
 import { useGlobalContext } from './components/context/provider'
+import { useDispatch } from 'react-redux'
+import { clear_patient_register } from './actions/patient'
 
 function App() {
     const navigate = useNavigate()
     const { setPatientHistory, clearStateStepAndFlowType } = useGlobalContext()
+    const dispatch = useDispatch()
     return (
         <Routes>
             {/* Trang chủ: không có step */}
@@ -45,7 +48,7 @@ function App() {
                     navigate(-1)
                     clearStateStepAndFlowType()
                 }} onSuccess={() => {navigate('/non-insur/info') }} />} />
-                <Route path="register" element={<Register onClose={() => navigate('/')} />} />
+                <Route path="register" element={<Register onClose={() => {navigate('/'); dispatch(clear_patient_register())}} />} />
                 <Route path="info" element={<NonInsurranceInfo />} />
                 <Route path="service" element={<Service />} />
                 <Route path="confirm-registration" element={<RegisterSuccess />} />
