@@ -1,23 +1,26 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import { select_patient_register_data } from '../../reducers'
+import { select_check_patient_exist_data, select_patient_register_data } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
     const patient_exist = useSelector(select_patient_register_data)
+    const patient_check = useSelector(select_check_patient_exist_data)
     const { setStateStep } = useGlobalContext()
     useEffect(() => {
         setStateStep(1)
     }, [setStateStep])
-
-    console.log(patient_exist)
+    console.log("patient_exist", patient_exist)
+    console.log("Patient_check", patient_check)
     const handleNext = () => {
         navigate('/non-insur/service')
     }
     const handleBack = () => {
         navigate(-1)
     }
+
+    const patient = patient_exist?.patient_id ? patient_exist : patient_check
     return (
         <>
             {patient_exist !== undefined ? (
@@ -29,35 +32,35 @@ function NonInsurranceInfo() {
                     <div className="flex text-[14px] md:text-[16px] lg:text-[18px] flex-col bg-white overflow-y-auto px-4 pt-3">
                         <div className="flex justify-between py-2">
                             <label className="font-semibold w-1/3 border-r-slate-700">Họ và tên:</label>
-                            <span className='text-center'>{patient_exist.full_name}</span>
+                            <span className='text-center'>{patient.full_name}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Ngày sinh:</label>
-                            <span className='text-center'>{patient_exist.dob}</span>
+                            <span className='text-center'>{patient.dob}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Giới tính:</label>
-                            <span className='text-center'>{patient_exist.gender == true ? "Nam" : "Nữ"}</span>
+                            <span className='text-center'>{patient.gender == true ? "Nam" : "Nữ"}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Địa chỉ:</label>
-                            <span className='text-center'>{patient_exist.address}</span>
+                            <span className='text-right'>{patient.address}</span>
                         </div>
                         <div className="flex justify-between  py-2">
-                            <label className="font-semibold w-1/3">Căn cước công dân:</label>
-                            <span className='text-center'>{patient_exist.patient_id}</span>
+                            <label className="font-semibold">Căn cước công dân:</label>
+                            <span className='text-center'>{patient.patient_id}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Nghề nghiệp:</label>
-                            <span className='text-center'>{patient_exist.job}</span>
+                            <span className='text-center'>{patient.job}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Dân tộc:</label>
-                            <span className='text-center'>{patient_exist.ethnic}</span>
+                            <span className='text-center'>{patient.ethnic}</span>
                         </div>
                         <div className="flex justify-between  py-2">
                             <label className="font-semibold w-1/3">Số điện thoại:</label>
-                            <span className='text-center'>{patient_exist.phone_number}</span>
+                            <span className='text-center'>{patient.phone_number}</span>
                         </div>
                     </div>
                     <div className="flex justify-center items-center p-3 bg-white rounded-b-md">

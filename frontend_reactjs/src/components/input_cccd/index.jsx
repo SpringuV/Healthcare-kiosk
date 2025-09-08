@@ -109,7 +109,7 @@ function InputCCCD(props) {
     const handle_non_insurance_mode = async (input_value) => {
         try {
             const response = await dispatch(check_patient_existed(input_value))
-
+            console.log(response)
             if (response.ok) {
                 onSuccess?.(response.data)
             } else {
