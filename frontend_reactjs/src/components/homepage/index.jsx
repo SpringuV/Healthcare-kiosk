@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { clear_insurance_check, clear_patient_exist_check, clear_patient_register } from '../../actions/patient'
+import { clear_history_booking, clear_insurance_check, clear_patient_exist_check, clear_patient_register } from '../../actions/patient'
 import { clear_booking_service } from '../../actions/service'
+import { Helmet } from "react-helmet-async"
 
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
@@ -14,10 +15,14 @@ function HomePage() {
         dispatch(clear_insurance_check())
         dispatch(clear_patient_exist_check())
         dispatch(clear_booking_service())
+        dispatch(clear_history_booking())
     },[dispatch])
     
     return (
         <>
+            <Helmet>
+                <title>Trang chủ</title>
+            </Helmet>
             <div className='text-center px-7 py-8  rounded-lg'>
                 <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                     <h1>CHỌN HÌNH THỨC KHÁM</h1>

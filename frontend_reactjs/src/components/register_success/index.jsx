@@ -7,11 +7,13 @@ import { useDispatch } from 'react-redux'
 import { clear_insurance_check, clear_patient_exist_check } from '../../actions/patient'
 import { clear_booking_service } from '../../actions/service'
 import { useGlobalContext } from '../context/provider'
+import { Helmet } from 'react-helmet-async'
 function RegisterSuccess() {
     const [qrCode, setQrCode] = useState("")
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { flowType, setStateStep, clearStateStepAndFlowType, paymentAgain } = useGlobalContext()
+    console.log("paymentAgain", paymentAgain)
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     useEffect(() => {
         if (flowType === "insurance") {
@@ -32,34 +34,57 @@ function RegisterSuccess() {
             navigate("/", { replace: true })
         }
     }
+    const fallback = (val, alt) => {
+        if (val === null || val === undefined || val === "") return alt
+        return val
+    }
 
+    const formatDate = (dateStr) => {
+        const d = new Date(dateStr)
+        return d.toLocaleString("vi-VN")
+    }
     const displayInfoRegister = {
-        fullname: patient_booking_service_data?.fullname ?? paymentAgain?.info_user?.fullname,
-        gender: patient_booking_service_data?.gender ?? paymentAgain?.info_user?.gender,
-        dob: patient_booking_service_data?.dob ?? paymentAgain?.info_user?.dob,
-        service_name: patient_booking_service_data?.service_name ?? paymentAgain?.info_order?.service_name,
-        citizen_id: patient_booking_service_data?.citizen_id ?? paymentAgain?.info_user?.citizen_id,
-        address_room: patient_booking_service_data?.address_room ?? paymentAgain?.info_order?.address_room,
-        doctor_name: patient_booking_service_data?.doctor_name ?? paymentAgain?.info_order?.doctor_name,
-        queue_number: patient_booking_service_data?.queue_number ?? paymentAgain?.info_order?.queue_number,
-        is_insurrance: patient_booking_service_data?.is_insurrance ?? paymentAgain?.info_user?.is_insurrance,
-        time_order: patient_booking_service_data?.time_order ?? paymentAgain?.info_order?.time_order,
-        price: patient_booking_service_data?.price ?? paymentAgain?.info_order?.price,
+        fullname: fallback(patient_booking_service_data?.fullname, paymentAgain?.info_user?.fullname),
+        gender: fallback(patient_booking_service_data?.gender, paymentAgain?.info_user?.gender),
+        dob: fallback(patient_booking_service_data?.dob, paymentAgain?.info_user?.dob),
+        service_name: fallback(patient_booking_service_data?.service_name, paymentAgain?.info_order?.service_name),
+        citizen_id: fallback(patient_booking_service_data?.citizen_id, paymentAgain?.info_user?.citizen_id),
+        address_room: fallback(patient_booking_service_data?.address_room, paymentAgain?.info_order?.clinic_name),
+        doctor_name: fallback(patient_booking_service_data?.doctor_name, paymentAgain?.info_order?.doctor_name),
+        queue_number: fallback(patient_booking_service_data?.queue_number, paymentAgain?.info_order?.queue_number),
+        is_insurrance: fallback(patient_booking_service_data?.is_insurrance, paymentAgain?.info_user?.is_insurrance),
+        time_order: fallback(patient_booking_service_data?.time_order, paymentAgain?.info_order?.time_order),
+        price: fallback(patient_booking_service_data?.price, paymentAgain?.info_order?.price),
     }
 
     useEffect(() => {
+        const handlePopState = () => navigate("/", { replace: true })
+        window.onpopstate = handlePopState
+        return () => { window.onpopstate = null }
+    }, [navigate])
+
+    useEffect(() => {
+        let isMounted = true;
         const fetchQRCode = async () => {
-            const orderId = patient_booking_service_data?.order_id || paymentAgain?.info_order?.order_id
+            const orderId = fallback(patient_booking_service_data?.order_id, paymentAgain?.info_order?.order_id)
             if (orderId) {
-                const res = await patient_get_qr_code(orderId)
-                setQrCode(res.data.QRCode) // API trả về { order_id, QRCode }
+                try {
+                    const res = await patient_get_qr_code(orderId)
+                    if (isMounted) setQrCode(res.data.QRCode)
+                } catch (err) {
+                    console.error("Lỗi fetch QR code:", err)
+                }
             }
         }
         fetchQRCode()
+        return () => { isMounted = false }
     }, [patient_booking_service_data, paymentAgain])
 
     return (
         <>
+            <Helmet>
+                <title>Xác nhận đăng kí khám</title>
+            </Helmet>
             {/* lớp phủ ngoài */}
             <div className='flex justify-center w-full my-3 py-3'>
                 <div className='bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[60vw] lg:w-[50vw] xl:w-[40vw] 2xl:w-[30vw] flex flex-col '>
@@ -82,7 +107,7 @@ function RegisterSuccess() {
                             ['Số phiếu đợi:', displayInfoRegister.queue_number],
                             ['Bảo hiểm y tế:', displayInfoRegister.is_insurrance ? 'Có' : 'Không'],
                             // ['Sử dụng bảo hiểm y tế:', patientRegister.use_insurrance ? 'Có' : 'Không'],
-                            ['Ngày đăng kí:', new Date(displayInfoRegister.time_order).toLocaleString()],
+                            ['Ngày đăng kí:', formatDate(displayInfoRegister.time_order)],
                             ['Giá khám:', `${Math.round(displayInfoRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`],
                             // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
                             // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
@@ -96,7 +121,11 @@ function RegisterSuccess() {
                     {/* QR Code */}
                     <div className=' pt-3 flex flex-col items-center justify-center'>
                         <p className="text-center text-[16px] md:text-[17px] lg:text-[18px] font-medium mb-2">Quét mã QR để tải phiếu khám</p>
-                        <img src={`data:image/png;base64,${qrCode}`} alt="QR Code" className='rounded-lg' width={150} height={150} />
+                        {qrCode ? (
+                            <img alt="Mã QR phiếu khám bệnh"  src={`data:image/png;base64,${qrCode}`} className="rounded-lg" width={150} height={150} />
+                        ) : (
+                            <p className="text-gray-500 italic">Đang tải mã QR...</p>
+                        )}
                     </div>
                     <div className=' flex justify-center items-center px-5 py-3'>
                         <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'

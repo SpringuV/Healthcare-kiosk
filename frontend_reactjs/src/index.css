@@ -8,6 +8,10 @@
     body {
         @apply bg-gradient-to-r from-gray-200 to-stone-200 pt-16 md:pt-20
     }
+
+    /* .ant-table-column-sorter-tooltip:hover {
+        display: none !important;
+    } */
 }
 
 @layer components {

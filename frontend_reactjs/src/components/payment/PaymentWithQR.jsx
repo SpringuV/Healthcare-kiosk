@@ -5,6 +5,7 @@ import { WS_URL } from "../../data/port"
 import { useSelector } from "react-redux"
 import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
+import { Helmet } from "react-helmet-async"
 
 function PaymentWithQR() {
     const navigate = useNavigate()
@@ -86,6 +87,9 @@ function PaymentWithQR() {
 
     return (
         <>
+            <Helmet>
+                <title>Thanh toán QR</title>
+            </Helmet>
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>

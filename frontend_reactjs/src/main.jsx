@@ -8,6 +8,7 @@ import { persistStore } from "redux-persist"
 import { PersistGate } from "redux-persist/integration/react"
 import { GlobalContextProvider } from './components/context/provider.jsx'
 import { BrowserRouter } from 'react-router-dom'
+import { HelmetProvider } from "react-helmet-async"
 
 const store = configureStore({
     reducer: persistedReducer,
@@ -19,11 +20,13 @@ const persistor = persistStore(store)
 createRoot(document.getElementById('root')).render(
     <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-            <BrowserRouter>
-                <GlobalContextProvider>
-                    <App />
-                </GlobalContextProvider>
-            </BrowserRouter>
+            <HelmetProvider>
+                <BrowserRouter>
+                    <GlobalContextProvider>
+                        <App />
+                    </GlobalContextProvider>
+                </BrowserRouter>
+            </HelmetProvider>
         </PersistGate>
     </Provider>
 )

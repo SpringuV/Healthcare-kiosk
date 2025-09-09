@@ -16,6 +16,10 @@ import {
     CLEAR_INSURANCE_ERROR,
     CLEAR_PATIENT_EXIST_CHECK,
     RESET_REGISTER_STATE,
+    HISTORY_BOOKING_REQUEST,
+    HISTORY_BOOKING_FAILURE,
+    HISTORY_BOOKING_SUCCESS,
+    CLEAR_HISTORY_BOOKING,
 } from "../constants/user_constant"
 
 
@@ -269,3 +273,42 @@ export const check_patient_exist_reducer = (state = initial_patient_exist, actio
 }
 
 // --------------CHECK PATIENT EXIST------------
+
+// ----------------HISTORY BOOKING----------------
+const initial_history_booking = {
+    history: {},
+    loading: false,
+    error: null,
+    message: null,
+}
+export const history_booking_reducer = (state = initial_history_booking, action) => {
+    switch (action.type) {
+        case HISTORY_BOOKING_REQUEST:
+            return {
+                ...state,
+                loading: action.payload.loading,
+                error: action.payload.error,
+                message: action.payload.message,
+            }
+        case HISTORY_BOOKING_FAILURE:
+            return {
+                ...state,
+                loading: action.payload.loading,
+                error: action.payload.error,
+                message: action.payload.message,
+                history: [],
+            }
+        case HISTORY_BOOKING_SUCCESS:
+            return {
+                ...state,
+                loading: action.payload.loading,
+                history: action.payload.history,
+                message: action.payload.message,
+                error: null,
+            }
+        case CLEAR_HISTORY_BOOKING:
+            return initial_history_booking
+        default:
+            return state
+    }
+}

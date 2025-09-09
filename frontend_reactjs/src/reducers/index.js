@@ -1,4 +1,4 @@
-import { patient_register_reducer, check_insurance_reducer, check_patient_exist_reducer } from "./patient"
+import { patient_register_reducer, check_insurance_reducer, check_patient_exist_reducer, history_booking_reducer } from "./patient"
 import { combineReducers } from "redux"
 import { createSelector } from 'reselect'
 import { persistReducer } from "redux-persist"
@@ -9,7 +9,8 @@ const allReducers = combineReducers({
     patient_register: patient_register_reducer,
     insurance_check: check_insurance_reducer,
     check_patient_exist: check_patient_exist_reducer,
-    patient_booking_service: patient_booking_service_reducer
+    patient_booking_service: patient_booking_service_reducer,
+    history_booking_service: history_booking_reducer
 })
 
 const persistConfig = {
@@ -55,5 +56,10 @@ export const select_check_patient_exist_data = (state) => state.check_patient_ex
 export const select_patient_booking_service_data = (state) => state.patient_booking_service
 export const select_patient_booking_service_error = (state) => state.patient_booking_service.error
 export const select_patient_booking_service_loading = (state) => state.patient_booking_service.loading
+
+// ---------------- history booking -------------
+export const select_history_booking_loading = (state) => state.patient_booking_service.loading
+export const select_history_booking_error = (state) => state.patient_booking_service.error
+export const select_history_booking_data = (state) => state.history_booking_service.history
 
 export default persistedReducer

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { useGlobalContext } from "../context/provider"
+import { Helmet } from "react-helmet-async"
 
 function PaymentControl() {
     const button = ['Tiền mặt', 'Chuyển khoản']
@@ -17,6 +18,9 @@ function PaymentControl() {
 
     return (
         <>
+            <Helmet>
+                <title>Chọn hình thức thanh toán</title>
+            </Helmet>
             <div className='text-center px-7 py-8  rounded-lg'>
                 <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                     <h1>CHỌN HÌNH THỨC THANH TOÁN</h1>

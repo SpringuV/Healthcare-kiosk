@@ -15,7 +15,12 @@ import {
     RESET_REGISTER_STATE,
     CLEAR_INSURANCE_CHECK,
     CLEAR_PATIENT_EXIST_CHECK,
+    HISTORY_BOOKING_REQUEST,
+    HISTORY_BOOKING_FAILURE,
+    HISTORY_BOOKING_SUCCESS,
+    CLEAR_HISTORY_BOOKING,
 } from "../constants/user_constant"
+import { patient_get_history_check } from "../services/patient"
 
 
 // Đăng ký bệnh nhân không bảo hiểm
@@ -202,7 +207,51 @@ export const check_patient_existed = (citizenId) => {
     }
 }
 
+export const history_booking_service = (citizen_id) => {
+    return async (dispatch) => {
+        dispatch({
+            type: HISTORY_BOOKING_REQUEST,
+            payload: { loading: true, error: null, message: null }
+        })
+
+        try {
+            const response = await patient_get_history_check(citizen_id)
+            if (!response.ok) {
+                dispatch({
+                    type: HISTORY_BOOKING_FAILURE,
+                    payload: {
+                        error: response.error || "Lỗi khi lấy lịch sử khám bệnh",
+                        loading: false,
+                        message: "Lỗi khi lấy lịch sử khám bệnh"
+                    }
+                })
+            }
+            dispatch({
+                type: HISTORY_BOOKING_SUCCESS, payload: {
+                    history: {
+                        info_user: response.data.patient,
+                        info_order: response.data.history
+                    },
+                    loading: false,
+                    message: null
+                }
+            })
+            return { ok: true, data: response.data || [] }
+        } catch (error) {
+            dispatch({
+                type: CHECK_PATIENT_EXIST_FAILURE,
+                payload: {
+                    error: error.message || "Lỗi kết nối tới máy chủ: Catch error",
+                    loading: false,
+                    message: "Lỗi khi lấy lịch sử khám bệnh: Catch error"
+                },
+            })
+            throw error
+        }
+    }
+}
 // Action sync
+export const clear_history_booking = () => ({ type: CLEAR_HISTORY_BOOKING })
 export const clear_patient_register = () => ({ type: RESET_REGISTER_STATE })
 export const clear_insurance_check = () => ({ type: CLEAR_INSURANCE_CHECK })
 export const clear_patient_exist_check = () => ({ type: CLEAR_PATIENT_EXIST_CHECK })

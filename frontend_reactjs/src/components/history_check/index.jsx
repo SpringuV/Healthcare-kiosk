@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom"
-import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col } from "antd"
+import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col, Tooltip } from "antd"
 import dayjs from "dayjs"
 import { useMemo, useState } from "react"
 import OrderDetail from "./order_detail"
 import { patient_get_history_check, patient_put_cancelled_payment } from "../../services/patient"
 import { useGlobalContext } from "../context/provider"
+import { Helmet } from "react-helmet-async"
+import { EyeOutlined, CloseCircleOutlined, CreditCardOutlined } from "@ant-design/icons"
 
 const { RangePicker } = DatePicker
 
@@ -17,9 +19,8 @@ function ResultSearch() {
     const [dateRange, setDateRange] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [loadingTable, setLoadingTable] = useState(false)
-    const { patientHistory, clearPatientHistory, setPaymentAgain , setFlowType} = useGlobalContext()
+    const { patientHistory, clearPatientHistory, setPaymentAgain, setFlowType } = useGlobalContext()
     const [orders, setOrders] = useState(patientHistory.history)
-
     const patient = patientHistory?.patient
     // console.log(patientHistory)
     // Mở modal chi tiết
@@ -120,13 +121,21 @@ function ResultSearch() {
     // Table columns
     const columns = [
         {
-            title: "Mã Phiếu",
+            title: () => (
+                <Tooltip mouseEnterDelay={0.2} title="Mã phiếu khám">
+                    <span>Mã phiếu khám</span>
+                </Tooltip>
+            ),
             dataIndex: "order_id",
             key: "order_id",
             align: "center",
         },
         {
-            title: "Thời gian",
+            title: () => (
+                <Tooltip placement="top" title="Ngày khám bệnh, có thể sắp xếp từ mới đến cũ hoặc ngược lại" mouseEnterDelay={0.2}>
+                    <span>Thời gian</span>
+                </Tooltip>
+            ),
             dataIndex: "time_order",
             key: "time_order",
             align: "center",
@@ -134,7 +143,11 @@ function ResultSearch() {
             sorter: (a, b) => dayjs(a.time_order).unix() - dayjs(b.time_order).unix(),
         },
         {
-            title: "Dịch vụ",
+            title: () => (
+                <Tooltip title="Dịch vụ đã đăng ký khám" mouseEnterDelay={0.2}>
+                    <span>Dịch vụ</span>
+                </Tooltip>
+            ),
             dataIndex: "service_name",
             key: "service_name",
             align: "center",
@@ -144,7 +157,11 @@ function ResultSearch() {
             sortDirections: ["descend", "ascend"],
         },
         {
-            title: "Giá tiền",
+            title: () => (
+                <Tooltip title="Giá dịch vụ đã đăng ký khám" mouseEnterDelay={0.2}>
+                    <span>Giá khám</span>
+                </Tooltip>
+            ),
             dataIndex: "price",
             key: "price",
             align: "center",
@@ -153,33 +170,26 @@ function ResultSearch() {
             sortDirections: ["descend", "ascend"],
         },
         {
-            title: "Trạng thái",
+            title: () => (
+                <Tooltip title="Trạng thái thanh toán" mouseEnterDelay={0.2}>
+                    <span>Trạng thái</span>
+                </Tooltip>
+            ),
             dataIndex: "payment_status",
             key: "payment_status",
             align: "center",
-            render: (text, record) => {
+            render: (text) => {
                 const statusMap = {
                     PAID: { color: "green", label: "Đã thanh toán" },
                     UNPAID: { color: "geekblue", label: "Chưa thanh toán" },
                     CANCELLED: { color: "volcano", label: "Đã hủy" },
                 };
-                const key = text?.trim()?.toUpperCase();
-                const { color, label } = statusMap[key] || {
+                const { color, label } = statusMap[text] || {
                     color: "default",
                     label: "Không rõ",
                 };
 
-                return (
-                    <>
-                        <Tag color={color}>{label}</Tag>
-                        {key === "UNPAID" && (
-                            <>
-                                <Button className="mr-2" type="dashed" onClick={() => handleCancelOrder(record)} loading={loadingCancel}>Hủy</Button>
-                                <Button type="dashed" loading={loadingCancel} onClick={() => handlePaying(record)}>Thanh toán</Button>
-                            </>
-                        )}
-                    </>
-                );
+                return <Tag color={color}>{label}</Tag>
             },
             filters: [
                 { text: "Đã thanh toán", value: "PAID" },
@@ -192,10 +202,27 @@ function ResultSearch() {
             title: "Hành động",
             key: "actions",
             align: "center",
-            render: (record) => (
-                <span className="hover:cursor-pointer" >
-                    <Button onClick={() => onOpen(record)} color="magenta">Chi Tiết</Button>
-                </span>
+            render: (text, record) => (
+                <div className="flex gap-4 justify-center">
+                    {/* Chi tiết */}
+                    <Tooltip title="Xem chi tiết">
+                        <EyeOutlined className="hover:!text-blue-500 !text-base !cursor-pointer" onClick={() => onOpen(record)} />
+                    </Tooltip>
+
+                    {/* Nếu chưa thanh toán thì hiển thị thêm hủy + thanh toán */}
+                    {record.payment_status === "UNPAID" && (
+                        <>
+                            <Tooltip title="Hủy phiếu khám">
+                                <Spin spinning={loadingCancel}>
+                                    <CloseCircleOutlined className="hover:!text-blue-500 !text-base !cursor-pointer" onClick={() => handleCancelOrder(record)} />
+                                </Spin>
+                            </Tooltip>
+                            <Tooltip title="Thanh toán">
+                                <CreditCardOutlined className="hover:!text-blue-500 !text-base !cursor-pointer" onClick={() => handlePaying(record)} />
+                            </Tooltip>
+                        </>
+                    )}
+                </div>
             ),
         },
     ]
@@ -204,6 +231,9 @@ function ResultSearch() {
         <div className="mx-[5%] bg-white p-3 rounded-lg mb-20">
             {patient ? (
                 <>
+                    <Helmet>
+                        <title>Lịch sử khám bệnh</title>
+                    </Helmet>
                     <div className="mb-4">
                         <h1 className="text-center text-[30px] font-semibold mb-4">Thông tin người khám</h1>
                         <Row gutter={[20, 20]}>
@@ -250,14 +280,17 @@ function ResultSearch() {
                     {/* Bộ lọc ngày */}
                     <div className="flex items-center justify-end mb-3">
                         <label className="mr-3">Lọc theo ngày</label>
-                        <RangePicker placeholder={["Ngày bắt đầu", "Ngày kết thúc"]} format="DD/MM/YYYY" onChange={(values) => setDateRange(values)} value={dateRange} />
+                        <Tooltip title="Chọn khoảng ngày để lọc">
+                            <RangePicker placeholder={["Ngày bắt đầu", "Ngày kết thúc"]} format="DD/MM/YYYY" onChange={(values) => setDateRange(values)} value={dateRange} />
+                        </Tooltip>
                     </div>
 
                     {/* Table */}
-                    <Table bordered rowKey="order_id" loading={loadingTable} dataSource={filteredOrders} columns={columns} pagination={{ position: ["bottomCenter"] }} />
+                    <Table showSorterTooltip={false} bordered rowKey="order_id" loading={loadingTable} dataSource={filteredOrders} columns={columns} pagination={{ position: ["bottomCenter"] }} />
 
                     {/* Modal chi tiết */}
                     <Modal
+                        centered={true}
                         title="Chi tiết đơn hàng"
                         width={{ xs: "90%", sm: "80%", md: "70%", lg: "60%", xl: "50%" }}
                         open={isModalDetail}
@@ -273,11 +306,15 @@ function ResultSearch() {
                     </Modal>
                     {/* Nút về trang chủ */}
                     <div className="flex justify-between items-center mt-2">
-                        <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
-                        <button className="text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
-                            onClick={handleReturnHome} type="button">
-                            Xác nhận và về trang chủ
-                        </button>
+                        <Tooltip title="Tải lại dữ liệu mới nhất">
+                            <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
+                        </Tooltip>
+                        <Tooltip title="Quay về trang chủ">
+                            <Button className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                                onClick={handleReturnHome} type="button">
+                                Trang chủ
+                            </Button>
+                        </Tooltip>
                     </div>
                 </>
             ) : (

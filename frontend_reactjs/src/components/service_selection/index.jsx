@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import ServiceItem from "./service_item"
 import { useGlobalContext } from "../context/provider"
+import { Helmet } from "react-helmet-async"
 function Service() {
     const [selectedService, setSelectedService] = useState(null)
     const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
@@ -12,6 +13,9 @@ function Service() {
     }, [setStateStep])
     return (
         <>
+            <Helmet>
+                <title>Chọn dịch vụ</title>
+            </Helmet>
             <div className='h-screen flex flex-col items-center'>
                 <div className='overflow-y-auto p-3 w-full'>
                     <div className='flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 '>

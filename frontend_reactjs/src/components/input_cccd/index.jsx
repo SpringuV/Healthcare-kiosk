@@ -4,15 +4,17 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button, Spin } from 'antd'
 import Alert from '../alert/Alert'
-import { check_insurance_user, check_patient_existed, clear_insurance_check } from '../../actions/patient'
-import { patient_get_history_check } from '../../services/patient'
+import { check_insurance_user, check_patient_existed, clear_insurance_check, history_booking_service } from '../../actions/patient'
 import {
     select_insurance_loading,
     select_insurance_error,
     select_check_patient_exist_loading,
-    select_check_patient_exist_error
+    select_check_patient_exist_error,
+    select_history_booking_loading,
+    select_history_booking_error
 } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
+import { Helmet } from 'react-helmet-async'
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
@@ -25,6 +27,11 @@ function InputCCCD(props) {
     // check patient exist 
     const check_patient_exist_loading = useSelector(select_check_patient_exist_loading)
     const check_patient_exist_error = useSelector(select_check_patient_exist_error)
+
+    // history booking
+    const history_booking_loading = useSelector(select_history_booking_loading)
+    const history_booking_error = useSelector(select_history_booking_error)
+
     // Local state
     const [error_message, set_error_message] = useState("")
     const [show_alert, set_show_alert] = useState(false)
@@ -40,9 +47,6 @@ function InputCCCD(props) {
     const navigate = useNavigate()
     const inputRef = useRef(null)
     const { setFlowType, setStateStep } = useGlobalContext()
-
-    // Local loading cho các mode khác (non-insurance, history)
-    const [local_loading, set_local_loading] = useState(false)
 
     // Setup initial state
     useEffect(() => {
@@ -109,7 +113,6 @@ function InputCCCD(props) {
     const handle_non_insurance_mode = async (input_value) => {
         try {
             const response = await dispatch(check_patient_existed(input_value))
-            console.log(response)
             if (response.ok) {
                 onSuccess?.(response.data)
             } else {
@@ -147,18 +150,22 @@ function InputCCCD(props) {
 
     const handle_history_mode = async (input_value) => {
         try {
-            set_local_loading(true)
-            const response = await patient_get_history_check(input_value)
-
-            if (!response.ok) {
-                show_alert_with_config({ text: "Không tìm thấy lịch sử khám bệnh!", showConfirmButton: false, cancelText: "Đóng" })
-            } else {
+            const response = await dispatch(history_booking_service(input_value))
+            if (response.ok) {
                 onSuccess?.(response.data)
+            } else {
+                show_alert_with_config({
+                    text: response.message || "Không tìm thấy lịch sử khám bệnh!",
+                    showConfirmButton: false,
+                    cancelText: "Đóng"
+                })
             }
         } catch (error) {
-            show_alert_with_config({ text: "Lỗi kết nối tới máy chủ", showConfirmButton: false, cancelText: "Đóng" })
-        } finally {
-            set_local_loading(false)
+            show_alert_with_config({
+                text: history_booking_error || "Lỗi kết nối tới máy chủ",
+                showConfirmButton: false,
+                cancelText: "Đóng"
+            })
         }
     }
 
@@ -195,12 +202,15 @@ function InputCCCD(props) {
     const loadingMap = {
         insurance: insurance_loading,
         "non-insurance": check_patient_exist_loading,
-        history: local_loading,
+        history: history_booking_loading,
     }
     const is_loading = loadingMap[mode] || false
 
     return (
         <>
+            <Helmet>
+                <title>Nhập CCCD</title>
+            </Helmet>
             <div className="fixed inset-0 flex justify-center items-center backdrop-blur-0">
                 <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">

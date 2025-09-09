@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { select_check_patient_exist_data, select_patient_register_data } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
+import { Helmet } from 'react-helmet-async'
 function NonInsurranceInfo() {
     const navigate = useNavigate()
     const patient_exist = useSelector(select_patient_register_data)
@@ -23,6 +24,9 @@ function NonInsurranceInfo() {
     const patient = patient_exist?.patient_id ? patient_exist : patient_check
     return (
         <>
+            <Helmet>
+                <title>Thông tin người khám</title>
+            </Helmet>
             {patient_exist !== undefined ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
                 <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">

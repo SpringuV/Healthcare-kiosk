@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useSelector } from "react-redux"
 import { select_insurance_check_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
+import { Helmet } from "react-helmet-async"
 function InfoInsurrance() {
     const navigate = useNavigate()
     const insurance_info = useSelector(select_insurance_check_data)
@@ -21,6 +22,9 @@ function InfoInsurrance() {
     }, [setStateStep])
     return (
         <>
+            <Helmet>
+                <title>Thông tin BHYT</title>
+            </Helmet>
             {insurance_info ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
                     <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">
