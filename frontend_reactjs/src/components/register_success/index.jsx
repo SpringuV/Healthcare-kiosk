@@ -13,7 +13,6 @@ function RegisterSuccess() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { flowType, setStateStep, clearStateStepAndFlowType, paymentAgain } = useGlobalContext()
-    console.log("paymentAgain", paymentAgain)
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     useEffect(() => {
         if (flowType === "insurance") {
