@@ -276,7 +276,7 @@ export const check_patient_exist_reducer = (state = initial_patient_exist, actio
 
 // ----------------HISTORY BOOKING----------------
 const initial_history_booking = {
-    history: {},
+    history: [],
     loading: false,
     error: null,
     message: null,

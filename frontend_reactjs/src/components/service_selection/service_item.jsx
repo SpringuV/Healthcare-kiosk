@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
 import { patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
+import { LoadingOutlined } from '@ant-design/icons'
 
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -67,16 +68,16 @@ function ServiceItem() {
             return
         }
         dispatch(await patient_booking_service(citizen_id, payload))
-        .then(() => {
-            if (flowType === "insurance") {
-                navigate("/insur/confirm-registration")
-            } else {
-                navigate("/non-insur/payment")
-            }
-        })
-        .catch((error) => {
-            console.error("Registration error:", error)
-        })
+            .then(() => {
+                if (flowType === "insurance") {
+                    navigate("/insur/confirm-registration")
+                } else {
+                    navigate("/non-insur/payment")
+                }
+            })
+            .catch((error) => {
+                console.error("Registration error:", error)
+            })
     }
 
     return (
@@ -153,13 +154,21 @@ function ServiceItem() {
                 </div>
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
                     <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
-                    <Spin spinning={patient_booking_loading}>
+                    <Spin spinning={patient_booking_loading} indicator={<LoadingOutlined />}>
                         {flowType === "insurance" ? (<div>
-                            <button disabled={patient_booking_loading} className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" onClick={handleRegister} >Đăng kí để khám</button>
+                            <button disabled={patient_booking_loading}
+                                className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
+                                onClick={handleRegister}>
+                                {patient_booking_loading == true ? "Đang xử lý ..." : "Đăng kí để khám"}
+                            </button>
                         </div>) : (
-                            <button className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50" disabled={patient_booking_loading} onClick={handleRegister}>Bước tiếp theo: Thanh toán</button>
+                            <button
+                                className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
+                                disabled={patient_booking_loading}
+                                onClick={handleRegister}>
+                                {patient_booking_loading == true ? "Đang xử lý ..." : "Bước tiếp theo: Thanh toán"}
+                            </button>
                         )}
-
                     </Spin>
                 </div>
             </div>

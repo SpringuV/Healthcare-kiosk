@@ -7,6 +7,9 @@ import { patient_get_history_check, patient_put_cancelled_payment } from "../../
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
 import { EyeOutlined, CloseCircleOutlined, CreditCardOutlined } from "@ant-design/icons"
+import { useSelector } from "react-redux"
+import { select_history_booking_data } from "../../reducers"
+import { LoadingOutlined } from '@ant-design/icons'
 
 const { RangePicker } = DatePicker
 
@@ -19,10 +22,12 @@ function ResultSearch() {
     const [dateRange, setDateRange] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [loadingTable, setLoadingTable] = useState(false)
-    const { patientHistory, clearPatientHistory, setPaymentAgain, setFlowType } = useGlobalContext()
-    const [orders, setOrders] = useState(patientHistory.history)
-    const patient = patientHistory?.patient
-    // console.log(patientHistory)
+    const { setPaymentAgain, setFlowType } = useGlobalContext()
+    const patient_history_booking = useSelector(select_history_booking_data)
+    const [orders, setOrders] = useState(patient_history_booking.history)
+    const patient = patient_history_booking?.patient
+    const [localLoading, setLocalLoading] = useState(false)
+
     // Mở modal chi tiết
     const onOpen = (order) => {
         setSelectedOrder(order)
@@ -49,14 +54,12 @@ function ResultSearch() {
     };
 
     // Về trang chủ
-    const handleReturnHome = () => {
-        clearPatientHistory()
+    const handleReturnHome = async () => {
         navigate("/", { replace: true })
         window.history.pushState(null, null, "/")
         window.onpopstate = () => {
             navigate("/", { replace: true })
         }
-        clearPatientHistory()
     }
 
     // Bộ lọc dịch vụ
@@ -111,7 +114,7 @@ function ResultSearch() {
     // Thanh toán đơn
     const handlePaying = (order) => {
         setPaymentAgain({
-            info_user: patientHistory.patient,
+            info_user: patient_history_booking.patient,
             info_order: order
         })
         setFlowType("non-insurance")
@@ -286,7 +289,16 @@ function ResultSearch() {
                     </div>
 
                     {/* Table */}
-                    <Table showSorterTooltip={false} bordered rowKey="order_id" loading={loadingTable} dataSource={filteredOrders} columns={columns} pagination={{ position: ["bottomCenter"] }} />
+                    <Table showSorterTooltip={false}
+                        bordered rowKey="order_id"
+                        loading={{
+                            spinning: loadingTable,
+                            indicator: <LoadingOutlined />
+                        }}
+                        dataSource={filteredOrders}
+                        columns={columns}
+                        pagination={{ position: ["bottomCenter"] }}
+                    />
 
                     {/* Modal chi tiết */}
                     <Modal
@@ -310,10 +322,18 @@ function ResultSearch() {
                             <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
                         </Tooltip>
                         <Tooltip title="Quay về trang chủ">
-                            <Button className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
-                                onClick={handleReturnHome} type="button">
-                                Trang chủ
-                            </Button>
+                            <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                <Button disabled={localLoading} className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                                    onClick={() => {
+                                        setLocalLoading(true)
+                                        setTimeout(() => {
+                                            handleReturnHome()
+                                            setLocalLoading(false)
+                                        }, Math.random(2000, 7000))
+                                    }} type="button">
+                                    {localLoading === true ? "Đang xử lý ..." : "Về trang chủ"}
+                                </Button>
+                            </Spin>
                         </Tooltip>
                     </div>
                 </>

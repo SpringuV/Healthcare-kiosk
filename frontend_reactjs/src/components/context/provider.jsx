@@ -28,18 +28,6 @@ export const GlobalContextProvider = ({ children }) => {
         sessionStorage.setItem("patient-register-info", JSON.stringify(patientRegister))
     }, [patientRegister])
 
-    // history check 
-    const history_data = sessionStorage.getItem("patient-history-info")
-    const [patientHistory, setPatientHistory] = useState(history_data ? JSON.parse(history_data) : {})
-    const clearPatientHistory = () => {
-        setPatientHistory({})
-        sessionStorage.removeItem("patient-history-info")
-    }
-
-    useEffect(() => {
-        sessionStorage.setItem("patient-history-info", JSON.stringify(patientHistory))
-    }, [patientHistory])
-
     // service select
     const [selectedService, setSelectedService] = useState(null)
 
@@ -65,8 +53,7 @@ export const GlobalContextProvider = ({ children }) => {
         selectedService, setSelectedService,
         paymentAgain, setPaymentAgain, clearPaymentAgain,
         patientRegister, setPatientRegister, clearPatientRegister,
-        patientHistory, setPatientHistory, clearPatientHistory
-    }), [stateStep, flowType, selectedService, paymentAgain, patientRegister, patientHistory])
+    }), [stateStep, flowType, selectedService, paymentAgain, patientRegister])
     return (
         <GlobalContext.Provider value={value}>
             {children}

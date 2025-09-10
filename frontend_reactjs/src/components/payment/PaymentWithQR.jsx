@@ -6,6 +6,7 @@ import { useSelector } from "react-redux"
 import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
+import { Spin } from "antd"
 
 function PaymentWithQR() {
     const navigate = useNavigate()
@@ -13,6 +14,9 @@ function PaymentWithQR() {
     const [showTimeDown, setShowTimeDown] = useState(true)
     const [textSuccess, setTextSuccess] = useState("")
     const { flowType, setStateStep, paymentAgain } = useGlobalContext()
+    const is_payment_again = paymentAgain && Object.keys(paymentAgain).length !== 0
+    const [localLoading, setLocalLoading] = useState(false)
+
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
@@ -30,13 +34,28 @@ function PaymentWithQR() {
         navigate("/non-insur/confirm-registration")
     }
 
+
     const handleConfirmAndReturnHome = () => {
-        navigate("/", { replace: true })
-        window.history.pushState(null, null, "/")
-        window.onpopstate = () => {
+        if (is_payment_again) {
+            // Nếu là thanh toán lại, chỉ quay về trang trước
+            navigate(-1)
+        } else {
+            // Nếu là flow mới, về trang chủ
             navigate("/", { replace: true })
+            window.history.pushState(null, null, "/")
+            window.onpopstate = () => {
+                navigate("/", { replace: true })
+            }
         }
     }
+    useEffect(() => {
+        // Debug: Log state để kiểm tra
+        console.log("Current Redux state:", {
+            patient_booking_service,
+            paymentAgain,
+            is_payment_again
+        })
+    }, [patient_booking_service, paymentAgain, is_payment_again])
 
     useEffect(() => {
         if (flowType === "non-insurance") {
@@ -134,11 +153,38 @@ function PaymentWithQR() {
                         <>
                             <h1 className={`italic ${isFailPayment ? " text-red-700 " : " text-green-700 "} text-center`}>{textSuccess}</h1>
                             <div className="flex justify-center items-center mt-2">
-                                {isFailPayment ? (
-                                    <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700' onClick={handleConfirmAndReturnHome}>Quay trở về trang chủ</button>
-                                ) : (
-                                    <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700' onClick={handleConfirmRegistration} type='button' >In phiếu và Xác nhận</button>
-                                )}
+                                <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                    {isFailPayment ? (
+                                        <button
+                                            disabled={localLoading}
+                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            onClick={() => {
+                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                                setLocalLoading(true)
+                                                setTimeout(() => {
+                                                    handleConfirmAndReturnHome()
+                                                    setLocalLoading(false)
+                                                }, delay[Math.floor(Math.random() * delay.length)])
+                                            }}>
+                                            {localLoading === true ? "Đang xử lý ..." : "Quay về trang chủ"}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            disabled={localLoading}
+                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            onClick={() => {
+                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                                setLocalLoading(true)
+                                                setTimeout(() => {
+                                                    handleConfirmRegistration()
+                                                    setLocalLoading(false)
+                                                }, delay[Math.floor(Math.random() * delay.length)])
+                                            }}
+                                            type='button' >
+                                            {localLoading === true ? "Đang xử lý ..." : "Bước tiếp theo: Xác nhận đăng kí khám"}
+                                        </button>
+                                    )}
+                                </Spin>
                             </div>
                         </>
                     )}

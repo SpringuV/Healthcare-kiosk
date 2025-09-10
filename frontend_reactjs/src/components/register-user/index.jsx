@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { clear_patient_register, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
@@ -8,6 +8,9 @@ import dayjs from "dayjs"
 import { select_patient_register_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
+import { Spin } from "antd"
+import { LoadingOutlined } from "@ant-design/icons"
+
 const { Option } = Select
 function Register({ onClose }) {
     const navigate = useNavigate()
@@ -15,6 +18,7 @@ function Register({ onClose }) {
     const { setStateStep, flowType } = useGlobalContext()
     const dataState = useSelector(select_patient_register_data)
     const [form] = Form.useForm()
+    const [localLoading, setLocalLoading] = useState(false)
 
     useEffect(() => {
         setStateStep(1)
@@ -126,7 +130,14 @@ function Register({ onClose }) {
                         </div>
                     </div>
                     <div className="overflow-y-auto p-3">
-                        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+                        <Form form={form} layout="vertical"
+                            onFinish={() => {
+                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                setLocalLoading(true)
+                                setTimeout(() => {
+                                    handleSubmit()
+                                }, Math.floor(Math.random() * delay.length))
+                            }}>
                             <Row gutter={[20, 10]}>
                                 <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
                                     <Form.Item label="Họ và Tên:" name="full_name" rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}>
@@ -200,9 +211,11 @@ function Register({ onClose }) {
                                 </Col>
                                 <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
                                     <Form.Item className="flex justify-center">
-                                        <Button type="primary" htmlType="submit" className="px-4 py-1 rounded-xl !bg-gradient-to-r from-colorTwo to-colorFive hover:!from-green-500 hover:!to-emerald-600">
-                                            Bước tiếp theo
-                                        </Button>
+                                        <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                            <Button disabled={localLoading} type="primary" htmlType="submit" className="px-4 py-1 rounded-xl !bg-gradient-to-r from-colorTwo to-colorFive hover:!from-green-500 hover:!to-emerald-600">
+                                                Bước tiếp theo
+                                            </Button>
+                                        </Spin>
                                     </Form.Item>
                                 </Col>
                             </Row>

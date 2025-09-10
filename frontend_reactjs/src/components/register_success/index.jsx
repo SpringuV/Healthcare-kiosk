@@ -3,17 +3,16 @@ import { useEffect, useState } from 'react'
 import { patient_get_qr_code } from '../../services/patient'
 import { useSelector } from 'react-redux'
 import { select_patient_booking_service_data } from '../../reducers'
-import { useDispatch } from 'react-redux'
-import { clear_insurance_check, clear_patient_exist_check } from '../../actions/patient'
-import { clear_booking_service } from '../../actions/service'
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
+import { Spin } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
 function RegisterSuccess() {
     const [qrCode, setQrCode] = useState("")
-    const dispatch = useDispatch()
     const navigate = useNavigate()
-    const { flowType, setStateStep, clearStateStepAndFlowType, paymentAgain } = useGlobalContext()
+    const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
+    const [localLoading, setLocalLoading] = useState(false)
     useEffect(() => {
         if (flowType === "insurance") {
             setStateStep(3)
@@ -22,17 +21,32 @@ function RegisterSuccess() {
         }
     }, [flowType, setStateStep])
 
+    const is_payment_again = paymentAgain && Object.keys(paymentAgain).length !== 0
     const handleReturnHomeInsur = () => {
-        dispatch(clear_insurance_check())
-        dispatch(clear_patient_exist_check())
-        dispatch(clear_booking_service())
-        clearStateStepAndFlowType()
-        navigate("/", { replace: true })
-        window.history.pushState(null, null, "/")
-        window.onpopstate = () => {
+        if (is_payment_again) {
+            navigate(-1)
+        } else {
             navigate("/", { replace: true })
         }
     }
+
+    useEffect(() => {
+        const handlePopState = (e) => {
+            e.preventDefault()
+            if (is_payment_again) {
+                // Nếu là thanh toán lại, cho phép quay về trang trước
+                navigate(-1)
+            } else {
+                // Nếu không phải thanh toán lại, luôn về trang chủ
+                navigate("/", { replace: true })
+            }
+        }
+        window.addEventListener("popstate", handlePopState)
+        return () => {
+            window.removeEventListener("popstate", handlePopState)
+        }
+    }, [navigate, is_payment_again])
+
     const fallback = (val, alt) => {
         if (val === null || val === undefined || val === "") return alt
         return val
@@ -55,12 +69,6 @@ function RegisterSuccess() {
         time_order: fallback(patient_booking_service_data?.time_order, paymentAgain?.info_order?.time_order),
         price: fallback(patient_booking_service_data?.price, paymentAgain?.info_order?.price),
     }
-
-    useEffect(() => {
-        const handlePopState = () => navigate("/", { replace: true })
-        window.onpopstate = handlePopState
-        return () => { window.onpopstate = null }
-    }, [navigate])
 
     useEffect(() => {
         let isMounted = true;
@@ -121,15 +129,24 @@ function RegisterSuccess() {
                     <div className=' pt-3 flex flex-col items-center justify-center'>
                         <p className="text-center text-[16px] md:text-[17px] lg:text-[18px] font-medium mb-2">Quét mã QR để tải phiếu khám</p>
                         {qrCode ? (
-                            <img alt="Mã QR phiếu khám bệnh"  src={`data:image/png;base64,${qrCode}`} className="rounded-lg" width={150} height={150} />
+                            <img alt="Mã QR phiếu khám bệnh" src={`data:image/png;base64,${qrCode}`} className="rounded-lg" width={150} height={150} />
                         ) : (
                             <p className="text-gray-500 italic">Đang tải mã QR...</p>
                         )}
                     </div>
                     <div className=' flex justify-center items-center px-5 py-3'>
-                        <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
-                            onClick={handleReturnHomeInsur}
-                            type='button' >Xác nhận và quay về trang chủ</button>
+                        <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                            <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                onClick={() => {
+                                    const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                    setLocalLoading(true)
+                                    setTimeout(() => {
+                                        handleReturnHomeInsur()
+                                        setLocalLoading(false)
+                                    }, Math.floor(Math.random() * delay.length))
+                                }}
+                                type='button' >{localLoading === true ? "Đang xử lý ..." : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
+                        </Spin>
                     </div>
                 </div>
             </div>

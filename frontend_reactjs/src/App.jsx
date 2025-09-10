@@ -18,7 +18,7 @@ import { clear_patient_register } from './actions/patient'
 
 function App() {
     const navigate = useNavigate()
-    const { setPatientHistory, clearStateStepAndFlowType } = useGlobalContext()
+    const { clearStateStepAndFlowType } = useGlobalContext()
     const dispatch = useDispatch()
     return (
         <Routes>
@@ -28,7 +28,7 @@ function App() {
                 <Route path="result-search" element={<InputCCCD mode="history" onClose={() => {
                     navigate(-1)
                     clearStateStepAndFlowType()
-                }} onSuccess={(data) => { setPatientHistory(data); navigate('/result') }} />} />
+                }} onSuccess={() => { navigate('/result') }} />} />
                 <Route path="result" element={<ResultSearch onClose={() => navigate(-1)} />} />
             </Route>
             {/* Flow Bảo hiểm y tế */}

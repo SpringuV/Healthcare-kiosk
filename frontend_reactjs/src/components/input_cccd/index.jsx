@@ -15,6 +15,7 @@ import {
 } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
+import { LoadingOutlined } from '@ant-design/icons'
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
@@ -243,7 +244,7 @@ function InputCCCD(props) {
                                 <p className="text-red-500 text-sm mb-3">{error_message}</p>
                             )}
 
-                            <Spin spinning={is_loading}>
+                            <Spin spinning={is_loading} indicator={<LoadingOutlined />}>
                                 <button
                                     type="submit"
                                     className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -228,10 +228,7 @@ export const history_booking_service = (citizen_id) => {
             }
             dispatch({
                 type: HISTORY_BOOKING_SUCCESS, payload: {
-                    history: {
-                        info_user: response.data.patient,
-                        info_order: response.data.history
-                    },
+                    history: response.data || [],
                     loading: false,
                     message: null
                 }
