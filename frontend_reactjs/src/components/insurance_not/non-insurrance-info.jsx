@@ -80,7 +80,7 @@ function NonInsurranceInfo() {
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleNext()
-                                        }, Math.floor(Math.random() * delay.length))
+                                        }, delay[Math.floor(Math.random() * delay.length)])
                                     }}>
                                     {localLoading === true ? "Đang xử lý ..." : "Bước tiếp theo: Chọn dịch vụ khám"}
                                 </button>

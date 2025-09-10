@@ -136,7 +136,7 @@ function Register({ onClose }) {
                                 setLocalLoading(true)
                                 setTimeout(() => {
                                     handleSubmit()
-                                }, Math.floor(Math.random() * delay.length))
+                                }, delay[Math.floor(Math.random() * delay.length)])
                             }}>
                             <Row gutter={[20, 10]}>
                                 <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>

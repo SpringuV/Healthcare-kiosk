@@ -138,12 +138,12 @@ function RegisterSuccess() {
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                             <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {
-                                    const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                    const delay = [3000, 4000, 5000, 6000, 7000]
                                     setLocalLoading(true)
                                     setTimeout(() => {
                                         handleReturnHomeInsur()
                                         setLocalLoading(false)
-                                    }, Math.floor(Math.random() * delay.length))
+                                    }, delay[Math.floor(Math.random() * delay.length)])
                                 }}
                                 type='button' >{localLoading === true ? "Đang xử lý ..." : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
                         </Spin>

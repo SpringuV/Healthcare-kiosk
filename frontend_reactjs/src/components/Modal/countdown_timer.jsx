@@ -30,7 +30,7 @@ function CountdownTimer({ minutes = 5, onTimeout, onSuccess, success }) {
     return (
         <>
             <div className="text-center font-bold text-red-600 text-xl">
-                ⏳ Thời gian còn lại: {formatTime(timeLeft)}
+                <span className="animate-wiggle ">⏳</span> Thời gian còn lại: {formatTime(timeLeft)}
             </div>
         </>
     );
