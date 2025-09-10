@@ -216,7 +216,7 @@ function ResultSearch() {
                     {record.payment_status === "UNPAID" && (
                         <>
                             <Tooltip title="Hủy phiếu khám">
-                                <Spin spinning={loadingCancel}>
+                                <Spin spinning={loadingCancel} indicator={<LoadingOutlined />}>
                                     <CloseCircleOutlined className="hover:!text-blue-500 !text-base !cursor-pointer" onClick={() => handleCancelOrder(record)} />
                                 </Spin>
                             </Tooltip>
