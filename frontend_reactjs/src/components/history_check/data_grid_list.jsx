@@ -75,6 +75,7 @@ function DataGridList(props) {
         if (patient?.citizen_id) {
             handleReload()
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [patient?.citizen_id])
     // Hủy đơn
     const handleCancelOrder = (order) => {

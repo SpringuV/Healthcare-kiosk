@@ -13,6 +13,7 @@ function RegisterSuccess() {
     const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     const [localLoading, setLocalLoading] = useState(false)
+    const [countDownTime, setCountDownTime] = useState(30)
     useEffect(() => {
         if (flowType === "insurance") {
             setStateStep(3)
@@ -29,6 +30,20 @@ function RegisterSuccess() {
             navigate("/", { replace: true })
         }
     }
+
+    useEffect(() => {
+        if (countDownTime <= 0) {
+            if (is_payment_again) {
+                navigate("/result")
+            } else {
+                navigate("/", { replace: true })
+            }
+        }
+        const timer = setTimeout(() => {
+            setCountDownTime(previous => previous - 1)
+        })
+        return () => clearTimeout(timer) // cleanup khi component unmount
+    }, [navigate, countDownTime, is_payment_again])
 
     useEffect(() => {
         const handlePopState = (e) => {
@@ -135,6 +150,7 @@ function RegisterSuccess() {
                         )}
                     </div>
                     <div className=' flex justify-center items-center px-5 py-3'>
+                        <p>Trang sẽ tự động thoát sau: {countDownTime}s</p>
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                             <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {
