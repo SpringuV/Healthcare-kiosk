@@ -30,7 +30,7 @@ function Header() {
                 <h1 className='flex-1 text-center text-white font-extrabold sm:text-[18px] md:text-[21px] lg:text-[24px] xl:text-[28px] 2xl:text-[31px] '>BỆNH VIỆN THẬN HÀ NỘI</h1>
                 <div className='flex items-center justify-end'>
                     <Tooltip mouseEnterDelay={0.2} title="Trang chủ">
-                        <a onClick={handleReturnHome} className='text-white'><i className='fa-solid fa-house'></i></a>
+                        <a onClick={handleReturnHome} className='text-white hover:text-blue-400'><i className='fa-solid fa-house'></i></a>
                     </Tooltip>
                 </div>
             </div>
