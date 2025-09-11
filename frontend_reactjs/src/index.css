@@ -12,6 +12,16 @@
     /* .ant-table-column-sorter-tooltip:hover {
         display: none !important;
     } */
+
+    /* Ẩn scrollbar trên Chrome, Edge, Safari */
+    .scroll-hidden::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Ẩn trên Firefox */
+    .scroll-hidden {
+        scrollbar-width: none;
+    }
 }
 
 @layer components {

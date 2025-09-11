@@ -35,7 +35,7 @@ function PaymentControl() {
                                     navigate('/non-insur/banking')
                                 }
                             }}>
-                                <div className='flex flex-col items-center justify-center h-[80%] w-full'>
+                                <div className='flex flex-col items-center justify-start h-[80%] w-full'>
                                     <div className='w-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
                                         <button className='cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]'>{text}</button>
                                     </div>

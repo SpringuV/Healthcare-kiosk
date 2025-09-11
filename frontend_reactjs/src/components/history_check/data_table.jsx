@@ -255,7 +255,15 @@ function DataTable(props) {
                 onCancel={onCancelModal}
                 footer={
                     selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID" ? (<div>
-                        <Button className="mr-2" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
+                        <Button className="mr-2" type="primary" onClick={() => {
+                            const delay = [1000, 2000, 3000]
+                            setLocalLoading(true)
+                            setTimeout(() => {
+                                handlePaying(selectedOrder)
+                            }, delay[Math.floor(Math.random() * delay.length)])
+
+                        }}>Thanh toán lại</Button>
+                        <Button className="mr-2 bg-red-400 hover:!bg-red-600" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
                         <Button onClick={onCancelModal} type="dashed">Đóng</Button>
                     </div>) : (<Button onClick={onCancelModal}>Đóng</Button>)
                 }

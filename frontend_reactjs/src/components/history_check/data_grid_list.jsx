@@ -1,18 +1,20 @@
 import { Button, Col, Modal, Row, Spin, Tooltip, DatePicker, Select, Input, Switch, Pagination } from "antd"
 import CartItem from "./cart_item"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { patient_get_history_check, patient_put_cancelled_payment } from "../../services/patient"
 import { useNavigate } from "react-router-dom"
 import OrderDetail from "./order_detail"
 import { LoadingOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import isBetween from "dayjs/plugin/isBetween"
+import { useGlobalContext } from "../context/provider"
 dayjs.extend(isBetween)
 const { RangePicker } = DatePicker
 const { Option } = Select
 function DataGridList(props) {
     const { data_patient_history_booking } = props
     const navigate = useNavigate()
+    const { setPaymentAgain, setFlowType } = useGlobalContext()
     const [isModalDetail, setIsModalDetail] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [loadingCancel, setLoadingCancel] = useState(false)
@@ -21,6 +23,7 @@ function DataGridList(props) {
     const [orders, setOrders] = useState(data_patient_history_booking?.history)
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize, setPageSize] = useState(8)
+    const [loadingPaymentAgain, setLoadingPaymentAgain] = useState(false)
 
     const patient = data_patient_history_booking?.patient
     const [filters, setFilters] = useState({
@@ -44,6 +47,16 @@ function DataGridList(props) {
         setIsModalDetail(true)
     }
 
+    // Thanh toán đơn
+    const handlePaying = (order) => {
+        setPaymentAgain({
+            info_user: data_patient_history_booking.patient,
+            info_order: order
+        })
+        setFlowType("non-insurance")
+        navigate("/non-insur/banking")
+    }
+
     const handleReload = async () => {
         try {
             setLoadingGridData(true)
@@ -57,6 +70,12 @@ function DataGridList(props) {
             setLoadingGridData(false)  // tắt loading
         }
     }
+
+    useEffect(() => {
+        if (patient?.citizen_id) {
+            handleReload()
+        }
+    }, [patient?.citizen_id])
     // Hủy đơn
     const handleCancelOrder = (order) => {
         Modal.confirm({
@@ -164,98 +183,109 @@ function DataGridList(props) {
         return sortPrices.slice(startIndex, endIndex)
     }, [sortPrices, currentPage, pageSize])
 
+
     return (
         <>
-            <div className="">
-                <>
-                    <Row gutter={[16, 16]} className="mb-5 text-sm lg:text-base">
-                        <Col className="flex-col lg:flex-row items-start lg:items-center justify-center">
-                            <label className="!mb-2 md:!mb-0" htmlFor="filter_time">Lọc theo thời gian: &nbsp;</label>
-                            <RangePicker
-                                className="w-full md:w-fit"
-                                id={"filter_time"}
-                                onChange={(values) => {
-                                    setFilters({ ...filters, date: values })
-                                }}
-                                allowClear
-                                format={"DD/MM/YYYY"}
-                                placeholder={["Từ ngày", "Đến ngày"]}
-                                valueFormat="YYYY-MM-DD"
-                                value={filters.date}
-                            >
-                            </RangePicker>
-                        </Col>
-                        <Col className="flex items-center justify-between w-full md:w-fit">
-                            <label htmlFor="filter_status">Lọc theo trạng thái: &nbsp;</label>
-                            <Select
-                                id="filter_status"
-                                allowClear
-                                className="!min-w-[200px]"
-                                mode="multiple"
-                                placeholder="Chọn trạng thái"
-                                options={options}
-                                onChange={(value) => setFilters({ ...filters, status: value })}
-                            />
-                        </Col>
-                        <Col className="flex items-center justify-between w-full md:w-fit">
-                            <label htmlFor="filter_service_name">Lọc theo dịch vụ: &nbsp;</label>
-                            <Select
-                                classNames={"w-full md:w-fit"}
-                                id="filter_service_name"
-                                className="!min-w-[200px]"
-                                placeholder="Tìm theo dịch vụ"
-                                allowClear
-                                mode="multiple"
-                                onChange={(value) => setFilters({ ...filters, service: value })}
-                            >
-                                {[...new Set(orders.map(item => item.service_name))].map((service, index) => (
-                                    <Option key={index} value={service}>{service}</Option>
-                                ))}
-                            </Select>
-                        </Col>
-                        <Col className="flex items-center justify-between w-full md:w-fit">
-                            <label htmlFor="filter_doctor_name">Lọc theo Bác sĩ: &nbsp;</label>
-                            <Select
-                                id="filter_doctor_name"
-                                className="!min-w-[200px]"
-                                placeholder="Tìm theo Bác sĩ"
-                                allowClear
-                                mode="multiple"
-                                onChange={(value) => setFilters({ ...filters, doctor_name: value })}
-                            >
-                                {[...new Set(orders.map((item) => item.doctor_name))].map((doctor, index) => (
-                                    <Option key={index} value={doctor}>{doctor}</Option>
-                                ))}
-                            </Select>
-                        </Col>
-                        <Col className="flex items-center">
-                            <label>Lọc theo giá: &nbsp;</label>
-                            <Switch
-                                onClick={handleChangePrice}
-                                checkedChildren="Tăng dần"
-                                unCheckedChildren="Giảm dần">
-                            </Switch>
-                        </Col>
-                    </Row>
-                    {/* show data */}
-                    {paginatedOrders && paginatedOrders.length > 0 ? (
-                        <Row gutter={[20, 20]} className="mb-2">
-                            {paginatedOrders.map((item, index) => (
-                                <Col key={index} xs={24} sm={24} md={12} lg={8} xl={6}>
-                                    <CartItem
-                                        loadingCancel={loadingCancel}
-                                        onCancelPayingOrder={() => handleCancelOrder(item)}
-                                        onOpenModal={() => onOpen(item)}
-                                        orderItem={item}
-                                    />
-                                </Col>
+            <>
+                {/* modal load */}
+                <Modal
+                    open={localLoading || loadingPaymentAgain}
+                    footer={null}
+                    closable={false}
+                    centered
+                    maskClosable={false}
+                    styles={{ body: { textAlign: "center" } }}
+                >
+                    <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                    <div className="text-lg font-semibold">Đang xử lý, vui lòng chờ...</div>
+                </Modal>
+                <Row gutter={[16, 16]} className="mb-5 text-sm lg:text-base">
+                    <Col className="flex-col lg:flex-row items-start lg:items-center justify-center">
+                        <label className="!mb-2 md:!mb-0" htmlFor="filter_time">Lọc theo thời gian: &nbsp;</label>
+                        <RangePicker
+                            className="w-full md:w-fit"
+                            id={"filter_time"}
+                            onChange={(values) => {
+                                setFilters({ ...filters, date: values })
+                            }}
+                            allowClear
+                            format={"DD/MM/YYYY"}
+                            placeholder={["Từ ngày", "Đến ngày"]}
+                            valueFormat="YYYY-MM-DD"
+                            value={filters.date}
+                        >
+                        </RangePicker>
+                    </Col>
+                    <Col className="flex items-center justify-between w-full md:w-fit">
+                        <label htmlFor="filter_status">Lọc theo trạng thái: &nbsp;</label>
+                        <Select
+                            id="filter_status"
+                            allowClear
+                            className="!min-w-[200px]"
+                            mode="multiple"
+                            placeholder="Chọn trạng thái"
+                            options={options}
+                            onChange={(value) => setFilters({ ...filters, status: value })}
+                        />
+                    </Col>
+                    <Col className="flex items-center justify-between w-full md:w-fit">
+                        <label htmlFor="filter_service_name">Lọc theo dịch vụ: &nbsp;</label>
+                        <Select
+                            classNames={"w-full md:w-fit"}
+                            id="filter_service_name"
+                            className="!min-w-[200px]"
+                            placeholder="Tìm theo dịch vụ"
+                            allowClear
+                            mode="multiple"
+                            onChange={(value) => setFilters({ ...filters, service: value })}
+                        >
+                            {[...new Set(orders.map(item => item.service_name))].map((service, index) => (
+                                <Option key={index} value={service}>{service}</Option>
                             ))}
-                        </Row>
-                    ) : (
-                        <div>Không có lịch sử khám bệnh</div>
-                    )}
-                </>
-            </div>
+                        </Select>
+                    </Col>
+                    <Col className="flex items-center justify-between w-full md:w-fit">
+                        <label htmlFor="filter_doctor_name">Lọc theo Bác sĩ: &nbsp;</label>
+                        <Select
+                            id="filter_doctor_name"
+                            className="!min-w-[200px]"
+                            placeholder="Tìm theo Bác sĩ"
+                            allowClear
+                            mode="multiple"
+                            onChange={(value) => setFilters({ ...filters, doctor_name: value })}
+                        >
+                            {[...new Set(orders.map((item) => item.doctor_name))].map((doctor, index) => (
+                                <Option key={index} value={doctor}>{doctor}</Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col className="flex items-center">
+                        <label>Lọc theo giá: &nbsp;</label>
+                        <Switch
+                            onClick={handleChangePrice}
+                            checkedChildren="Tăng dần"
+                            unCheckedChildren="Giảm dần">
+                        </Switch>
+                    </Col>
+                </Row>
+                {/* show data */}
+                {paginatedOrders && paginatedOrders.length > 0 ? (
+                    <Row gutter={[20, 20]} className="mb-2">
+                        {paginatedOrders.map((item, index) => (
+                            <Col key={index} xs={24} sm={24} md={12} lg={8} xl={6}>
+                                <CartItem
+                                    loadingCancel={loadingCancel}
+                                    onCancelPayingOrder={() => handleCancelOrder(item)}
+                                    onOpenModal={() => onOpen(item)}
+                                    orderItem={item}
+                                />
+                            </Col>
+                        ))}
+                    </Row>
+                ) : (
+                    <div>Không có lịch sử khám bệnh</div>
+                )}
+            </>
             {/* Modal chi tiết */}
             <Modal
                 centered={true}
@@ -264,10 +294,20 @@ function DataGridList(props) {
                 open={isModalDetail}
                 onCancel={onCancelModal}
                 footer={
-                    selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID" ? (<div>
-                        <Button className="mr-2" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
-                        <Button onClick={onCancelModal} type="dashed">Đóng</Button>
-                    </div>) : (<Button onClick={onCancelModal}>Đóng</Button>)
+                    selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID"
+                        ? (<div>
+                            <Button className="mr-2" type="primary" onClick={() => {
+                                const delay = [1000, 2000, 3000]
+                                setLoadingPaymentAgain(true)
+                                setTimeout(() => {
+                                    handlePaying(selectedOrder)
+                                }, delay[Math.floor(Math.random() * delay.length)])
+
+                            }}>Thanh toán lại</Button>
+                            <Button className="mr-2 bg-red-400 hover:!bg-red-600" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
+                            <Button onClick={onCancelModal} type="dashed">Đóng</Button>
+                        </div>)
+                        : (<Button onClick={onCancelModal}>Đóng</Button>)
                 }
             >
                 <OrderDetail order={selectedOrder} />
@@ -288,18 +328,19 @@ function DataGridList(props) {
             <div className="flex justify-between items-center mt-2">
                 <Tooltip title="Tải lại dữ liệu mới nhất">
                     <Spin spinning={loadingGridData} indicator={<LoadingOutlined />}>
-                        <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
+                        <Button onClick={handleReload} className="bg-orange-400 hover:!bg-orange-600" type="primary" >Tải lại dữ liệu</Button>
                     </Spin>
                 </Tooltip>
                 <Tooltip title="Quay về trang chủ">
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
-                        <Button disabled={localLoading} className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                        <Button disabled={localLoading} className="!text-sm lg:!text-base text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
+                                const delay = [2000, 3000, 4000]
                                 setLocalLoading(true)
                                 setTimeout(() => {
                                     handleReturnHome()
                                     setLocalLoading(false)
-                                }, Math.random(2000, 7000))
+                                }, delay[Math.floor(Math.random() * delay.length)] )
                             }} type="button">
                             {localLoading === true ? "Đang xử lý ..." : "Về trang chủ"}
                         </Button>

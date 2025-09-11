@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { clear_patient_register, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
@@ -19,6 +19,79 @@ function Register({ onClose }) {
     const dataState = useSelector(select_patient_register_data)
     const [form] = Form.useForm()
     const [localLoading, setLocalLoading] = useState(false)
+    const [showScrollHint, setShowScrollHint] = useState(false)
+    const containerRef = useRef(null)
+    // State này để nhớ xem người dùng đã từng cuộn hay chưa
+    // Khác với showScrollHint - cái này chỉ theo dõi hành động cuộn
+    const [hasUserScrolled, setHasUserScrolled] = useState(false)
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return // Nếu không có element thì thoát
+
+        // Biến này để tránh gọi quá nhiều lần checkScroll (throttling)
+        // Vì scroll event có thể fire rất nhiều lần trong 1 giây
+        let ticking = false
+
+        const checkScroll = () => {
+            // Chỉ xử lý nếu chưa đang xử lý (tránh lag)
+            if (!ticking) {
+                // requestAnimationFrame: đợi đến frame tiếp theo để chạy
+                // Điều này giúp animation mượt mà, không bị giật
+                requestAnimationFrame(() => {
+
+                    // KIỂM TRA CÓ CẦN SCROLL KHÔNG
+                    // Nếu nội dung cao hơn container thì mới cần scroll
+                    if (el.scrollHeight > el.clientHeight) {
+
+                        // TRƯỜNG HỢP 1: NGƯỜI DÙNG ĐÃ BẮT ĐẦU CUỘN
+                        if (el.scrollTop > 0) {
+                            // Đánh dấu là đã cuộn (chỉ set 1 lần)
+                            setHasUserScrolled(true)
+                            // Ẩn hint ngay lập tức
+                            setShowScrollHint(false)
+                        }
+                        // TRƯỜNG HỢP 2: CHƯA CUỘN VÀ CHƯA TỪNG CUỘN
+                        else if (!hasUserScrolled) {
+                            // Hiện hint để báo có thể cuộn xuống
+                            setShowScrollHint(true)
+                        }
+                        // Nếu hasUserScrolled = true nhưng scrollTop = 0
+                        // có nghĩa là đã cuộn rồi quay lại đầu trang
+                        // Lúc này vẫn không hiện hint nữa
+                    }
+                    // TRƯỜNG HỢP 3: KHÔNG CẦN SCROLL
+                    else {
+                        // Nội dung ngắn, không cần cuộn => ẩn hint
+                        setShowScrollHint(false)
+                    }
+
+                    // Reset cờ để có thể xử lý lần tiếp theo
+                    ticking = false
+                })
+                // Đánh dấu đang xử lý để tránh gọi lại
+                ticking = true
+            }
+        }
+
+        // Chạy lần đầu để kiểm tra trạng thái ban đầu
+        checkScroll()
+
+        // Lắng nghe sự kiện scroll
+        // { passive: true }: báo browser rằng chúng ta không gọi preventDefault()
+        // Điều này giúp browser tối ưu performance scroll
+        el.addEventListener("scroll", checkScroll, { passive: true })
+
+        // Cleanup: xóa event listener khi component unmount hoặc effect chạy lại
+        return () => el.removeEventListener("scroll", checkScroll)
+    }, [hasUserScrolled]) // Dependency: chạy lại khi hasUserScrolled thay đổi
+
+    useEffect(() => {
+        // Khi dataState thay đổi (ví dụ: form được fill lại)
+        // Reset về trạng thái ban đầu
+        setHasUserScrolled(false) // Chưa từng cuộn
+        setShowScrollHint(false)  // Tạm ẩn hint, sẽ được tính lại ở useEffect trên
+    }, [dataState])
 
     useEffect(() => {
         setStateStep(1)
@@ -119,7 +192,7 @@ function Register({ onClose }) {
                 <title>Đăng ký thông tin người khám</title>
             </Helmet>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
-                <div className="bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[60vw] lg:w-[50vw] max-h-[80vh] flex flex-col text-[17px]">
+                <div className="bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[60vw] lg:w-[50vw] max-h-[70vh] flex flex-col text-[17px]">
                     <div className="p-2 bg-colorOne rounded-t-lg">
                         <div className="flex justify-between items-center w-full">
                             <h3 className="flex-1 text-center text-white font-semibold">Nhập thông tin chi tiết</h3>
@@ -129,8 +202,10 @@ function Register({ onClose }) {
                             ></i>
                         </div>
                     </div>
-                    <div className="overflow-y-auto p-3">
-                        <Form form={form} layout="vertical"
+                    <div ref={containerRef} className="overflow-y-auto p-3 relative scroll-hidden">
+                        <Form
+                            form={form}
+                            layout="vertical"
                             onFinish={() => {
                                 const delay = [2000, 3000, 4000, 5000, 6000, 7000]
                                 setLocalLoading(true)
@@ -220,6 +295,43 @@ function Register({ onClose }) {
                                 </Col>
                             </Row>
                         </Form>
+                        {/* Gợi ý kéo xuống */}
+                        <div
+                            className={`
+                                        absolute bottom-0 left-0 w-full h-10 
+                                        bg-gradient-to-t from-white to-transparent 
+                                        flex justify-center items-end 
+                                        pointer-events-none 
+                                        transition-all duration-150 
+                                        ${showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                                    `}
+                        >
+                            {/* 
+                                GIẢI THÍCH CSS:
+                                - transition-all duration-150: tất cả thuộc tính thay đổi trong 150ms
+                                - opacity-100/0: hiện/ẩn bằng độ trong suốt
+                                - translate-y-0/2: di chuyển lên/xuống 8px (2 * 4px) để có hiệu ứng mượt
+                                
+                                KHI showScrollHint = true: opacity-100 translate-y-0 (hiện và ở vị trí bình thường)
+                                KHI showScrollHint = false: opacity-0 translate-y-2 (ẩn và hơi dịch xuống)
+                                TÓM TẮT LOGIC:
+                                1. Ban đầu: hasUserScrolled = false, nếu cần scroll thì hiện hint
+                                2. User bắt đầu cuộn: hasUserScrolled = true, ẩn hint ngay lập tức
+                                3. Dù user cuộn lên đầu trang, hint vẫn không hiện nữa (vì đã từng cuộn)
+                                4. Chỉ reset khi dataState thay đổi (form load data mới)
+
+                                TẠI SAO NHANH HƠN:
+                                - requestAnimationFrame: đồng bộ với refresh rate màn hình
+                                - Throttling với ticking: tránh xử lý quá nhiều
+                                - { passive: true }: browser biết không cần chờ preventDefault()
+                                - CSS transition thay vì JavaScript animation
+                                - Logic đơn giản: chỉ kiểm tra scrollTop > 0
+                                */
+                        }
+                            
+                            <i className="fa-solid fa-angle-down text-gray-400 animate-bounce"></i>
+                        </div>
+
                     </div>
                 </div>
             </div>

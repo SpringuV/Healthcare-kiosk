@@ -24,7 +24,7 @@ function App() {
         <Routes>
             {/* Trang chủ: không có step */}
             <Route path="/" element={<LayoutHome />}>
-                <Route path='/' element={<HomePage />} />
+                <Route index element={<HomePage />} />
                 <Route path="result-search" element={<InputCCCD mode="history" onClose={() => {
                     navigate(-1)
                     clearStateStepAndFlowType()

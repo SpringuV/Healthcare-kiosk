@@ -5,7 +5,7 @@ import { clear_history_booking, clear_insurance_check, clear_patient_exist_check
 import { clear_booking_service } from '../../actions/service'
 import { Helmet } from "react-helmet-async"
 import { useGlobalContext } from '../context/provider'
-import { Spin } from 'antd'
+import { Modal, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
@@ -43,14 +43,18 @@ function HomePage() {
             <Helmet>
                 <title>Trang chủ</title>
             </Helmet>
-            <Spin
-                className='fixed z-50 inset-0 flex gap-5 justify-center items-center bg-blur-sm'
-                spinning={localLoading}
-                fullscreen
-                size='large'
-                indicator={<LoadingOutlined className='text-white' spin />}
-                tip={<span className='text-2xl  font-semibold text-white'>Đang xử lý ...</span>}
-            />
+            {/* modal load */}
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold">Đang xử lý, vui lòng chờ...</div>
+            </Modal>
             <div className={`transition-all duration-300 ${localLoading ? 'blur-sm !bg-white/20' : ''}`}>
                 <div className='text-center px-7 py-8 rounded-lg'>
                     <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>

@@ -7,7 +7,7 @@ import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
 import { Spin } from "antd"
-
+import { LoadingOutlined } from "@ant-design/icons"
 function PaymentWithQR() {
     const navigate = useNavigate()
     const [showButtonReturn, setShowButtonReturn] = useState(false)

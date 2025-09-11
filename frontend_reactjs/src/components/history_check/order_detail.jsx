@@ -1,4 +1,4 @@
-import { Descriptions, Modal, Tag } from "antd"
+import { Descriptions, Tag } from "antd"
 import dayjs from "dayjs"
 
 function OrderDetail(props) {
