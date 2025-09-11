@@ -16,6 +16,14 @@ function PaymentControl() {
             
     }, [stateStep, setStateStep])
 
+    //  Auto play audio khi trang render
+    useEffect(() => {
+        const audio = new Audio("/audio/step3(payment).mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
+
     return (
         <>
             <Helmet>

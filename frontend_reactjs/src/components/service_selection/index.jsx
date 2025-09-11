@@ -11,6 +11,13 @@ function Service() {
     useEffect(() => {
         setStateStep(2)
     }, [setStateStep])
+
+    useEffect(() => {
+        const audio = new Audio("/audio/step2.mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
     return (
         <>
             <Helmet>
@@ -20,7 +27,7 @@ function Service() {
                 <div className='overflow-y-auto p-3 w-full'>
                     <div className='flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 '>
                         {service.map((text, i) => (
-                            <div key={i} className= 'rounded-xl' onClick={() => setSelectedService(text)}>
+                            <div key={i} className='rounded-xl' onClick={() => setSelectedService(text)}>
                                 <div className={`cursor-pointer flex justify-center items-center p-3 rounded-xl bg-gradient-to-r w-full ${selectedService === text ? " from-green-600 to-emerald-600 " : " from-teal-800 to-teal-600 "}`}>
                                     <h3 className='text-white font-bold text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]'>{text}</h3>
                                 </div>

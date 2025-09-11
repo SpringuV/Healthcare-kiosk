@@ -24,6 +24,23 @@ function HomePage() {
 
     }, [dispatch, clearStateStepAndFlowType])
 
+    useEffect(() => {
+        const audio = new Audio("/audio/main_menu.mp3")
+        audio.volume = 1
+
+        audio.play().catch(() => {
+            // Nếu autoplay bị chặn thì chỉ cần di chuột / chạm là phát
+            const unlock = () => {
+                audio.play()
+                document.removeEventListener("mousemove", unlock)
+                document.removeEventListener("touchstart", unlock)
+            }
+
+            document.addEventListener("mousemove", unlock, { once: true })
+            document.addEventListener("touchstart", unlock, { once: true })
+        })
+    }, [])
+
     const handleChange = (text) => {
         setLocalLoading(true)
         const delay = [1000, 2000, 3000]

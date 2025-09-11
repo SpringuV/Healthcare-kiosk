@@ -31,6 +31,14 @@ function RegisterSuccess() {
         }
     }
 
+    //  Auto play audio khi trang render
+    useEffect(() => {
+        const audio = new Audio("/audio/last_step.mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
+
     useEffect(() => {
         if (countDownTime <= 0) {
             if (is_payment_again) {
@@ -38,10 +46,11 @@ function RegisterSuccess() {
             } else {
                 navigate("/", { replace: true })
             }
+            return
         }
         const timer = setTimeout(() => {
             setCountDownTime(previous => previous - 1)
-        })
+        }, 1000)
         return () => clearTimeout(timer) // cleanup khi component unmount
     }, [navigate, countDownTime, is_payment_again])
 
@@ -149,8 +158,8 @@ function RegisterSuccess() {
                             <p className="text-gray-500 italic">Đang tải mã QR...</p>
                         )}
                     </div>
-                    <div className=' flex justify-center items-center px-5 py-3'>
-                        <p>Trang sẽ tự động thoát sau: {countDownTime}s</p>
+                    <div className=' flex justify-center flex-col items-center px-5 py-3'>
+                        <p className='text-green-700 text-base'>Trang sẽ tự động thoát sau: <span className='text-red-500'>{countDownTime}s</span></p>
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                             <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {

@@ -61,6 +61,14 @@ function InputCCCD(props) {
         }
     }, [setStateStep, mode, setFlowType, dispatch])
 
+    //  Auto play audio khi trang render
+    useEffect(() => {
+        const audio = new Audio("/audio/step1.mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
+
     const show_alert_with_config = (config) => {
         set_alert_config({
             text: config.text || "",
