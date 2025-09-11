@@ -206,7 +206,6 @@ function InputCCCD(props) {
         history: history_booking_loading,
     }
     const is_loading = loadingMap[mode] || false
-
     return (
         <>
             <Helmet>
