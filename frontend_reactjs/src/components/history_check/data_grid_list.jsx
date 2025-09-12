@@ -275,6 +275,7 @@ function DataGridList(props) {
                         {paginatedOrders.map((item, index) => (
                             <Col key={index} xs={24} sm={24} md={12} lg={8} xl={6}>
                                 <CartItem
+                                    style={{ cursor: "pointer" }}
                                     loadingCancel={loadingCancel}
                                     onCancelPayingOrder={() => handleCancelOrder(item)}
                                     onOpenModal={() => onOpen(item)}
