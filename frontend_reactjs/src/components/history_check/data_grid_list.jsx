@@ -24,7 +24,7 @@ function DataGridList(props) {
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize, setPageSize] = useState(8)
     const [loadingPaymentAgain, setLoadingPaymentAgain] = useState(false)
-
+    const delay = [2000, 3000, 1000]
     const patient = data_patient_history_booking?.patient
     const [filters, setFilters] = useState({
         date: null,
@@ -75,7 +75,7 @@ function DataGridList(props) {
         if (patient?.citizen_id) {
             handleReload()
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [patient?.citizen_id])
     // Hủy đơn
     const handleCancelOrder = (order) => {
@@ -298,7 +298,6 @@ function DataGridList(props) {
                     selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID"
                         ? (<div>
                             <Button className="mr-2" type="primary" onClick={() => {
-                                const delay = [1000, 2000, 3000]
                                 setLoadingPaymentAgain(true)
                                 setTimeout(() => {
                                     handlePaying(selectedOrder)
@@ -336,12 +335,11 @@ function DataGridList(props) {
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                         <Button disabled={localLoading} className="!text-sm lg:!text-base text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
-                                const delay = [2000, 3000, 4000]
                                 setLocalLoading(true)
                                 setTimeout(() => {
                                     handleReturnHome()
                                     setLocalLoading(false)
-                                }, delay[Math.floor(Math.random() * delay.length)] )
+                                }, delay[Math.floor(Math.random() * delay.length)])
                             }} type="button">
                             {localLoading === true ? "Đang xử lý ..." : "Về trang chủ"}
                         </Button>

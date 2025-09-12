@@ -227,6 +227,18 @@ function DataTable(props) {
     ]
     return (
         <>
+            {/* modal load */}
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
+            </Modal>
             {/* Bộ lọc ngày */}
             <div className="flex items-center justify-end mb-3">
                 <label className="mr-3">Lọc theo ngày</label>
@@ -279,11 +291,12 @@ function DataTable(props) {
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                         <Button disabled={localLoading} className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
+                                const delay = [1000, 2000, 3000]
                                 setLocalLoading(true)
                                 setTimeout(() => {
                                     handleReturnHome()
                                     setLocalLoading(false)
-                                }, Math.random(2000, 7000))
+                                }, delay[Math.floor(Math.random() * delay.length)])
                             }} type="button">
                             {localLoading === true ? "Đang xử lý ..." : "Về trang chủ"}
                         </Button>

@@ -14,6 +14,7 @@ function RegisterSuccess() {
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     const [localLoading, setLocalLoading] = useState(false)
     const [countDownTime, setCountDownTime] = useState(30)
+    const delay = [1000, 2000]
     useEffect(() => {
         if (flowType === "insurance") {
             setStateStep(3)
@@ -163,14 +164,13 @@ function RegisterSuccess() {
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                             <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {
-                                    const delay = [1000, 2000]
                                     setLocalLoading(true)
                                     setTimeout(() => {
                                         handleReturnHomeInsur()
                                         setLocalLoading(false)
                                     }, delay[Math.floor(Math.random() * delay.length)])
                                 }}
-                                type='button' >{localLoading === true ? "Đang xử lý ..." : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
+                                type='button' >{localLoading === true ? (<span className="loading-dots">Đang xử lý</span>) : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
                         </Spin>
                     </div>
                 </div>

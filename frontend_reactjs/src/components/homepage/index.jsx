@@ -26,7 +26,7 @@ function HomePage() {
 
     const handleChange = (text) => {
         setLocalLoading(true)
-        const delay = [1000, 2000, 3000]
+        const delay = [1000, 2000]
         setTimeout(() => {
             if (text === "Khám bảo hiểm y tế") {
                 navigate('/insur')

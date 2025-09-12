@@ -82,6 +82,17 @@ function ServiceItem() {
 
     return (
         <>
+            <Modal
+                footer={null}
+                open={patient_booking_loading}
+                closable={false}
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+                centered
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
+            </Modal>
             <div className="flex flex-col bg-white p-2 md:p-6 rounded-xl">
                 <div className="text-[14px] md:text-[16px] lg:text-[18px] flex flex-col lg:flex-row w-[90vw] lg:w-[60vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
                     <label className="w-[40%] font-semibold text-center" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
@@ -159,14 +170,14 @@ function ServiceItem() {
                             <button disabled={patient_booking_loading}
                                 className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
                                 onClick={handleRegister}>
-                                {patient_booking_loading == true ? "Đang xử lý ..." : "Đăng kí để khám"}
+                                {patient_booking_loading == true ? (<span className="loading-dots">Đang xử lý</span>) : "Đăng kí để khám"}
                             </button>
                         </div>) : (
                             <button
                                 className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
                                 disabled={patient_booking_loading}
                                 onClick={handleRegister}>
-                                {patient_booking_loading == true ? "Đang xử lý ..." : "Bước tiếp theo: Thanh toán"}
+                                {patient_booking_loading == true ? (<span className="loading-dots">Đang xử lý</span>) : "Bước tiếp theo: Thanh toán"}
                             </button>
                         )}
                     </Spin>

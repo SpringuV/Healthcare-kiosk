@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button, Modal } from 'antd'
+import { Button, Modal, Spin } from 'antd'
 import Alert from '../alert/Alert'
 import { check_insurance_user, check_patient_existed, clear_insurance_check, history_booking_service } from '../../actions/patient'
 import {
@@ -48,7 +48,7 @@ function InputCCCD(props) {
     const navigate = useNavigate()
     const inputRef = useRef(null)
     const { setFlowType, setStateStep } = useGlobalContext()
-    const timeDelay = 2000
+    // const timeDelay = 2000
     // Setup initial state
     useEffect(() => {
         setStateStep(1)
@@ -82,6 +82,7 @@ function InputCCCD(props) {
 
     const handle_insurance_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const result = await dispatch(check_insurance_user(input_value))
             if (result.ok) {
                 onSuccess?.(result.data)
@@ -116,11 +117,14 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+        } finally {
+            setDelayLoading(false)
         }
     }
 
     const handle_non_insurance_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const response = await dispatch(check_patient_existed(input_value))
             if (response.ok) {
                 onSuccess()
@@ -154,11 +158,14 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+        } finally {
+            setDelayLoading(false)
         }
     }
 
     const handle_history_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const response = await dispatch(history_booking_service(input_value))
             if (response.ok) {
                 onSuccess()
@@ -175,6 +182,8 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+        } finally {
+            setDelayLoading(false)
         }
     }
 
@@ -214,22 +223,22 @@ function InputCCCD(props) {
         history: history_booking_loading,
     }
     const is_loading = loadingMap[mode] || false
-    useEffect(() => {
-        let timer
-        if (is_loading) {
-            setDelayLoading(true)
-        } else {
-            timer = setTimeout(() => setDelayLoading(false), timeDelay)
-        }
-        return () => clearTimeout(timer)
-    }, [is_loading])
+    // useEffect(() => {
+    //     let timer
+    //     if (is_loading) {
+    //         setDelayLoading(true)
+    //     } else {
+    //         timer = setTimeout(() => setDelayLoading(false), timeDelay)
+    //     }
+    //     return () => clearTimeout(timer)
+    // }, [is_loading])
     return (
         <>
             <Helmet>
                 <title>Nhập CCCD</title>
             </Helmet>
             <Modal
-                open={delayLoading}
+                open={delayLoading || is_loading}
                 footer={null}
                 closable={false}
                 centered
@@ -270,19 +279,21 @@ function InputCCCD(props) {
                             {error_message && (
                                 <p className="text-red-500 text-sm mb-3">{error_message}</p>
                             )}
-                            <button
-                                type="submit"
-                                className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                onClick={handle_check_info}
-                                disabled={delayLoading}>
-                                {delayLoading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
-                            </button>
+                            <Spin spinning={delayLoading || is_loading} indicator={<LoadingOutlined />}>
+                                <button
+                                    type="submit"
+                                    className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={handle_check_info}
+                                    disabled={delayLoading}>
+                                    {delayLoading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
+                                </button>
+                            </Spin>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {show_alert && !delayLoading && (
+            {show_alert && !delayLoading && !is_loading && (
                 <Alert
                     textInput={alert_config.text}
                     onClose={() => set_show_alert(false)}

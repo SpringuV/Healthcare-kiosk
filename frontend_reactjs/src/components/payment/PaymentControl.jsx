@@ -28,7 +28,7 @@ function PaymentControl() {
     }, [])
 
     const handleChange = (text) => {
-        const delay = [2000, 3000, 2500]
+        const delay = [2000, 1500, 2500]
         setLocalLoanding(true)
         setTimeout(() => {
             if (text === "Tiền mặt") {

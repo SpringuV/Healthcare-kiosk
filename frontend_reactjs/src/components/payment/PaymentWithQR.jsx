@@ -16,7 +16,7 @@ function PaymentWithQR() {
     const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const is_payment_again = paymentAgain && Object.keys(paymentAgain).length !== 0
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [2000, 3000, 4000]
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
@@ -159,7 +159,6 @@ function PaymentWithQR() {
                                             disabled={localLoading}
                                             className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
-                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
                                                 setLocalLoading(true)
                                                 setTimeout(() => {
                                                     handleConfirmAndReturnHome()
@@ -173,7 +172,6 @@ function PaymentWithQR() {
                                             disabled={localLoading}
                                             className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
-                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
                                                 setLocalLoading(true)
                                                 setTimeout(() => {
                                                     handleConfirmRegistration()

@@ -13,7 +13,7 @@ function NonInsurranceInfo() {
     const patient_check = useSelector(select_check_patient_exist_data)
     const { setStateStep } = useGlobalContext()
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [1500, 2000, 2500]
     useEffect(() => {
         setStateStep(1)
     }, [setStateStep])
@@ -87,7 +87,6 @@ function NonInsurranceInfo() {
                                     disabled={localLoading}
                                     className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
-                                        const delay = [1500, 2000, 2500]
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleNext()
