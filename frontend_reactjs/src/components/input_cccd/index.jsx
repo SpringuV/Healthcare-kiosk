@@ -48,7 +48,7 @@ function InputCCCD(props) {
     const navigate = useNavigate()
     const inputRef = useRef(null)
     const { setFlowType, setStateStep } = useGlobalContext()
-
+    const timeDelay = 2000
     // Setup initial state
     useEffect(() => {
         setStateStep(1)
@@ -123,7 +123,7 @@ function InputCCCD(props) {
         try {
             const response = await dispatch(check_patient_existed(input_value))
             if (response.ok) {
-                onSuccess?.(response.data)
+                onSuccess()
             } else {
                 if (response.need_register) {
                     show_alert_with_config({
@@ -161,7 +161,7 @@ function InputCCCD(props) {
         try {
             const response = await dispatch(history_booking_service(input_value))
             if (response.ok) {
-                onSuccess?.(response.data)
+                onSuccess()
             } else {
                 show_alert_with_config({
                     text: response.message || "Không tìm thấy lịch sử khám bệnh!",
@@ -219,7 +219,7 @@ function InputCCCD(props) {
         if (is_loading) {
             setDelayLoading(true)
         } else {
-            timer = setTimeout(() => setDelayLoading(false), 1800)
+            timer = setTimeout(() => setDelayLoading(false), timeDelay)
         }
         return () => clearTimeout(timer)
     }, [is_loading])

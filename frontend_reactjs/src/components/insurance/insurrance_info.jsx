@@ -75,7 +75,7 @@ function InfoInsurrance() {
                                     disabled={localLoading}
                                     className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
-                                        const delay = [2000, 3000, 4000, 5000]
+                                        const delay = [1500, 2000, 2500]
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleChangePath()

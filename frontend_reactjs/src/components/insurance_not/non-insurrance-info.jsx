@@ -39,7 +39,7 @@ function NonInsurranceInfo() {
                 styles={{ body: { textAlign: "center" } }}
             >
                 <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
-                <div className="text-lg font-semibold loading-dots">Đang kiểm tra thông tin, vui lòng chờ</div>
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
             </Modal>
             {patient_exist !== undefined ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
@@ -87,7 +87,7 @@ function NonInsurranceInfo() {
                                     disabled={localLoading}
                                     className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
-                                        const delay = [2000, 3000, 4000, 5000]
+                                        const delay = [1500, 2000, 2500]
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleNext()
