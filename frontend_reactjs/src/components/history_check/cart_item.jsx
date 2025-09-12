@@ -14,7 +14,7 @@ function CartItem(props) {
         <>
             <Tooltip title="Click để xem chi tiết">
                 <div className="hover:bg-blue-100 focus:bg-blue-100 bg-slate-50">
-                    <Col onClick={onOpenModal} xs={24} sm={24} md={24} lg={24} xl={24} className="p-1 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <Col onClick={onOpenModal} xs={24} sm={24} md={24} lg={24} xl={24} className="p-1 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer">
                         <Row gutter={[16, 16]} className="w-full flex justify-between items-center py-1 pl-2 gap-3 shadow-sm text-sm lg:text-base">
                             <h3 className="font-semibold  ml-1 text-wrap flex-1">Dịch vụ khám: </h3>
                             <span className="w-1/2 text-center text-wrap">{orderItem.service_name}</span>
