@@ -198,7 +198,7 @@ function DataGridList(props) {
                     styles={{ body: { textAlign: "center" } }}
                 >
                     <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
-                    <div className="text-lg font-semibold">Đang xử lý, vui lòng chờ...</div>
+                    <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
                 </Modal>
                 <Row gutter={[16, 16]} className="mb-5 text-sm lg:text-base">
                     <Col className="flex-col lg:flex-row items-start lg:items-center justify-center">

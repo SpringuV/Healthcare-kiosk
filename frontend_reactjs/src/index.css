@@ -25,6 +25,29 @@
 }
 
 @layer components {
+    .loading-dots::after {
+        content: "";
+        animation: dots 1s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+        0% {
+            content: "";
+        }
+
+        33% {
+            content: ".";
+        }
+
+        66% {
+            content: "..";
+        }
+
+        100% {
+            content: "...";
+        }
+    }
+
     .print-pdf {
         @apply text-sm p-4 w-[148mm] h-[210mm] bg-white text-black;
     }

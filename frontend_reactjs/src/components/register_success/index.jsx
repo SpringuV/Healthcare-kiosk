@@ -33,7 +33,7 @@ function RegisterSuccess() {
 
     //  Auto play audio khi trang render
     useEffect(() => {
-        const audio = new Audio("/audio/last_step.mp3")
+        const audio = new Audio("/audio/confirm_booking.mp3")
         audio.play().catch(err => {
             console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
         })

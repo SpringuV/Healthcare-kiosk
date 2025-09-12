@@ -13,7 +13,7 @@ function Service() {
     }, [setStateStep])
 
     useEffect(() => {
-        const audio = new Audio("/audio/step2.mp3")
+        const audio = new Audio("/audio/choose_service.mp3")
         audio.play().catch(err => {
             console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
         })

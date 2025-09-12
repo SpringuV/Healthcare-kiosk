@@ -5,7 +5,7 @@ import { clear_history_booking, clear_insurance_check, clear_patient_exist_check
 import { clear_booking_service } from '../../actions/service'
 import { Helmet } from "react-helmet-async"
 import { useGlobalContext } from '../context/provider'
-import { Modal, Spin } from 'antd'
+import { Modal } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
@@ -23,23 +23,6 @@ function HomePage() {
         clearStateStepAndFlowType()
 
     }, [dispatch, clearStateStepAndFlowType])
-
-    useEffect(() => {
-        const audio = new Audio("/audio/main_menu.mp3")
-        audio.volume = 1
-
-        audio.play().catch(() => {
-            // Nếu autoplay bị chặn thì chỉ cần di chuột / chạm là phát
-            const unlock = () => {
-                audio.play()
-                document.removeEventListener("mousemove", unlock)
-                document.removeEventListener("touchstart", unlock)
-            }
-
-            document.addEventListener("mousemove", unlock, { once: true })
-            document.addEventListener("touchstart", unlock, { once: true })
-        })
-    }, [])
 
     const handleChange = (text) => {
         setLocalLoading(true)
@@ -70,7 +53,7 @@ function HomePage() {
                 styles={{ body: { textAlign: "center" } }}
             >
                 <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
-                <div className="text-lg font-semibold">Đang xử lý, vui lòng chờ...</div>
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
             </Modal>
             <div className={`transition-all duration-300 ${localLoading ? 'blur-sm !bg-white/20' : ''}`}>
                 <div className='text-center px-7 py-8 rounded-lg'>
