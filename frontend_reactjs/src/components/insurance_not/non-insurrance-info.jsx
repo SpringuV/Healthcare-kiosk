@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { select_check_patient_exist_data, select_patient_register_data } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
-import { Spin } from 'antd'
+import { Modal, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 
 function NonInsurranceInfo() {
@@ -30,6 +30,17 @@ function NonInsurranceInfo() {
             <Helmet>
                 <title>Thông tin người khám</title>
             </Helmet>
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang kiểm tra thông tin, vui lòng chờ</div>
+            </Modal>
             {patient_exist !== undefined ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
                     <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">
@@ -76,13 +87,13 @@ function NonInsurranceInfo() {
                                     disabled={localLoading}
                                     className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
-                                        const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                        const delay = [2000, 3000, 4000, 5000]
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleNext()
                                         }, delay[Math.floor(Math.random() * delay.length)])
                                     }}>
-                                    {localLoading === true ? "Đang xử lý ..." : "Bước tiếp theo: Chọn dịch vụ khám"}
+                                    {localLoading === true ? (<span className='loading-dots'>Đang xử lý</span>) : "Bước tiếp theo: Chọn dịch vụ khám"}
                                 </button>
                             </Spin>
                         </div>

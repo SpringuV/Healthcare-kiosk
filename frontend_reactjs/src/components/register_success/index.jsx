@@ -163,7 +163,7 @@ function RegisterSuccess() {
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                             <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {
-                                    const delay = [3000, 4000, 5000]
+                                    const delay = [1000, 2000]
                                     setLocalLoading(true)
                                     setTimeout(() => {
                                         handleReturnHomeInsur()

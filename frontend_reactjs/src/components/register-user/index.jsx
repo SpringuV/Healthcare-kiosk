@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { clear_patient_register, register_user } from "../../actions/patient"
 import Provinces from "../provinces"
-import { Form, Input, Select, Button, DatePicker, Row, Col } from "antd"
+import { Form, Input, Select, Button, DatePicker, Row, Col, Modal } from "antd"
 import dayjs from "dayjs"
 import { select_patient_register_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
@@ -32,18 +32,15 @@ function Register({ onClose }) {
         // Biến này để tránh gọi quá nhiều lần checkScroll (throttling)
         // Vì scroll event có thể fire rất nhiều lần trong 1 giây
         let ticking = false
-
         const checkScroll = () => {
             // Chỉ xử lý nếu chưa đang xử lý (tránh lag)
             if (!ticking) {
                 // requestAnimationFrame: đợi đến frame tiếp theo để chạy
                 // Điều này giúp animation mượt mà, không bị giật
                 requestAnimationFrame(() => {
-
                     // KIỂM TRA CÓ CẦN SCROLL KHÔNG
                     // Nếu nội dung cao hơn container thì mới cần scroll
                     if (el.scrollHeight > el.clientHeight) {
-
                         // TRƯỜNG HỢP 1: NGƯỜI DÙNG ĐÃ BẮT ĐẦU CUỘN
                         if (el.scrollTop > 0) {
                             // Đánh dấu là đã cuộn (chỉ set 1 lần)
@@ -65,7 +62,6 @@ function Register({ onClose }) {
                         // Nội dung ngắn, không cần cuộn => ẩn hint
                         setShowScrollHint(false)
                     }
-
                     // Reset cờ để có thể xử lý lần tiếp theo
                     ticking = false
                 })
@@ -144,8 +140,14 @@ function Register({ onClose }) {
     // Theo dõi registration success
     useEffect(() => {
         if (dataState.is_registered && !dataState.loading && !dataState.error) {
-            // console.log("Registration successful, navigating...")
+            // const timer = setTimeout(() => {
             navigate(flowType === "insurance" ? "/insur/service" : "/non-insur/info")
+            // }, 2000)
+            // Cleanup nếu component unmount
+            // Mount – khi component được tạo và render lần đầu (xuất hiện trên màn hình)
+            // Update – khi props hoặc state của nó thay đổi → React re-render component đó
+            // Unmount – khi component bị gỡ khỏi DOM (biến mất khỏi màn hình)
+            // return () => clearTimeout(timer)
         }
     }, [dataState.is_registered, dataState.loading, dataState.error, navigate, flowType])
 
@@ -160,9 +162,6 @@ function Register({ onClose }) {
             dob: values.dob ? values.dob.format("YYYY-MM-DD") : null,
             is_insur: flowType === "insurance",
         }
-
-        console.log("Payload gửi đi:", JSON.stringify(payload, null, 2))
-
         try {
             await dispatch(register_user(payload))
             // Navigation sẽ được xử lý trong useEffect
@@ -171,6 +170,14 @@ function Register({ onClose }) {
             // Error đã được lưu vào Redux state
         }
     }
+
+    useEffect(() => {
+        if (dataState.loading) {
+            setLocalLoading(true)
+        } else {
+            setLocalLoading(false)
+        }
+    }, [dataState.loading])
     const ethnicArr = [
         "Kinh", "Tày", "Thái", "Mường", "Khmer", "Hoa", "Nùng", "H'Mông", "Dao", "Gia Rai",
         "Ê Đê", "Ba Na", "Chăm", "Sán Dìu", "Cơ Ho", "Xơ Đăng", "Sán Chay", "Ra Glai", "Mnông",
@@ -191,6 +198,17 @@ function Register({ onClose }) {
             <Helmet>
                 <title>Đăng ký thông tin người khám</title>
             </Helmet>
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý đăng kí, vui lòng chờ</div>
+            </Modal>
             <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center h-screen flex-col">
                 <div className="bg-white rounded-lg w-[80vw] sm:w-[70vw] md:w-[60vw] lg:w-[50vw] max-h-[70vh] flex flex-col text-[17px]">
                     <div className="p-2 bg-colorOne rounded-t-lg">
@@ -206,13 +224,7 @@ function Register({ onClose }) {
                         <Form
                             form={form}
                             layout="vertical"
-                            onFinish={() => {
-                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
-                                setLocalLoading(true)
-                                setTimeout(() => {
-                                    handleSubmit()
-                                }, delay[Math.floor(Math.random() * delay.length)])
-                            }}>
+                            onFinish={handleSubmit}>
                             <Row gutter={[20, 10]}>
                                 <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
                                     <Form.Item label="Họ và Tên:" name="full_name" rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}>
@@ -259,7 +271,6 @@ function Register({ onClose }) {
                                 <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
                                     <Form.Item label="Dân tộc:" name="ethnic" rules={[{ required: true, message: "Vui lòng chọn dân tộc" }]}>
                                         <Select placeholder="Chọn dân tộc">
-                                            <Option value="none">-- Chọn dân tộc --</Option>
                                             {ethnicArr.map((ethnic, index) => (
                                                 <Option key={index} value={ethnic}>
                                                     {ethnic}
@@ -327,8 +338,8 @@ function Register({ onClose }) {
                                 - CSS transition thay vì JavaScript animation
                                 - Logic đơn giản: chỉ kiểm tra scrollTop > 0
                                 */
-                        }
-                            
+                            }
+
                             <i className="fa-solid fa-angle-down text-gray-400 animate-bounce"></i>
                         </div>
 

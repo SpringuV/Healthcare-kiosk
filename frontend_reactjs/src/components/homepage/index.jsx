@@ -72,7 +72,7 @@ function HomePage() {
                         </div>
                     </div>
                     <div className='my-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
-                        <h1>DỊCH VỤ KHÁC</h1>
+                        <h1>TIỆN ÍCH KHÁC</h1>
                     </div>
                     <div className='flex w-full h-10 justify-center items-center gap-1'>
                         <div className='flex items-center justify-center h-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button, Spin } from 'antd'
+import { Button, Modal } from 'antd'
 import Alert from '../alert/Alert'
 import { check_insurance_user, check_patient_existed, clear_insurance_check, history_booking_service } from '../../actions/patient'
 import {
@@ -43,7 +43,7 @@ function InputCCCD(props) {
         cancelText: "Nhập lại thông tin",
         onConfirm: null
     })
-    const ctx = useGlobalContext()
+    const [delayLoading, setDelayLoading] = useState(false)
     // Hooks
     const navigate = useNavigate()
     const inputRef = useRef(null)
@@ -214,11 +214,31 @@ function InputCCCD(props) {
         history: history_booking_loading,
     }
     const is_loading = loadingMap[mode] || false
+    useEffect(() => {
+        let timer
+        if (is_loading) {
+            setDelayLoading(true)
+        } else {
+            timer = setTimeout(() => setDelayLoading(false), 1800)
+        }
+        return () => clearTimeout(timer)
+    }, [is_loading])
     return (
         <>
             <Helmet>
                 <title>Nhập CCCD</title>
             </Helmet>
+            <Modal
+                open={delayLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang kiểm tra thông tin, vui lòng chờ</div>
+            </Modal>
             <div className="fixed inset-0 flex justify-center items-center backdrop-blur-0">
                 <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
@@ -250,22 +270,19 @@ function InputCCCD(props) {
                             {error_message && (
                                 <p className="text-red-500 text-sm mb-3">{error_message}</p>
                             )}
-
-                            <Spin spinning={is_loading} indicator={<LoadingOutlined />}>
-                                <button
-                                    type="submit"
-                                    className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onClick={handle_check_info}
-                                    disabled={is_loading}>
-                                    {is_loading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
-                                </button>
-                            </Spin>
+                            <button
+                                type="submit"
+                                className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={handle_check_info}
+                                disabled={delayLoading}>
+                                {delayLoading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {show_alert && (
+            {show_alert && !delayLoading && (
                 <Alert
                     textInput={alert_config.text}
                     onClose={() => set_show_alert(false)}
