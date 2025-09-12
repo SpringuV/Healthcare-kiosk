@@ -157,7 +157,7 @@ function PaymentWithQR() {
                                     {isFailPayment ? (
                                         <button
                                             disabled={localLoading}
-                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            className='hover:scale-105 transition-all duration-300 ease-in-out text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
                                                 setLocalLoading(true)
                                                 setTimeout(() => {
@@ -170,7 +170,7 @@ function PaymentWithQR() {
                                     ) : (
                                         <button
                                             disabled={localLoading}
-                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            className='hover:scale-105 transition-all duration-300 ease-in-out text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
                                                 setLocalLoading(true)
                                                 setTimeout(() => {

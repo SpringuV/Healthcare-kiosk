@@ -85,7 +85,7 @@ function NonInsurranceInfo() {
                             <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                                 <button
                                     disabled={localLoading}
-                                    className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
+                                    className="hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
                                         setLocalLoading(true)
                                         setTimeout(() => {

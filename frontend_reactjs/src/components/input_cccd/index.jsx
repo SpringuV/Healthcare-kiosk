@@ -255,7 +255,7 @@ function InputCCCD(props) {
                             <h2>Nhập thông tin</h2>
                         </div>
                         <div>
-                            <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600'>
+                            <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600 hover:scale-110 transition-all duration-500 ease-in-out'>
                                 Trở lại
                             </Button>
                         </div>
@@ -282,7 +282,7 @@ function InputCCCD(props) {
                             <Spin spinning={delayLoading || is_loading} indicator={<LoadingOutlined />}>
                                 <button
                                     type="submit"
-                                    className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="hover:scale-105 transition-all duration-500 ease-in-out text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={handle_check_info}
                                     disabled={delayLoading}>
                                     {delayLoading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}

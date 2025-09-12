@@ -267,7 +267,7 @@ function DataTable(props) {
                 onCancel={onCancelModal}
                 footer={
                     selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID" ? (<div>
-                        <Button className="mr-2" type="primary" onClick={() => {
+                        <Button className="hover:scale-105 transition-all duration-500 ease-in-out mr-3" type="primary" onClick={() => {
                             const delay = [1000, 2000, 3000]
                             setLocalLoading(true)
                             setTimeout(() => {
@@ -275,7 +275,7 @@ function DataTable(props) {
                             }, delay[Math.floor(Math.random() * delay.length)])
 
                         }}>Thanh toán lại</Button>
-                        <Button className="mr-2 bg-red-400 hover:!bg-red-600" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
+                        <Button className="hover:scale-105 transition-all duration-500 ease-in-out mr-3 bg-red-400 hover:!bg-red-600" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
                         <Button onClick={onCancelModal} type="dashed">Đóng</Button>
                     </div>) : (<Button onClick={onCancelModal}>Đóng</Button>)
                 }
@@ -285,11 +285,11 @@ function DataTable(props) {
             {/* Nút về trang chủ */}
             <div className="flex justify-between items-center mt-2">
                 <Tooltip title="Tải lại dữ liệu mới nhất">
-                    <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
+                    <Button className="hover:scale-105 transition-all duration-500 ease-in-out" onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
                 </Tooltip>
                 <Tooltip title="Quay về trang chủ">
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
-                        <Button disabled={localLoading} className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                        <Button disabled={localLoading} className="hover:scale-105 transition-all duration-500 ease-in-out !text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
                                 const delay = [1000, 2000, 3000]
                                 setLocalLoading(true)

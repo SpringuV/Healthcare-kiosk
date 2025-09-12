@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react"
-import Select from "react-select"
 import { useNavigate } from "react-router-dom"
-import { Spin } from "antd"
+import { Modal, Spin, Select } from "antd"
 import { get_service_list } from "../../services/healcare_service"
 import { useDispatch, useSelector } from "react-redux"
 import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
 import { patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
 import { LoadingOutlined } from '@ant-design/icons'
-
+const { Option } = Select
 function ServiceItem() {
     const [options, setOptions] = useState([])
     const [selectedItemService, setSelectedItemService] = useState("Vui lòng chọn dịch vụ khám")
@@ -20,12 +19,6 @@ function ServiceItem() {
     const patient_booking_loading = useSelector(select_patient_booking_service_loading)
     const patient_register_initial = useSelector(select_patient_register_data)
     const dispatch = useDispatch()
-
-    const handleChange = (option) => {
-        setSelectedOption(option)
-        setSelectedItemService(option.label)
-        setSelectedService(option.label)
-    };
 
     useEffect(() => {
         const fetchApiService = async () => {
@@ -97,84 +90,40 @@ function ServiceItem() {
                 <div className="text-[14px] md:text-[16px] lg:text-[18px] flex flex-col lg:flex-row w-[90vw] lg:w-[60vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
                     <label className="w-[40%] font-semibold text-center" htmlFor="serviceDropdown">Lựa chọn dịch vụ khám</label>
                     <Select
-                        options={options}
-                        value={selectedOption}
-                        onChange={handleChange}
-                        placeholder="Chọn dịch vụ khám"
-                        isSearchable={false}
-                        className="text-left text-white flex-1"
-                        formatOptionLabel={(option, { isFocused, isSelected }) => (
-                            <div
-                                title={option.description}
-                                style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    width: '100%',
-                                    padding: '4px 8px',
-                                    gap: '20px',
-                                    color: isFocused || isSelected ? "white" : "black",
-                                }}
-                            >
-                                <span>{option.label}</span>
-                                <span style={{
-                                    color: isFocused || isSelected ? "white" : "black",
-                                    fontWeight: 'bold'
-                                }}>
-                                    {(Math.round(option.price * 26181)).toLocaleString('vi-VN')} VNĐ
-                                </span>
-                            </div>
-                        )}
-                        styles={{
-                            placeholder: (base) => ({
-                                ...base,
-                                color: "white",
-                                fontWeight: "bold",
-                            }),
-                            control: (base) => ({
-                                ...base,
-                                background: "linear-gradient(to right, #0d9488, #059669)",
-                                color: "white",
-                                borderRadius: "12px",
-                                borderColor: "transparent",
-                                padding: "4px",
-                            }),
-                            menu: (base) => ({
-                                ...base,
-                                width: 'auto',
-                                minWidth: '300px',
-                            }),
-                            singleValue: (base) => ({
-                                ...base,
-                                color: "white", // chữ dịch vụ đã chọn màu trắng
-                                fontWeight: "bold",
-                            }),
-                            option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected
-                                    ? "#10b981" // màu nền khi được chọn
-                                    : isFocused
-                                        ? "#10b981" // màu nền khi hover
-                                        : "white",
-                                color: isSelected || isFocused ? "white" : "black", // chữ trắng khi hover hoặc chọn
-                                fontWeight: isSelected ? "bold" : "normal",
-                                cursor: "pointer",
-                            }),
+                        value={selectedOption?.value}
+                        onChange={(value, option) => {
+                            setSelectedOption(option);      // lưu object option
+                            setSelectedItemService(option.label);
+                            setSelectedService(option.label);
                         }}
-                    />
+                        className="w-[80%]"
+                        placeholder="CHỌN DỊCH VỤ KHÁM"
+                        style={{ fontStyle: selectedOption ? 'italic' : 'normal' , fontWeight: selectedOption ? "bold" : "normal"}}
+                    >
+                        {options.map((option, index) => (
+                            <Option key={index} value={option.value} label={option.label}>
+                                <div className="flex justify-between">
+                                    <span className="text-base">{(option.label).toUpperCase()}</span>
+                                    <span className="text-base text-green-600">
+                                        {(Math.round(option.price * 26181)).toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                            </Option>
+                        ))}
+                    </Select>
                 </div>
                 <div className="flex flex-col justify-center items-center text-[14px] md:text-[16px] lg:text-[18px]">
-                    <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{selectedItemService}</span></p>
+                    <p className="text-colorOne my-4 font-semibold px-4 py-2 bg-white rounded-xl">Dịch vụ đã chọn: <span className="italic text-green-600">{(selectedItemService).toUpperCase()}</span></p>
                     <Spin spinning={patient_booking_loading} indicator={<LoadingOutlined />}>
                         {flowType === "insurance" ? (<div>
                             <button disabled={patient_booking_loading}
-                                className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
+                                className="hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
                                 onClick={handleRegister}>
                                 {patient_booking_loading == true ? (<span className="loading-dots">Đang xử lý</span>) : "Đăng kí để khám"}
                             </button>
                         </div>) : (
                             <button
-                                className="cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
+                                className="hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-5 py-2 font-semibold bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-50"
                                 disabled={patient_booking_loading}
                                 onClick={handleRegister}>
                                 {patient_booking_loading == true ? (<span className="loading-dots">Đang xử lý</span>) : "Bước tiếp theo: Thanh toán"}

@@ -328,12 +328,12 @@ function DataGridList(props) {
             <div className="flex justify-between items-center mt-2">
                 <Tooltip title="Tải lại dữ liệu mới nhất">
                     <Spin spinning={loadingGridData} indicator={<LoadingOutlined />}>
-                        <Button onClick={handleReload} className="bg-orange-400 hover:!bg-orange-600" type="primary" >Tải lại dữ liệu</Button>
+                        <Button onClick={handleReload} className="hover:scale-105 transition-all duration-500 ease-in-out bg-orange-400 hover:!bg-orange-600" type="primary" >Tải lại dữ liệu</Button>
                     </Spin>
                 </Tooltip>
                 <Tooltip title="Quay về trang chủ">
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
-                        <Button disabled={localLoading} className="!text-sm lg:!text-base text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                        <Button disabled={localLoading} className="hover:scale-105 transition-all duration-500 ease-in-out !text-sm lg:!text-base text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
                                 setLocalLoading(true)
                                 setTimeout(() => {

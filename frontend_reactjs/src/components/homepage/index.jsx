@@ -11,7 +11,7 @@ function HomePage() {
     const button = ['Khám bảo hiểm y tế', 'Khám dịch vụ']
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { clearStateStepAndFlowType } = useGlobalContext()
+    const { clearStateStepAndFlowType, clearPaymentAgain, clearPatientRegister } = useGlobalContext()
     const [localLoading, setLocalLoading] = useState(false)
 
     useEffect(() => {
@@ -21,8 +21,10 @@ function HomePage() {
         dispatch(clear_booking_service())
         dispatch(clear_history_booking())
         clearStateStepAndFlowType()
+        clearPaymentAgain()
+        clearPatientRegister()
 
-    }, [dispatch, clearStateStepAndFlowType])
+    }, [dispatch])
 
     const handleChange = (text) => {
         setLocalLoading(true)
@@ -38,6 +40,24 @@ function HomePage() {
             setLocalLoading(false)
         }, delay[Math.floor(Math.random() * delay.length)])
     }
+
+    useEffect(() => {
+        // Thay thế lịch sử hiện tại bằng HomePage, xóa lịch sử trước đó
+        window.history.replaceState(null, document.title, window.location.pathname);
+        // Xử lý khi người dùng nhấn quay lại
+        const handlePopState = () => {
+            // Thêm một mục lịch sử giả để ngăn quay lại
+            window.history.pushState(null, document.title, window.location.pathname);
+            // Ngăn hành vi mặc định của trình duyệt
+            return false;
+        }
+        window.addEventListener('popstate', handlePopState);
+        // Cleanup khi component unmount
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        }
+    }, []) // Chạy một lần khi mount
+
     return (
         <>
             <Helmet>
@@ -64,8 +84,8 @@ function HomePage() {
                         <div className='flex w-full gap-1 sm:w-[80%] lg:w-[45vw]'>
                             {button.map((text, i) => (
                                 <div key={i} className='flex m-2 h-full w-1/2' onClick={() => handleChange(text)}>
-                                    <div className='flex items-center justify-center h-[80%] w-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
-                                        <button className='cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]'>{text}</button>
+                                    <div className='flex items-center justify-center h-[80%] w-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 hover:scale-105 transition-all duration-500 ease-in-out'>
+                                        <button className='cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px] '>{text}</button>
                                     </div>
                                 </div>
                             ))}
@@ -75,7 +95,7 @@ function HomePage() {
                         <h1>TIỆN ÍCH KHÁC</h1>
                     </div>
                     <div className='flex w-full h-10 justify-center items-center gap-1'>
-                        <div className='flex items-center justify-center h-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600'>
+                        <div className='flex items-center justify-center h-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 hover:scale-105 transition-all duration-500 ease-in-out'>
                             <button className='px-5 py-1 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]' onClick={() => handleChange("Tra cứu lịch sử khám")}>Tra cứu lịch sử khám</button>
                         </div>
                     </div>

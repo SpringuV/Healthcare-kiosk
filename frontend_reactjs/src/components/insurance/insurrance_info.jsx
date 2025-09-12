@@ -11,7 +11,7 @@ function InfoInsurrance() {
     const navigate = useNavigate()
     const insurance_info = useSelector(select_insurance_check_data)
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [1500, 2000, 2500]
     const handleChangePath = () => {
         if (insurance_info.is_saved) {
             navigate('/insur/service')
@@ -73,9 +73,8 @@ function InfoInsurrance() {
                             <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
                                 <button
                                     disabled={localLoading}
-                                    className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
+                                    className="hover:scale-105 transition-all duration-500 ease-in-out px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
                                     onClick={() => {
-                                        const delay = [1500, 2000, 2500]
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleChangePath()
