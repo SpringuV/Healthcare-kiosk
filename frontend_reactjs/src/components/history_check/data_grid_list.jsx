@@ -1,4 +1,4 @@
-import { Button, Col, Modal, Row, Spin, Tooltip, DatePicker, Select, Input, Switch, Pagination } from "antd"
+import { Button, Col, Modal, Row, Spin, Tooltip, DatePicker, Select, Switch, Pagination, message } from "antd"
 import CartItem from "./cart_item"
 import { useEffect, useMemo, useState } from "react"
 import { patient_get_history_check, patient_put_cancelled_payment } from "../../services/patient"
@@ -34,6 +34,28 @@ function DataGridList(props) {
         doctor_name: null
     })
     const [isASC, setASC] = useState(true)
+    const text_cancel_order = "Hủy thanh toán thành công"
+    const text_reload_data = "Tải dữ liệu thành công"
+    const [messageApi, contextHolder] = message.useMessage();
+    const success = (text) => {
+        messageApi.open({
+            type: 'success',
+            content: text,
+        })
+    }
+    const error = (text) => {
+        messageApi.open({
+            type: 'error',
+            content: text,
+        })
+    }
+    // eslint-disable-next-line no-unused-vars
+    const warning = () => {
+        messageApi.open({
+            type: 'warning',
+            content: 'This is a warning message',
+        })
+    }
 
     // Đóng modal chi tiết
     const onCancelModal = () => {
@@ -63,6 +85,7 @@ function DataGridList(props) {
             const res = await patient_get_history_check(patient.citizen_id)
             if (res.ok) {
                 setOrders(res.data.history)
+                success(text_reload_data)
             }
         } catch (err) {
             console.error(err)
@@ -99,13 +122,16 @@ function DataGridList(props) {
                         if (selectedOrder?.order_id === order.order_id) {
                             setSelectedOrder({ ...order, payment_status: "CANCELLED" })
                         }
+                        success(text_cancel_order)
                     } else {
                         Modal.error({ title: "Hủy đơn thất bại" })
+                        error("Hủy đơn thất bại")
                     }
                 } catch (err) {
                     setLoadingCancel(false)
                     console.error(err)
                     Modal.error({ title: "Đã có lỗi khi hủy đơn" })
+                    error("Đã có lỗi khi hủy đơn: " + err)
                 }
             },
         })
@@ -188,6 +214,7 @@ function DataGridList(props) {
     return (
         <>
             <>
+                {contextHolder}
                 {/* modal load */}
                 <Modal
                     open={localLoading || loadingPaymentAgain}

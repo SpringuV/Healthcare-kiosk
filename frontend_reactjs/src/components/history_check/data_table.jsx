@@ -1,4 +1,4 @@
-import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col, Tooltip } from "antd"
+import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col, Tooltip, message } from "antd"
 import { useMemo, useState } from "react"
 import { useGlobalContext } from "../context/provider"
 import OrderDetail from "./order_detail"
@@ -22,6 +22,27 @@ function DataTable(props) {
     const [dateRange, setDateRange] = useState(null)
     const [localLoading, setLocalLoading] = useState(false)
 
+    const [messageApi, contextHolder] = message.useMessage();
+    const success = (text) => {
+        messageApi.open({
+            type: 'success',
+            content: text,
+        })
+    }
+    const error = (text) => {
+        messageApi.open({
+            type: 'error',
+            content: text,
+        })
+    }
+    // eslint-disable-next-line no-unused-vars
+    const warning = () => {
+        messageApi.open({
+            type: 'warning',
+            content: 'This is a warning message',
+        })
+    }
+
     const patient = data_patient_history_booking?.patient
     const handleReload = async () => {
         try {
@@ -29,11 +50,13 @@ function DataTable(props) {
             const res = await patient_get_history_check(patient.citizen_id)
             if (res.ok) {
                 setOrders(res.data.history)
+                success("Load dữ liệu lại thành công")
             }
         } catch (err) {
             console.error(err)
+            error("Lỗi: " + err)
         } finally {
-            setLoadingTable(false)  // tắt loading
+            setLoadingTable(false) 
         }
     }
     // Đóng modal chi tiết
@@ -92,18 +115,21 @@ function DataTable(props) {
                         // Cập nhật trực tiếp UI
                         const newOrders = orders.map((item) => item.order_id === order.order_id ? { ...item, payment_status: "CANCELLED" } : item)
                         setOrders(newOrders)
-
+                        
                         // Nếu đang mở modal chi tiết, cập nhật luôn
                         if (selectedOrder?.order_id === order.order_id) {
                             setSelectedOrder({ ...order, payment_status: "CANCELLED" })
                         }
+                        success("Hủy thanh toán thành công")
                     } else {
                         Modal.error({ title: "Hủy đơn thất bại" })
+                        error("Hủy đơn thất bại")
                     }
                 } catch (err) {
                     setLoadingCancel(false)
                     console.error(err)
                     Modal.error({ title: "Đã có lỗi khi hủy đơn" })
+                    error("Đã có lỗi khi hủy đơn: " + err)
                 }
             },
         })
@@ -227,6 +253,7 @@ function DataTable(props) {
     ]
     return (
         <>
+            {contextHolder}
             {/* modal load */}
             <Modal
                 open={localLoading}

@@ -6,7 +6,7 @@ import { useSelector } from "react-redux"
 import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
-import { Spin } from "antd"
+import { Spin, message } from "antd"
 import { LoadingOutlined } from "@ant-design/icons"
 function PaymentWithQR() {
     const navigate = useNavigate()
@@ -29,6 +29,29 @@ function PaymentWithQR() {
         month: "long",
         year: "numeric"
     })
+    const text_pay_success = "Bạn đã thanh toán thành công !" 
+    const text_pay_error = "Thanh toán không thành công !"
+    const [messageApi, contextHolder] = message.useMessage()
+    const success = (text) => {
+        messageApi.open({
+            type: 'success',
+            content: text,
+        })
+    }
+    const error = (text) => {
+        messageApi.open({
+            type: 'error',
+            content: text,
+        })
+    }
+    // eslint-disable-next-line no-unused-vars
+    const warning = () => {
+        messageApi.open({
+            type: 'warning',
+            content: 'This is a warning message',
+        })
+    }
+
 
     const handleConfirmRegistration = () => {
         navigate("/non-insur/confirm-registration")
@@ -83,14 +106,16 @@ function PaymentWithQR() {
                 setTextSuccess("Bạn đã thanh toán thành công, vui lòng trở lại trang chủ !")
                 setShowTimeDown(false)
                 setShowButtonReturn(true)
+                success(text_pay_success)
                 ws.close(); // Đóng socket khi đã có kết quả
             }
         };
         ws.onclose = () => {
             console.log("WebSocket đã đóng");
         };
-        ws.onerror = (error) => {
-            console.error("Lỗi WebSocket:", error);
+        ws.onerror = (err) => {
+            console.error("Lỗi WebSocket:", err)
+            error(text_pay_error)
         };
         // cleanup khi component unmount
         return () => {
@@ -109,6 +134,7 @@ function PaymentWithQR() {
             <Helmet>
                 <title>Thanh toán QR</title>
             </Helmet>
+            {contextHolder}
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
