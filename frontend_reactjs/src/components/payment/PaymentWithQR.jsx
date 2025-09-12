@@ -6,8 +6,9 @@ import { useSelector } from "react-redux"
 import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
-import { Spin, message } from "antd"
+import { Spin } from "antd"
 import { LoadingOutlined } from "@ant-design/icons"
+import { useMessageProvider } from "../context/message_provider"
 function PaymentWithQR() {
     const navigate = useNavigate()
     const [showButtonReturn, setShowButtonReturn] = useState(false)
@@ -31,27 +32,8 @@ function PaymentWithQR() {
     })
     const text_pay_success = "Bạn đã thanh toán thành công !" 
     const text_pay_error = "Thanh toán không thành công !"
-    const [messageApi, contextHolder] = message.useMessage()
-    const success = (text) => {
-        messageApi.open({
-            type: 'success',
-            content: text,
-        })
-    }
-    const error = (text) => {
-        messageApi.open({
-            type: 'error',
-            content: text,
-        })
-    }
     // eslint-disable-next-line no-unused-vars
-    const warning = () => {
-        messageApi.open({
-            type: 'warning',
-            content: 'This is a warning message',
-        })
-    }
-
+    const { success, error, warning, contextHolder } = useMessageProvider()
 
     const handleConfirmRegistration = () => {
         navigate("/non-insur/confirm-registration")

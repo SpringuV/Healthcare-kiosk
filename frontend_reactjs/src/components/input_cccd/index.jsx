@@ -16,6 +16,7 @@ import {
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
 import { LoadingOutlined } from '@ant-design/icons'
+import { useMessageProvider } from '../context/message_provider'
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
@@ -45,6 +46,7 @@ function InputCCCD(props) {
     })
     const [delayLoading, setDelayLoading] = useState(false)
     // Hooks
+    const { success, error, warning, contextHolder } = useMessageProvider()
     const navigate = useNavigate()
     const inputRef = useRef(null)
     const { setFlowType, setStateStep } = useGlobalContext()
@@ -85,7 +87,8 @@ function InputCCCD(props) {
             setDelayLoading(true)
             const result = await dispatch(check_insurance_user(input_value))
             if (result.ok) {
-                onSuccess?.(result.data)
+                onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 // Xử lý các trường hợp thất bại
                 if (result.need_register) {
@@ -100,6 +103,7 @@ function InputCCCD(props) {
                             })
                         }
                     })
+                    warning("Bạn cần đăng kí mới !")
                 } else {
                     show_alert_with_config({
                         text: result.message,
@@ -109,14 +113,17 @@ function InputCCCD(props) {
                             onClose()
                         }
                     })
+                    warning(result.message)
                 }
             }
-        } catch (error) {
+        } catch (err) {
             show_alert_with_config({
                 text: insurance_error || "Lỗi kết nối tới máy chủ",
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            console.error(err)
+            error("Kiểm tra thất bại: " + insurance_error)
         } finally {
             setDelayLoading(false)
         }
@@ -128,6 +135,7 @@ function InputCCCD(props) {
             const response = await dispatch(check_patient_existed(input_value))
             if (response.ok) {
                 onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 if (response.need_register) {
                     show_alert_with_config({
@@ -141,6 +149,7 @@ function InputCCCD(props) {
                             })
                         }
                     })
+                    warning("Bạn cần đăng kí mới !")
                 } else {
                     show_alert_with_config({
                         text: response.message,
@@ -150,6 +159,7 @@ function InputCCCD(props) {
                             onClose()
                         }
                     })
+                    warning(response.message)
                 }
             }
         } catch (error) {
@@ -158,6 +168,7 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            error("Kiểm tra thất bại: " + insurance_error)
         } finally {
             setDelayLoading(false)
         }
@@ -169,12 +180,14 @@ function InputCCCD(props) {
             const response = await dispatch(history_booking_service(input_value))
             if (response.ok) {
                 onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 show_alert_with_config({
                     text: response.message || "Không tìm thấy lịch sử khám bệnh!",
                     showConfirmButton: false,
                     cancelText: "Đóng"
                 })
+                error("Kiểm tra thất bại: " + response.message)
             }
         } catch (error) {
             show_alert_with_config({
@@ -182,6 +195,7 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            error("Kiểm tra thất bại: " + history_booking_error)
         } finally {
             setDelayLoading(false)
         }

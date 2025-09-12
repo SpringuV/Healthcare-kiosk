@@ -1,4 +1,4 @@
-import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col, Tooltip, message } from "antd"
+import { Modal, Table, Tag, DatePicker, Button, Spin, Row, Col, Tooltip } from "antd"
 import { useMemo, useState } from "react"
 import { useGlobalContext } from "../context/provider"
 import OrderDetail from "./order_detail"
@@ -6,6 +6,7 @@ import { patient_get_history_check, patient_put_cancelled_payment } from "../../
 import { useNavigate } from "react-router-dom"
 import dayjs from "dayjs"
 import { EyeOutlined, CloseCircleOutlined, CreditCardOutlined, LoadingOutlined } from "@ant-design/icons"
+import { useMessageProvider } from "../context/message_provider"
 
 const { RangePicker } = DatePicker
 function DataTable(props) {
@@ -22,26 +23,8 @@ function DataTable(props) {
     const [dateRange, setDateRange] = useState(null)
     const [localLoading, setLocalLoading] = useState(false)
 
-    const [messageApi, contextHolder] = message.useMessage();
-    const success = (text) => {
-        messageApi.open({
-            type: 'success',
-            content: text,
-        })
-    }
-    const error = (text) => {
-        messageApi.open({
-            type: 'error',
-            content: text,
-        })
-    }
     // eslint-disable-next-line no-unused-vars
-    const warning = () => {
-        messageApi.open({
-            type: 'warning',
-            content: 'This is a warning message',
-        })
-    }
+    const { success, error, warning, contextHolder } = useMessageProvider()
 
     const patient = data_patient_history_booking?.patient
     const handleReload = async () => {

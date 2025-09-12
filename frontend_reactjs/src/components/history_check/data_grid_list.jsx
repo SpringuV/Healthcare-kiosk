@@ -1,4 +1,4 @@
-import { Button, Col, Modal, Row, Spin, Tooltip, DatePicker, Select, Switch, Pagination, message } from "antd"
+import { Button, Col, Modal, Row, Spin, Tooltip, DatePicker, Select, Switch, Pagination } from "antd"
 import CartItem from "./cart_item"
 import { useEffect, useMemo, useState } from "react"
 import { patient_get_history_check, patient_put_cancelled_payment } from "../../services/patient"
@@ -8,6 +8,7 @@ import { LoadingOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import isBetween from "dayjs/plugin/isBetween"
 import { useGlobalContext } from "../context/provider"
+import { useMessageProvider } from "../context/message_provider"
 dayjs.extend(isBetween)
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -36,26 +37,8 @@ function DataGridList(props) {
     const [isASC, setASC] = useState(true)
     const text_cancel_order = "Hủy thanh toán thành công"
     const text_reload_data = "Tải dữ liệu thành công"
-    const [messageApi, contextHolder] = message.useMessage();
-    const success = (text) => {
-        messageApi.open({
-            type: 'success',
-            content: text,
-        })
-    }
-    const error = (text) => {
-        messageApi.open({
-            type: 'error',
-            content: text,
-        })
-    }
     // eslint-disable-next-line no-unused-vars
-    const warning = () => {
-        messageApi.open({
-            type: 'warning',
-            content: 'This is a warning message',
-        })
-    }
+    const { success, error, warning, contextHolder } = useMessageProvider()
 
     // Đóng modal chi tiết
     const onCancelModal = () => {
