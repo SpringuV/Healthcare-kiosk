@@ -5,11 +5,16 @@ from fastapi import (
     HTTPException,
     WebSocket,
     WebSocketDisconnect,
+    Depends,
 )
 from pydantic import BaseModel
 from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
+from jose import jwt, JWTError, ExpiredSignatureError
+from datetime import timezone, timedelta, datetime
 from actionDB import (
     cancelOrder,
     getPatientHistory,
@@ -38,8 +43,37 @@ app = FastAPI()
 IP = "127.0.0.1"
 PORT = "8000"
 
+SECRET_KEY = "v8P2shAY3fDKWuz5qZt0mXNaHy1Lrj"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 5
+
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
+
+cryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oAuthBearer = OAuth2PasswordBearer(tokenUrl="token")
+
+def create_token(citizen_id):
+    to_encode = {}
+    hash_id = cryptContext.hash(citizen_id)
+    to_encode.update({"sub": hash_id})
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encode
+
+def verify_token(token, citizen_id):
+    try:
+        code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        id = code.get("sub")
+        if cryptContext.verify(citizen_id, id):
+            return True, ""
+        return False, "Token ko chính xác"
+    except ExpiredSignatureError:
+        return False, "Token hết hạn"
+    except JWTError:
+        return False, "Token ko có quyền hạn"
+    
 
 app.add_middleware(
     CORSMiddleware,
@@ -102,6 +136,7 @@ def check_insurance(citizen_id: str):
             "is_activate": is_activate,
             "is_saved": is_had,
             "message": message,
+            "token": create_token(insurance[0])
         }
     except Exception as e:
         print(f"Error in check_insurance: {e}")
@@ -125,7 +160,7 @@ def makePatientInfo(patient: PatientInfo):
     if not result:
         return JSONResponse(status_code=400, content={"reason": reason})
     else:
-        return JSONResponse(status_code=201, content={})
+        return JSONResponse(status_code=201, content={"token": create_token(patient.patient_id)})
 
 
 # Cập nhật thông tin bệnh nhân
@@ -157,6 +192,7 @@ def checkPatient(citizen_id: str):
             "phone_number": patient[5],
             "ethnic": patient[6],
             "job": patient[7],
+            "token": create_token(patient[0])
         },
     )
 
@@ -178,35 +214,42 @@ def getServicesList():
 
 
 # Tạo phiếu khám
-@app.post("/orders/create/{citizen_id}", status_code=200)
-def makeOrder(citizen_id: str, orderInfo: OrderInfo):
+@app.post("/orders/create/{citizen_id}")
+def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthBearer)):
+    patient = getPatient(citizen_id)
+    if patient is None:
+        return JSONResponse(status_code=400, content={"detail": "Patient ko tồn tại"})
+    
+    access, detail = verify_token(token, citizen_id)
+    if not access:
+        return JSONResponse(status_code=401, content={"detail": detail})
+    
     order_id = createOrder(citizen_id, orderInfo.service_name, orderInfo.type)
     if order_id is None:
-        return JSONResponse(status_code=400, content={})
+        return JSONResponse(status_code=400, content={"detail": "Lỗi tạo order"})
     else:
         # Thông tin order
         # order = [ o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance]
         order = getOrder(order_id)
-        return {
+        return JSONResponse(status_code=200, content={
             "citizen_id": order[0],
             "fullname": order[1],
             "gender": "Nam" if order[2] == 1 else "Nữ",
-            "dob": order[3],
+            "dob": order[3].isoformat() if order[3] else None,
             "queue_number": order[4],
-            "time_order": order[5],
+            "time_order": order[5].isoformat() if order[5] else None,
             "is_insurrance": order[7],
             "use_insurrance": order[13],
             "service_name": order[9],
             "clinic_name": order[10],
             "address_room": order[11],
             "doctor_name": order[12],
-            "price": order[6],
+            "price": float(order[6]),
             "order_id": order_id,
-            # "QRCode": makeQRCode(f"http://{IP}:{PORT}/downloadPDF/{order_id}")
             "QRCode": makeQRCode(
                 f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}"
             ),
-        }
+        })
 
 
 @app.get("/showQR/{order_id}")

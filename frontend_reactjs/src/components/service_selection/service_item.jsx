@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
 import { patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
+import { clearToken } from "../../utils/token"
 import { LoadingOutlined } from '@ant-design/icons'
 const { Option } = Select
 function ServiceItem() {
@@ -60,8 +61,9 @@ function ServiceItem() {
             alert("Vui lòng chọn dịch vụ.")
             return
         }
-        dispatch(await patient_booking_service(citizen_id, payload))
+        dispatch(patient_booking_service(citizen_id, payload))
             .then(() => {
+                clearToken()
                 if (flowType === "insurance") {
                     navigate("/insur/confirm-registration")
                 } else {

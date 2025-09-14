@@ -14,7 +14,7 @@ export const patient_booking_service = (citizen_id, data) => {
 
         try {
             const response = await post_register_service_check(citizen_id, data)
-            if (response.ok) {
+            if (response.status === 200) {
                 dispatch({
                     type: PATIENT_BOOKING_SERVICE_SUCCESS,
                     payload: {
@@ -29,11 +29,11 @@ export const patient_booking_service = (citizen_id, data) => {
                     type: PATIENT_BOOKING_SERVICE_FAILURE,
                     payload: {
                         loading: false,
-                        error: "Đăng kí dịch vụ để khám lỗi ! 500",
-                        message: "Đăng kí dịch vụ để khám lỗi ! 500"
+                        error: "Lỗi",
+                        message: response.data["detail"] +". Yêu cầu quay lại trang chủ thực hiện lại."
                     }
                 })
-                console.error("Lỗi khi gọi API tạo order:")
+                throw new Error(response.data["detail"] +". Yêu cầu quay lại trang chủ thực hiện lại.")
             }
         } catch (error) {
             dispatch({

@@ -5,6 +5,7 @@ import { clear_history_booking, clear_insurance_check, clear_patient_exist_check
 import { clear_booking_service } from '../../actions/service'
 import { Helmet } from "react-helmet-async"
 import { useGlobalContext } from '../context/provider'
+import { clearToken } from '../../utils/token'
 import { Modal } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 function HomePage() {
@@ -21,6 +22,7 @@ function HomePage() {
         dispatch(clear_booking_service())
         dispatch(clear_history_booking())
         clearStateStepAndFlowType()
+        clearToken()
         clearPaymentAgain()
         clearPatientRegister()
 

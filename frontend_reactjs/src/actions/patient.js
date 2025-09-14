@@ -1,5 +1,6 @@
 import { check_insurance } from "../services/insurance_service"
 import { check_patient_none_insurance, register_user_non_insurance } from "../services/non_insurance_service"
+import { saveToken } from "../utils/token"
 import {
     CHECK_PATIENT_EXIST_FAILURE,
     CHECK_PATIENT_EXIST_REQUEST,
@@ -22,7 +23,6 @@ import {
 } from "../constants/user_constant"
 import { patient_get_history_check } from "../services/patient"
 
-
 // Đăng ký bệnh nhân không bảo hiểm
 export const register_user = (formData) => {
     return async (dispatch) => {
@@ -38,7 +38,7 @@ export const register_user = (formData) => {
         try {
             const response = await register_user_non_insurance(formData)
 
-            if (response) {
+            if (response.status === 201) {
                 dispatch({
                     type: USER_REGISTER_SUCCESS,
                     payload: {
@@ -49,7 +49,8 @@ export const register_user = (formData) => {
                         error: null,
                     },
                 })
-                return response.data || formData
+                saveToken(response.data["token"])
+                return response.data
             } else {
                 throw new Error(response.message || "Đăng ký thất bại")
             }
@@ -139,6 +140,7 @@ export const check_insurance_user = (citizenId) => {
                         need_register: false,
                     },
                 })
+                saveToken(insurance["token"])
                 return { ok: true, data: insurance }
             }
         } catch (error) {
@@ -193,6 +195,7 @@ export const check_patient_existed = (citizenId) => {
                     message: "Tìm thấy thông tin người khám",
                 }
             })
+            saveToken(patient_info["token"])
             return { ok: true, data: patient_info }
         } catch (error) {
             dispatch({

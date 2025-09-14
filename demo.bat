@@ -15,7 +15,6 @@ REM Chạy Chrome ở chế độ app, có title bar
   --no-first-run ^
   --disable-infobars ^
   --incognito
-
 exit
 
 @REM %CHROME_PATH% ^
@@ -25,7 +24,6 @@ exit
 @REM   --autoplay-policy=no-user-gesture-required ^
 @REM   --no-first-run ^
 @REM   --disable-infobars ^
-@REM   --incognito
-@REM ::  --kiosk
-@REM :: Thêm ^ vào cuối --incognito, uncomment --kiosk để chạy full màn hình ở chế độ kiosk, Alt + F4 để thoát
+@REM   --incognito ^
+@REM   --kiosk
 @REM exit
