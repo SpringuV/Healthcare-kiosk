@@ -322,27 +322,39 @@ def cancelOrder(order_id: str):
 def createOrder(citizen_id: str, service_name: str, type_order: str):
     conn, cursor = connect()
     try:
-        if type_order == "insurance":
-            activate, _, _ = isInsurrance(citizen_id)
-            if not activate:
-                return None
         clinic_service_id = getClinicServiceID(service_name)
         query = """INSERT INTO orders 
         (queue_number, citizen_id, clinic_service_id, payment_method, payment_status, price)
         VALUES
         (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(
-            query,
-            (
-                getNextQueueNumber(clinic_service_id),
-                citizen_id,
-                clinic_service_id,
-                "CASH",
-                "UNPAID",
-                getPrice(citizen_id, clinic_service_id, service_name, type_order),
-            ),
-        )
+        if type_order == "insurance":
+            activate, _, _ = isInsurrance(citizen_id)
+            if not activate:
+                return None
+            cursor.execute(
+                query,
+                (
+                    getNextQueueNumber(clinic_service_id),
+                    citizen_id,
+                    clinic_service_id,
+                    "INSURRANCE",
+                    "PAID",
+                    getPrice(citizen_id, clinic_service_id, service_name, type_order),
+                ),
+            )
+        elif type_order == "non-insurance":
+            cursor.execute(
+                query,
+                (
+                    getNextQueueNumber(clinic_service_id),
+                    citizen_id,
+                    clinic_service_id,
+                    "CASH",
+                    "UNPAID",
+                    getPrice(citizen_id, clinic_service_id, service_name, type_order),
+                ),
+            )
         conn.commit()
         new_id = cursor.lastrowid
         return new_id
