@@ -8,6 +8,7 @@ import { patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
 import { clearToken } from "../../utils/token"
 import { LoadingOutlined } from '@ant-design/icons'
+import Alert from '../alert/Alert'
 const { Option } = Select
 function ServiceItem() {
     const [options, setOptions] = useState([])
@@ -20,6 +21,7 @@ function ServiceItem() {
     const patient_booking_loading = useSelector(select_patient_booking_service_loading)
     const patient_register_initial = useSelector(select_patient_register_data)
     const dispatch = useDispatch()
+    const [alertText, setAlertText] = useState(null)
 
     useEffect(() => {
         const fetchApiService = async () => {
@@ -72,11 +74,26 @@ function ServiceItem() {
             })
             .catch((error) => {
                 console.error("Registration error:", error)
+                setAlertText(error.message)
             })
     }
 
     return (
         <>
+            {/* Hiện thông báo */}
+            {alertText && (
+                <Alert
+                    textInput={alertText}
+                    onClose={() => {
+                        setAlertText(null) 
+                        dispatch(clear_booking_service())  // reset redux state
+                    }}
+                    showConfirmButton={true}
+                    showCancelButton={false}
+                    confirmText={"Quay lại trang chủ"}
+                    onConfirm={() => navigate("/")}
+                />
+            )}
             <Modal
                 footer={null}
                 open={patient_booking_loading}
