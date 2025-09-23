@@ -3,7 +3,7 @@ REM Đường dẫn tới Chrome, bạn cần đúng với máy của mình
 SET CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 REM Link ứng dụng web của bạn
-SET APP_URL=https://healthcare-kiosk.vercel.app
+SET APP_URL=http://localhost:5173
 
 REM Chạy Chrome ở chế độ app, có title bar
 

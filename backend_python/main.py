@@ -197,20 +197,27 @@ def checkPatient(citizen_id: str):
     )
 
 
-# Lấy danh sách dịch vụ (ko cần tham số)
+# Lấy danh sách dịch vụ
 @app.get("/api/services")
 def getServicesList():
-    services = []
+    clinics = []
     listService = getServices()
-    for service in listService:
-        services.append(
+    clinic_name = sorted(set([clinic[0] for clinic in listService]))
+    for name in clinic_name:
+        services = []
+        for service in listService:
+            if service[0] == name:
+                services.append({
+                    "service_name": service[1],
+                    "service_description": service[2],
+                    "price": float(service[3])})
+        clinics.append(
             {
-                "service_name": service[0],
-                "service_description": service[1],
-                "price": float(service[2]),
+                "clinic_name": name,
+                "clinic_services": services
             }
         )
-    return JSONResponse(status_code=200, content={"services": services})
+    return JSONResponse(status_code=200, content={"clinics": clinics})
 
 
 # Tạo phiếu khám

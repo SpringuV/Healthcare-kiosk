@@ -12,6 +12,7 @@ import PaymentControl from './components/payment/PaymentControl'
 import PaymentWithQR from './components/payment/PaymentWithQR'
 import ResultSearch from './components/history_check'
 import LayoutHome from './components/Layout/LayoutHome'
+import RegisterPage from './components/register'
 import { useGlobalContext } from './components/context/provider'
 import { useDispatch } from 'react-redux'
 import { clear_patient_register } from './actions/patient'
@@ -29,6 +30,7 @@ function App() {
                     navigate(-1)
                     clearStateStepAndFlowType()
                 }} onSuccess={() => { navigate('/result') }} />} />
+                <Route path="register" element={<RegisterPage />} />
                 <Route path="result" element={<ResultSearch onClose={() => navigate(-1)} />} />
             </Route>
             {/* Flow Bảo hiểm y tế */}

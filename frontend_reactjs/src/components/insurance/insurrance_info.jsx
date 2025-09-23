@@ -70,20 +70,39 @@ function InfoInsurrance() {
                             </div>
                         </div>
                         <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                            <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                            <div className="w-full grid grid-cols-2 gap-5">
                                 <button
-                                    disabled={localLoading}
-                                    className="hover:scale-105 transition-all duration-500 ease-in-out px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
-                                    onClick={() => {
+                                    className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                            bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                            font-semibold text-white"
+                                    onClick={() => navigate("/insur")}
+                                >
+                                    Trở lại
+                                </button>
+                                <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                    <button
+                                        disabled={localLoading}
+                                        className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                                bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                                font-semibold text-white"
+                                        onClick={() => {
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleChangePath()
                                             setLocalLoading(false)
                                         }, delay[Math.floor(Math.random() * delay.length)])
-                                    }}>
-                                    {localLoading === true ? (<span className='loading-dots'>Đang xử lý</span>) : insurance_info.is_saved ? "Bước tiếp theo: Chọn dịch vụ khám" : "Bước tiếp theo: Cập nhật thông tin"}
-                                </button>
-                            </Spin>
+                                        }}
+                                    >
+                                        {localLoading ? (
+                                        <span className="loading-dots">Đang xử lý</span>
+                                        ) : insurance_info.is_saved ? (
+                                        "Bước tiếp theo: Chọn dịch vụ khám"
+                                        ) : (
+                                        "Bước tiếp theo: Cập nhật thông tin"
+                                        )}
+                                    </button>
+                                </Spin>
+                            </div>
                         </div>
                     </div>
                 </div>

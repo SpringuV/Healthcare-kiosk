@@ -172,14 +172,15 @@ def getServices():
     conn, cursor = connect()
     try:
         query = """SELECT
+        c.clinic_name,
         s.service_name,
         s.service_description,
         s.price
-        FROM service s
-        JOIN clinic_service cs ON s.service_id = cs.service_id
+        FROM clinic_service cs
+        JOIN service s ON cs.service_id = s.service_id
+        JOIN clinic c ON cs.clinic_id = c.clinic_id
         WHERE cs.service_status = 1
-        GROUP BY s.service_name, s.service_description, s.price
-        ORDER BY s.service_name;"""
+        ORDER BY c.clinic_name, s.service_name;"""
         cursor.execute(query)
         services = cursor.fetchall()
         return services

@@ -8,8 +8,8 @@ import { useGlobalContext } from '../context/provider'
 import { clearToken } from '../../utils/token'
 import { Modal } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
-function HomePage() {
-    const button = ['Lấy số', 'Đăng ký khám', 'Đăng ký mở bảo hiểm', 'Ngân hàng số 24/7', 'Liên thông hồ sơ bệnh án (CCCD/VNEID)', 'Bản đồ', 'Tra cứu']
+function RegisterPage() {
+    const button = ['Bảo hiểm y tế', 'Dịch vụ']
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { clearStateStepAndFlowType, clearPaymentAgain, clearPatientRegister } = useGlobalContext()
@@ -32,10 +32,10 @@ function HomePage() {
         setLocalLoading(true)
         const delay = [1000, 2000]
         setTimeout(() => {
-            if (text === "Đăng ký khám") {
-                navigate('/register')
-            } else if (text === "Tra cứu") {
-                navigate('/result-search')
+            if (text === "Bảo hiểm y tế") {
+                navigate('/insur')
+            } else if (text === "Dịch vụ") {
+                navigate('/non-insur')
             }
             setLocalLoading(false)
         }, delay[Math.floor(Math.random() * delay.length)])
@@ -61,7 +61,7 @@ function HomePage() {
     return (
         <>
             <Helmet>
-                <title>Trang chủ</title>
+                <title>Lựa chọn hình thức khám</title>
             </Helmet>
             {/* modal load */}
             <Modal
@@ -76,11 +76,11 @@ function HomePage() {
                 <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
             </Modal>
             <div className={`transition-all duration-300 ${localLoading ? 'blur-sm !bg-white/20' : ''}`}>
-                <div className='text-center px-7 py-8 rounded-lg h-full'>
+                <div className='text-center px-7 py-8 rounded-lg'>
                     <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
-                        <h1>Chào mừng bạn tới KIOSK phục vụ tự động vui lòng chọn dịch vụ bạn muốn thực hiện!</h1>
+                        <h1>Lựa chọn hình thức khám</h1>
                     </div>
-                    {/* <div className='flex justify-center'>
+                    <div className='flex justify-center'>
                         <div className='flex w-full gap-1 sm:w-[80%] lg:w-[45vw]'>
                             {button.map((text, i) => (
                                 <div key={i} className='flex m-2 h-full w-1/2' onClick={() => handleChange(text)}>
@@ -90,28 +90,25 @@ function HomePage() {
                                 </div>
                             ))}
                         </div>
-                    </div> */}
-                    <div className="flex justify-center h-full">
-                        <div className="grid w-full sm:w-[80%] lg:w-[45vw] grid-cols-2 gap-4 h-full">
-                            {button.map((text, i) => (
-                            <div
-                                key={i}
-                                onClick={() => handleChange(text)}
-                                className="flex h-full"
-                            >
-                                <div className="flex items-center justify-center w-full h-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 hover:scale-105 transition-all duration-500 ease-in-out">
-                                <button className="cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]">
-                                    {text}
-                                </button>
-                                </div>
-                            </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
             </div>
+            {/* Nút dưới cùng */}
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full sm:w-[80%] lg:w-[45vw] px-4">
+                    <div
+                        onClick={() => navigate("/")}
+                    >
+                        <div className="flex items-center justify-center bg-gradient-to-r from-colorTwo to-colorFive text-black rounded-xl 
+                                        hover:from-gray-500 hover:to-gray-600 hover:scale-105 
+                                        transition-all duration-500 ease-in-out">
+                        <button className="cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]">
+                            Trở lại
+                        </button>
+                        </div>
+                    </div>
+                </div>
         </>
     )
 }
 
-export default HomePage
+export default RegisterPage

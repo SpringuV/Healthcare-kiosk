@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react"
 import ServiceItem from "./service_item"
+import ClinicRoom from "../clinic_room"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
+import { useSelector } from "react-redux"
+import { select_check_patient_exist_data, select_insurance_check_data, select_patient_register_data } from "../../reducers"
+
 function Service() {
-    const [selectedService, setSelectedService] = useState(null)
-    const service = ['Lấy số', 'Đăng kí khám', 'Tra cứu']
+    const [setSelectedService] = useState(null)
+
+    // Thông tin người dùng
+    const insurance_check_data = useSelector(select_insurance_check_data)
+    const patient_exit_data = useSelector(select_check_patient_exist_data)
+    const patient_register_initial = useSelector(select_patient_register_data)
+    const fullname = insurance_check_data?.full_name || patient_exit_data?.full_name || patient_register_initial?.full_name
+    const gender = insurance_check_data?.gender || patient_exit_data?.gender || patient_register_initial?.gender
 
     const context = useGlobalContext()
     const { setStateStep } = context
@@ -24,22 +34,12 @@ function Service() {
                 <title>Chọn dịch vụ</title>
             </Helmet>
             <div className='h-screen flex flex-col items-center'>
-                <div className='overflow-y-auto p-3 w-full'>
-                    <div className='flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 '>
-                        {service.map((text, i) => (
-                            <div key={i} className='rounded-xl' onClick={() => setSelectedService(text)}>
-                                <div className={`cursor-pointer flex justify-center items-center p-3 rounded-xl bg-gradient-to-r w-full ${selectedService === text ? " from-green-600 to-emerald-600 " : " from-teal-800 to-teal-600 "}`}>
-                                    <h3 className='text-white font-bold text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px]'>{text}</h3>
-                                </div>
-                            </div>
-                        ))}
+                <div className='overflow-y-hidden p-3 w-full'>
+                    <div className="flex justify-center items-center flex-wrap gap-1 md:gap-2 lg:gap-4 font-bold text-[20px]">Bệnh nhân: {fullname} - {gender}</div>
+                    <div className="flex justify-center items-center mt-3">
+                        <ClinicRoom onClose={() => setSelectedService(null)}></ClinicRoom>
                     </div>
                 </div>
-                {selectedService === "Đăng kí khám" && (
-                    <div className="flex justify-center items-center mt-3">
-                        <ServiceItem onClose={() => setSelectedService(null)}></ServiceItem>
-                    </div>
-                )}
             </div>
 
         </>

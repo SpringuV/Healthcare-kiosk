@@ -49,7 +49,8 @@ function InputCCCD(props) {
     const { success, error, warning, contextHolder } = useMessageProvider()
     const navigate = useNavigate()
     const inputRef = useRef(null)
-    const { setFlowType, setStateStep } = useGlobalContext()
+    const { setFlowType, setStateStep, setSelectedService } = useGlobalContext()
+    setSelectedService(null)
     // const timeDelay = 2000
     // Setup initial state
     useEffect(() => {
@@ -269,7 +270,7 @@ function InputCCCD(props) {
                             <h2>Nhập thông tin</h2>
                         </div>
                         <div>
-                            <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600 hover:scale-110 transition-all duration-500 ease-in-out'>
+                            <Button onClick={() => navigate("/register")} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600 hover:scale-110 transition-all duration-500 ease-in-out'>
                                 Trở lại
                             </Button>
                         </div>
