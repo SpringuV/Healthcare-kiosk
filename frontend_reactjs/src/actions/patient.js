@@ -20,6 +20,7 @@ import {
     HISTORY_BOOKING_FAILURE,
     HISTORY_BOOKING_SUCCESS,
     CLEAR_HISTORY_BOOKING,
+    SERVER_UNAVAILABLE,
 } from "../constants/user_constant"
 import { patient_get_history_check } from "../services/patient"
 
@@ -89,6 +90,14 @@ export const check_insurance_user = (citizenId) => {
                     payload: { message: "Không có thông tin bảo hiểm y tế" },
                 })
                 return { ok: false, message: "Không có thông tin bảo hiểm y tế" }
+            }
+
+            if (response.status === 503) {
+                dispatch({
+                    type: SERVER_UNAVAILABLE,
+                    payload: { message: "Không kết nối được server backend" },
+                })
+                return { ok: false, message: "Không kết nối được server backend" }
             }
 
             if (response.data) {
@@ -184,6 +193,19 @@ export const check_patient_existed = (citizenId) => {
 
                 })
                 return { ok: false, message: "Không có thông tin người khám", need_register: true }
+            }
+            if (response.status === 503) {
+                dispatch({
+                    type: SERVER_UNAVAILABLE,
+                    payload: {
+                        message: "Không kết nối được server backend",
+                        need_register: true,
+                        loading: false,
+                        isRegistered: false,
+                    },
+
+                })
+                return { ok: false, message: "Không kết nối được server backend", need_register: false }
             }
 
             const patient_info = response.data
