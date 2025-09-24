@@ -77,27 +77,16 @@ function HomePage() {
             </Modal>
             <div className={`transition-all duration-300 ${localLoading ? 'blur-sm !bg-white/20' : ''}`}>
                 <div className='text-center px-7 py-8 rounded-lg h-full'>
-                    <div className='mb-3 text-colorOne font-bold text-[18px] lg:text-[25px]'>
+                    <div className='mb-7 text-colorOne font-bold text-[18px] lg:text-[25px]'>
                         <h1>Chào mừng bạn tới KIOSK phục vụ tự động vui lòng chọn dịch vụ bạn muốn thực hiện!</h1>
                     </div>
-                    {/* <div className='flex justify-center'>
-                        <div className='flex w-full gap-1 sm:w-[80%] lg:w-[45vw]'>
-                            {button.map((text, i) => (
-                                <div key={i} className='flex m-2 h-full w-1/2' onClick={() => handleChange(text)}>
-                                    <div className='flex items-center justify-center h-[80%] w-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 hover:scale-105 transition-all duration-500 ease-in-out'>
-                                        <button className='cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px] '>{text}</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div> */}
-                    <div className="flex justify-center h-full">
-                        <div className="grid w-full sm:w-[80%] lg:w-[45vw] grid-cols-2 gap-4 h-full">
+                    <div className="flex justify-center w-full h-full">
+                        <div className="grid w-fit grid-cols-2 gap-6 h-full">
                             {button.map((text, i) => (
                             <div
                                 key={i}
                                 onClick={() => handleChange(text)}
-                                className="flex h-full"
+                                className="flex h-28 w-full"
                             >
                                 <div className="flex items-center justify-center w-full h-full bg-gradient-to-r from-colorTwo to-colorFive text-white rounded-xl hover:from-green-500 hover:to-emerald-600 hover:scale-105 transition-all duration-500 ease-in-out">
                                 <button className="cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]">

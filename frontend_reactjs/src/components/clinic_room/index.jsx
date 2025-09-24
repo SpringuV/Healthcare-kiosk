@@ -4,7 +4,7 @@ import { Modal, Spin } from "antd"
 import { get_service_list } from "../../services/healcare_service"
 import { useDispatch, useSelector } from "react-redux"
 import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
-import { patient_booking_service } from "../../actions/service"
+import { clear_booking_service, patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
 import { clearToken } from "../../utils/token"
 import { LoadingOutlined } from '@ant-design/icons'
@@ -103,18 +103,18 @@ function ClinicRoom() {
                     onConfirm={() => navigate("/")}
                 />
             )}
-            <div className="flex flex-col bg-white p-2 md:p-6 rounded-xl">
+            <div className="flex flex-col justify-center items-center bg-white p-2 md:p-6 rounded-xl">
                 <div className="text-[14px] md:text-[16px] lg:text-[18px] flex flex-col lg:flex-row w-[90vw] lg:w-[60vw] md:w-[70vw] sm:w-[80vw] gap-3 justify-center items-center">
                     
                     <div className="grid grid-cols-2 gap-[20px]">
                         {clinicRooms.map((clinic) => (
                             <button
                             key={clinic.name}
-                            className="p-4 rounded-2xl shadow bg-gradient-to-r from-green-400 to-emerald-500 
-                                        text-white text-left hover:scale-105 transition-all"
+                            className="p-4 rounded-2xl shadow bg-gradient-to-r text-center from-green-400 to-emerald-500 
+                                        text-white hover:scale-105 duration-500 transition-all"
                             onClick={() => setSelectedClinic(clinic)}
                             >
-                            <h2 className="text-lg font-bold mb-2">{clinic.name}</h2>
+                            <h2 className="text-lg font-bold">{clinic.name}</h2>
                             </button>
                         ))}
                     </div>
