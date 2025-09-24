@@ -7,6 +7,7 @@ from fastapi import (
     WebSocketDisconnect,
     Depends,
 )
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -15,7 +16,8 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import timezone, timedelta, datetime
-from actionDB import (
+from random import choices
+from patientAction import (
     cancelOrder,
     getPatientHistory,
     isInsurrance,
@@ -32,13 +34,15 @@ from actionDB import (
     updateTransferState,
     setPaymentMethod,
 )
+from adminAction import (
+    createAccount,
+    getAccount
+)
 
 from qrMaker import makeQRCode
 from pdfMaker import makePDF, round_like_js
 
 import asyncio
-
-app = FastAPI()
 
 IP = "127.0.0.1"
 PORT = "8000"
@@ -53,7 +57,15 @@ SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L
 cryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oAuthBearer = OAuth2PasswordBearer(tokenUrl="token")
 
-def create_token(citizen_id):
+default_password = "123@Abc"
+space = "124567890qwertyuiopasdfghjklzxcvbnm"
+
+def create_random_str(k: int):
+    s = choices(space, k=k)
+    s = ''.join(s)
+    return s
+
+def create_token_type_1(citizen_id):
     to_encode = {}
     hash_id = cryptContext.hash(citizen_id)
     to_encode.update({"sub": hash_id})
@@ -62,7 +74,7 @@ def create_token(citizen_id):
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encode
 
-def verify_token(token, citizen_id):
+def verify_token_type_1(token, citizen_id):
     try:
         code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id = code.get("sub")
@@ -74,6 +86,21 @@ def verify_token(token, citizen_id):
     except JWTError:
         return False, "Token ko có quyền hạn"
     
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    salt = create_random_str(k=10)
+    hash_pass = cryptContext.hash(salt+default_password)
+    result, detail = createAccount("", "", "admin", salt, hash_pass)
+    if result:
+        print("Đã tạo thành công tài khoản admin")
+    else:
+        print(detail)
+    yield
+    print("Shutdown")
+
+app = FastAPI(lifespan=lifespan) 
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,6 +133,14 @@ class OrderInfo(BaseModel):
     service_name: str
     type: str
 
+class FormLoginData(BaseModel):
+    username: str
+    password: str
+
+class FormCreateAccountData(BaseModel):
+    realname: str
+    username: str
+    citizen_id: str
 
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
 @app.get("/health-insurances/{citizen_id}", status_code=200)  # Sửa đường dẫn
@@ -136,7 +171,7 @@ def check_insurance(citizen_id: str):
             "is_activate": is_activate,
             "is_saved": is_had,
             "message": message,
-            "token": create_token(insurance[0])
+            "token": create_token_type_1(insurance[0])
         }
     except Exception as e:
         print(f"Error in check_insurance: {e}")
@@ -160,7 +195,7 @@ def makePatientInfo(patient: PatientInfo):
     if not result:
         return JSONResponse(status_code=400, content={"reason": reason})
     else:
-        return JSONResponse(status_code=201, content={"token": create_token(patient.patient_id)})
+        return JSONResponse(status_code=201, content={"token": create_token_type_1(patient.patient_id)})
 
 
 # Cập nhật thông tin bệnh nhân
@@ -192,7 +227,7 @@ def checkPatient(citizen_id: str):
             "phone_number": patient[5],
             "ethnic": patient[6],
             "job": patient[7],
-            "token": create_token(patient[0])
+            "token": create_token_type_1(patient[0])
         },
     )
 
@@ -227,7 +262,7 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthB
     if patient is None:
         return JSONResponse(status_code=400, content={"detail": "Patient ko tồn tại"})
     
-    access, detail = verify_token(token, citizen_id)
+    access, detail = verify_token_type_1(token, citizen_id)
     if not access:
         return JSONResponse(status_code=401, content={"detail": detail})
     
@@ -424,5 +459,28 @@ def cancelOrderAPI(order_id: str):
     else:
         return JSONResponse(status_code=500, content={"message": "Lỗi khi hủy đơn"})
 
+############################################################################################################################################################################
+# admin quản lý
+# đăng nhập
+@app.get("/api/login")
+def login(loginInfo: FormLoginData):
+    account = getAccount(loginInfo.username)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+    if cryptContext.verify(account["salt"]+loginInfo.password, account["hash_pass"]):
+        return JSONResponse(status_code=200, content={
+            "token": "token"
+        })
+    else:
+        raise HTTPException(status_code=401, detail="Sai mật khẩu")
+
+# tạo tài khoản
+@app.post("/api/account/create")
+def createAccountUser():
+    pass
+
+@app.get("/test")
+def test():
+    print(getAccount("admin"))
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
