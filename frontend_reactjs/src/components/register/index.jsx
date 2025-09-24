@@ -94,14 +94,14 @@ function RegisterPage() {
                 </div>
             </div>
             {/* Nút dưới cùng */}
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full sm:w-[80%] lg:w-[45vw] px-4">
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-fit px-4">
                     <div
                         onClick={() => navigate("/")}
                     >
-                        <div className="flex items-center justify-center bg-gradient-to-r from-colorTwo to-colorFive text-black rounded-xl 
-                                        hover:from-gray-500 hover:to-gray-600 hover:scale-105 
+                        <div className="flex px-10 items-center justify-center bg-gradient-to-r from-colorTwo to-colorFive text-black rounded-xl 
+                                        hover:from-green-500 hover:to-emerald-600 hover:scale-105 
                                         transition-all duration-500 ease-in-out">
-                        <button className="cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]">
+                        <button className="text-white cursor-pointer p-2 text-[14px] sm:text-[18px] font-semibold lg:text-[22px]">
                             Trở lại
                         </button>
                         </div>

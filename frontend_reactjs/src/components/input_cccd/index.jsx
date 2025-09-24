@@ -263,7 +263,7 @@ function InputCCCD(props) {
                 <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
                 <div className="text-lg font-semibold loading-dots">Đang kiểm tra thông tin, vui lòng chờ</div>
             </Modal>
-            <div className="fixed inset-0 flex justify-center items-center backdrop-blur-0">
+            <div className=" flex justify-center items-center backdrop-blur-0">
                 <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
                         <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">

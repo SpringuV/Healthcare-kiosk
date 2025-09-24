@@ -4,7 +4,7 @@ import { Modal, Spin, Select } from "antd"
 import { get_service_list } from "../../services/healcare_service"
 import { useDispatch, useSelector } from "react-redux"
 import { select_check_patient_exist_data, select_insurance_check_data, select_patient_booking_service_loading, select_patient_register_data } from "../../reducers"
-import { patient_booking_service } from "../../actions/service"
+import { clear_booking_service, patient_booking_service } from "../../actions/service"
 import { useGlobalContext } from "../context/provider"
 import { clearToken } from "../../utils/token"
 import { LoadingOutlined } from '@ant-design/icons'
