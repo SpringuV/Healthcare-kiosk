@@ -90,7 +90,7 @@ function RegisterSuccess() {
         address_room: fallback(patient_booking_service_data?.address_room, paymentAgain?.info_order?.clinic_name),
         doctor_name: fallback(patient_booking_service_data?.doctor_name, paymentAgain?.info_order?.doctor_name),
         queue_number: fallback(patient_booking_service_data?.queue_number, paymentAgain?.info_order?.queue_number),
-        is_insurrance: fallback(patient_booking_service_data?.is_insurrance, paymentAgain?.info_user?.is_insurrance),
+        is_insurance: fallback(patient_booking_service_data?.is_insurance, paymentAgain?.info_user?.is_insurance),
         time_order: fallback(patient_booking_service_data?.time_order, paymentAgain?.info_order?.time_order),
         price: fallback(patient_booking_service_data?.price, paymentAgain?.info_order?.price),
     }
@@ -137,12 +137,12 @@ function RegisterSuccess() {
                             ['Phòng khám:', displayInfoRegister.address_room],
                             ['Bác sĩ:', displayInfoRegister.doctor_name],
                             ['Số phiếu đợi:', displayInfoRegister.queue_number],
-                            ['Bảo hiểm y tế:', displayInfoRegister.is_insurrance ? 'Có' : 'Không'],
-                            // ['Sử dụng bảo hiểm y tế:', patientRegister.use_insurrance ? 'Có' : 'Không'],
+                            ['Bảo hiểm y tế:', displayInfoRegister.is_insurance ? 'Có' : 'Không'],
+                            // ['Sử dụng bảo hiểm y tế:', patientRegister.use_insurance ? 'Có' : 'Không'],
                             ['Ngày đăng kí:', formatDate(displayInfoRegister.time_order)],
                             ['Giá khám:', `${Math.round(displayInfoRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`],
-                            // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
-                            // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
+                            // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurance === "Không" ? true : false],
+                            // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurance === "Có" ? true : false],
                         ].map(([label, value, isItalic], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>

@@ -2,6 +2,24 @@ from connectDB import connect, disconnect
 from mysql.connector import Error
 from mysql.connector import IntegrityError
 
+def checkAccount(id, type="CASHIER"):
+    conn, cursor = connect(dict=True)
+    try:
+        query = "SELECT username FROM account WHERE account_id = %s LIMIT 1"
+        cursor.execute(query, (id,))
+        username = cursor.fetchone()
+        if username != None:
+            if username == "admin" and type == "ADMIN":
+                return True
+            if username != "admin" and type == "CASHIER":
+                return True
+        return False
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
+
 def hasAdmin():
     conn, cursor = connect()
     try:
@@ -57,13 +75,46 @@ def createAccount(realname: str, citizen_id: str, username: str, salt: str, hash
         finally:
             disconnect(conn, cursor)
 
-def getAccount(username):
+def getAccount(info):
     conn, cursor = connect(dict=True)
     try:
-        query = "SELECT * FROM account WHERE username = %s LIMIT 1"
-        cursor.execute(query, (username,))
+        query = "SELECT * FROM account WHERE username = %s OR account_id = %s LIMIT 1"
+        cursor.execute(query, (info, info))
         account = cursor.fetchone()
         return account
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        disconnect(conn, cursor)
+
+def changePass(id, salt, hash_pass):
+    conn, cursor = connect(dict=True)
+    try:
+        query = "UPDATE account SET salt = %s, hash_pass = %s WHERE account_id = %s"
+        cursor.execute(query, (salt, hash_pass, id))
+        conn.commit()
+        return cursor.rowcount != 0
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        disconnect(conn, cursor)
+
+def getOrders(skip):
+    conn, cursor = connect(dict=True)
+    try:
+        query = '''SELECT p.fullname, p.citizen_id, p.dob, hi.insurance_id, s.service_name, o.create_at, o.payment_method, o.payment_status, o.price
+        FROM orders o 
+        JOIN patient p ON o.citizen_id = p.citizen_id
+        LEFT JOIN heath_insurance hi ON hi.citizen_id = p.citizen_id
+        JOIN clinic_service cs ON o.clinic_service_id = cs.clinic_service_id
+        JOIN service s ON cs.service_id = s.service_id
+        LIMIT 10 OFFSET %s
+        '''
+        cursor.execute(query, (skip,))
+        orders = cursor.fetchall()
+        return orders
     except Exception as e:
         print(f"Error: {e}")
         return None

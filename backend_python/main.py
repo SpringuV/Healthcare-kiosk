@@ -20,9 +20,9 @@ from random import choices
 from patientAction import (
     cancelOrder,
     getPatientHistory,
-    isInsurrance,
+    isInsurance,
     isHasPatientInfo,
-    updatePatientInsurranceState,
+    updatePatientInsuranceState,
     savePatientInfo,
     getServices,
     getPatient,
@@ -36,7 +36,10 @@ from patientAction import (
 )
 from adminAction import (
     createAccount,
-    getAccount
+    getAccount,
+    checkAccount,
+    changePass,
+    getOrders,
 )
 
 from qrMaker import makeQRCode
@@ -86,6 +89,42 @@ def verify_token_type_1(token, citizen_id):
     except JWTError:
         return False, "Token ko có quyền hạn"
     
+def create_token_type_2(id, typeAccess):
+    to_encode = {}
+    to_encode.update({"sub": id})
+    to_encode.update({"aud": typeAccess+"_SERVICES"})
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encode
+
+def refresh_token_type_2(token):
+    code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    code.update({"exp": expire})
+    encode = jwt.encode(code, SECRET_KEY, algorithm=ALGORITHM)
+    return encode
+
+
+def verify_token_type_2(token):
+    try:
+        code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        id = code.get("sub")
+        type_service = code.get("aud")
+        if type_service == "ADMIN_SERVICES":
+            if checkAccount(id, type="ADMIN"):
+                return True, "ADMIN", id
+            return False, "Không có thẩm quyền", None
+        elif type_service == "CASHIER_SERVICES":
+            if checkAccount(id):
+                return True, "CASHIER", id
+            return False, "Không có thẩm quyền", None
+        else:
+            return False, "Không xác thực người dùng", None
+    except ExpiredSignatureError:
+        return False, "Hết phiên sử dụng", None
+    except JWTError:
+        return False, "Token ko có quyền hạn", None
 
 
 @asynccontextmanager
@@ -120,7 +159,6 @@ class PatientInfo(BaseModel):
     address: str
     ethnic: str
     job: str
-    is_insur: bool
 
 
 class PatientInfoUpdate(BaseModel):
@@ -133,20 +171,24 @@ class OrderInfo(BaseModel):
     service_name: str
     type: str
 
-class FormLoginData(BaseModel):
+class FormLogin(BaseModel):
     username: str
     password: str
 
-class FormCreateAccountData(BaseModel):
+class FormCreateAccount(BaseModel):
     realname: str
     username: str
     citizen_id: str
+
+class FormChangePassword(BaseModel):
+    old_password: str
+    new_password: str
 
 # Kiểm tra thông tin bệnh nhân (truyền vào CCCD)
 @app.get("/health-insurances/{citizen_id}", status_code=200)  # Sửa đường dẫn
 def check_insurance(citizen_id: str):
     try:
-        is_activate, message, insurance = isInsurrance(citizen_id)  # Sửa tên function
+        is_activate, message, insurance = isInsurance(citizen_id)  # Sửa tên function
         is_had, _ = isHasPatientInfo(citizen_id)  # Sửa tên function
 
         if insurance is None:
@@ -157,17 +199,17 @@ def check_insurance(citizen_id: str):
 
         # Nếu bệnh nhân đã có thông tin, cập nhật trạng thái bảo hiểm
         if is_had:
-            updatePatientInsurranceState(citizen_id, is_activate)
+            updatePatientInsuranceState(citizen_id, insurance[1])
 
         return {
             "citizen_id": insurance[0],
-            "full_name": insurance[1],
-            "dob": insurance[3].isoformat() if insurance[3] else None,  # Format date
-            "valid_from": insurance[6].isoformat() if insurance[6] else None,
-            "expired": insurance[7].isoformat() if insurance[7] else None,
-            "registration_place": insurance[5],
-            "phone_number": insurance[4],
-            "gender": "Nam" if insurance[2] == 1 else "Nữ",
+            "full_name": insurance[2],
+            "dob": insurance[4].isoformat() if insurance[4] else None,  # Format date
+            "valid_from": insurance[7].isoformat() if insurance[7] else None,
+            "expired": insurance[8].isoformat() if insurance[8] else None,
+            "registration_place": insurance[6],
+            "phone_number": insurance[5],
+            "gender": "Nam" if insurance[3] == 1 else "Nữ",
             "is_activate": is_activate,
             "is_saved": is_had,
             "message": message,
@@ -190,7 +232,7 @@ def makePatientInfo(patient: PatientInfo):
         patient.phone_number,
         patient.ethnic,
         patient.job,
-        patient.is_insur,
+        None
     )
     if not result:
         return JSONResponse(status_code=400, content={"reason": reason})
@@ -199,9 +241,10 @@ def makePatientInfo(patient: PatientInfo):
 
 
 # Cập nhật thông tin bệnh nhân
-@app.put("/patient/insurrance-info/{citizen_id}")
+@app.put("/patient/insurance-info/{citizen_id}")
 def updatePatient(citizen_id: str, info: PatientInfoUpdate):
-    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job):
+    _, _, insurance = isInsurance(citizen_id)
+    if not updatePatientInfo(citizen_id, info.address, info.ethnic, info.job, insurance[1]):
         return JSONResponse(status_code=400, content={})
     else:
         return JSONResponse(status_code=201, content={})
@@ -271,7 +314,7 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthB
         return JSONResponse(status_code=400, content={"detail": "Lỗi tạo order"})
     else:
         # Thông tin order
-        # order = [ o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance]
+        # order = [ o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.insurance_id o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurance]
         order = getOrder(order_id)
         return JSONResponse(status_code=200, content={
             "citizen_id": order[0],
@@ -280,8 +323,8 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthB
             "dob": order[3].isoformat() if order[3] else None,
             "queue_number": order[4],
             "time_order": order[5].isoformat() if order[5] else None,
-            "is_insurrance": order[7],
-            "use_insurrance": order[13],
+            "is_insurance": bool(order[7]),
+            "use_insurance": order[13],
             "service_name": order[9],
             "clinic_name": order[10],
             "address_room": order[11],
@@ -399,7 +442,7 @@ def getPatientHistoryAPI(citizen_id: str):
         "phone_number": first["phone_number"],
         "ethnic": first["ethnic"],
         "job": first["job"],
-        "is_insurance": bool(first["is_insurrance"]),
+        "is_insurance": bool(first["insurance_id"]),
     }
 
     # Chỉ lấy phần lịch sử khám
@@ -463,24 +506,79 @@ def cancelOrderAPI(order_id: str):
 # admin quản lý
 # đăng nhập
 @app.get("/api/login")
-def login(loginInfo: FormLoginData):
+def login(loginInfo: FormLogin):
     account = getAccount(loginInfo.username)
+    if account["state"] == 0:
+        raise HTTPException(status_code=401, detail="Tài khoản bị khóa")
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
     if cryptContext.verify(account["salt"]+loginInfo.password, account["hash_pass"]):
-        return JSONResponse(status_code=200, content={
-            "token": "token"
+        typeAccess = "CASHIER"
+        if account["username"] == "admin":
+            typeAccess = "ADMIN"
+        token = create_token_type_2(account["account_id"], typeAccess)
+        respone = JSONResponse(status_code=200, content={
+            "token": token
         })
+        return respone
     else:
         raise HTTPException(status_code=401, detail="Sai mật khẩu")
 
 # tạo tài khoản
-@app.post("/api/account/create")
-def createAccountUser():
-    pass
+@app.post("/api/user/admin/create_cashier")
+def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
+    access, code, _ = verify_token_type_2(token)
+    if access and code == "ADMIN":
+        salt = create_random_str(k=10)
+        result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
+        if result:
+            token = refresh_token_type_2(token)
+            return JSONResponse(status_code=201, content={"detail": detail, "token": token})
+        raise HTTPException(status_code=401, content={"detail": detail})
+    if code == "CASHIER":
+        code = "Không phải admin"
+    raise HTTPException(status_code=401, content={"detail": code})
+
+# đổi mật khẩu
+@app.put("/api/user/change_password")
+def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
+    access, _, id = verify_token_type_2(token)
+    if access:
+        account = getAccount(id)
+        if cryptContext.verify(account["salt"]+data["old_password"], account["hash_pass"]):
+            new_salt = create_random_str(k=10)
+            new_hash_pass = cryptContext.hash(new_salt+data.new_password)
+            if changePass(id, new_salt, new_hash_pass):
+                token = refresh_token_type_2(token)
+                return JSONResponse(status_code=201, content={"detail": "Đổi mật khẩu thành công", "token": token})
+            else:
+                raise HTTPException(status_code=401, content={"detail": "Đổi mật khẩu thất bại"})
+        else:
+            raise HTTPException(status_code=401, content={"detail": "Mật khẩu cũ ko chính xác"})
+
+# lấy danh sách giao dịch
+@app.get("/api/user/get_order_list/{skip}")
+def get_order_list(skip: int, token: str = Depends(oAuthBearer)):
+    access, code, id = verify_token_type_2(token)
+    if access:
+        orders = getOrders(skip)
+        # p.fullname, p.citizen_id, p.dob, s.service_name, o.create_at, o.payment_method, o.payment_status, o.price
+        data = []
+        for order in orders:
+            data.append({
+                "fullname": order["fullname"],
+                "citizen_id": order["citizen_id"],
+                "dob": order["dob"],
+                "service_name": order["service_name"],
+                "create_at": order["create_at"],
+                "payment_method": order["payment_method"],
+                "payment_status": order["payment_status"],
+                "price": order["price"],
+            })
+        return JSONResponse(status_code=200, content={'data': data})
 
 @app.get("/test")
 def test():
-    print(getAccount("admin"))
+    print(getOrders(20))
 
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

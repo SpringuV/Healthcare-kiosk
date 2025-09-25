@@ -32,7 +32,7 @@ def makePDF(info):
     info_line(pdf, "Giới tính:", "Nam" if info[2] == 1 else "Nữ")
     info_line(pdf, "Ngày sinh:", to_str(info[3]))
     info_line(pdf, "CCCD:", info[0])
-    info_line(pdf, "Bảo hiểm y tế:", "Có" if info[7] == 1 else "Không")
+    info_line(pdf, "Bảo hiểm y tế:", "Có" if info[7] != None else "Không")
     info_line(pdf, "Phiếu áp dụng bảo hiểm y tế:", "Có" if info[13] == 1 else "Không")
     info_line(pdf, "Dịch vụ:", info[9])
     info_line(pdf, "Phòng khám:", info[10])
