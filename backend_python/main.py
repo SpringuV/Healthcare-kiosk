@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import timezone, timedelta, datetime
@@ -105,7 +105,7 @@ def create_token_type_2(id, typeAccess):
     return encode
 
 def refresh_token_type_2(token):
-    code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
     code.update({"exp": expire})
     encode = jwt.encode(code, SECRET_KEY, algorithm=ALGORITHM)
@@ -326,19 +326,19 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthB
         # order = [ o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.insurance_id o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurance]
         order = getOrder(order_id)
         return JSONResponse(status_code=200, content={
-            "citizen_id": order[0],
-            "fullname": order[1],
-            "gender": "Nam" if order[2] == 1 else "Nữ",
-            "dob": order[3].isoformat() if order[3] else None,
-            "queue_number": order[4],
-            "time_order": order[5].isoformat() if order[5] else None,
-            "is_insurance": bool(order[7]),
-            "use_insurance": order[13],
-            "service_name": order[9],
-            "clinic_name": order[10],
-            "address_room": order[11],
-            "doctor_name": order[12],
-            "price": float(order[6]),
+            "citizen_id": order["citizen_id"],
+            "fullname": order["fullname"],
+            "gender": "Nam" if order["gender"] == 1 else "Nữ",
+            "dob": order["dob"].isoformat() if order["dob"] else None,
+            "queue_number": order["queue_number"],
+            "time_order": order["create_at"].isoformat() if order["create_at"] else None,
+            "is_insurance": bool(order["insurance_id"]),
+            "use_insurance": order["use_insurance"],
+            "service_name": order["service_name"],
+            "clinic_name": order["clinic_name"],
+            "address_room": order["address_room"],
+            "doctor_name": order["doctor_name"],
+            "price": float(order["price"]),
             "order_id": order_id,
             "QRCode": makeQRCode(
                 f"https://healthcare-kiosk.onrender.com/downloadPDF/{order_id}"
@@ -514,7 +514,7 @@ def cancelOrderAPI(order_id: str):
 ############################################################################################################################################################################
 # admin quản lý
 # đăng nhập
-@app.get("/api/login")
+@app.post("/api/login")
 def login(loginInfo: FormLogin):
     account = getAccount(username=loginInfo.username)
     if account is None:
@@ -625,6 +625,8 @@ def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
 @app.get("/api/user/get_order_list/{search}/{skip}")
 def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
     verify_token_type_2(token)
+    if search == "empty":
+        search = ""
     orders = getOrders(search, skip)
     # p.fullname, p.citizen_id, p.dob, p.insurance_id, s.service_name, o.create_at, o.payment_method, o.payment_status, o.price
     data = []
@@ -639,6 +641,11 @@ def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
             "payment_method": order["payment_method"],
             "payment_status": order["payment_status"],
             "price": float(order["price"]),
+            "queue_number": order["queue_number"],
+            "service_name": order["service_name"],
+            "clinic_name": order["clinic_name"],
+            "address_room": order["address_room"],
+            "doctor_name": order["doctor_name"],
         })
     token = refresh_token_type_2(token)
     return JSONResponse(status_code=200, content={'orders': data, 'token': token})
@@ -653,17 +660,19 @@ def payCash(order_id: str, token: str = Depends(oAuthBearer)):
         return JSONResponse(status_code=200, content={"detail": "Thanh toán thành công", "token": token})
     raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Thu ngân mới có quyền này")
 
-@app.get("/api/test")
-def test():
-    data = []
-    infos = getDashboardInfos()
-    for info in infos:
-        data.append({
-            "order_date": info["order_date"].isoformat(),
-            "order_money": float(info["order_money"]),
-            "total_paid_orders": info["total_paid_orders"],
-            "total_unpaid_orders": info["total_unpaid_orders"],
-            "total_cancelled_orders": info["total_cancelled_orders"]
-        })
-    return JSONResponse(status_code=200, content={"data": data})
+# chỉ dùng để chạy thử trên /docs, xóa khi deploy
+@app.post("/token")
+def login_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    account = getAccount(username=form_data.username)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+    if account["state"] == 0:
+        raise HTTPException(status_code=403, detail="Tài khoản bị khóa")
+    if not cryptContext.verify(account["salt"] + form_data.password, account["hash_pass"]):
+        raise HTTPException(status_code=400, detail="Sai mật khẩu")
+
+    typeAccess = "ADMIN" if account["username"] == "admin" else "CASHIER"
+    token = create_token_type_2(account["account_id"], typeAccess)
+
+    return {"access_token": token, "token_type": "bearer"}
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

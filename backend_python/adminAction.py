@@ -171,10 +171,12 @@ def getCashiers(skip):
 def getOrders(search, skip):
     conn, cursor = connect(dict=True)
     try:
-        query = '''SELECT p.fullname, p.citizen_id, p.dob, p.insurance_id, s.service_name, o.create_at, o.payment_method, o.payment_status, o.price
+        query = '''SELECT p.fullname, p.citizen_id, p.dob, p.insurance_id, s.service_name, o.create_at, o.queue_number, o.payment_method, o.payment_status, o.price, s.service_name, c.clinic_name, c.address_room, st.fullname AS doctor_name
         FROM orders o 
         JOIN patient p ON o.citizen_id = p.citizen_id
         JOIN clinic_service cs ON o.clinic_service_id = cs.clinic_service_id
+        JOIN clinic c ON cs.clinic_id = c.clinic_id
+        JOIN staff st ON cs.clinic_id = st.clinic_id AND st.staff_position = 'DOCTOR'
         JOIN service s ON cs.service_id = s.service_id
         '''
         condition = '''WHERE p.fullname LIKE %s OR p.citizen_id = %s OR p.insurance_id = %s'''
