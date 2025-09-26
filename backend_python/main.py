@@ -6,6 +6,7 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Depends,
+    status
 )
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -37,6 +38,7 @@ from patientAction import (
 from adminAction import (
     createAccount,
     getAccount,
+    updateTimeAccessExpire,
     checkAccount,
     lockAccount,
     deleteAccount,
@@ -96,17 +98,23 @@ def verify_token_type_1(token, citizen_id):
         raise HTTPException(status_code=401, detail="Token lỗi")
     
 def create_token_type_2(id, typeAccess):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    updateTimeAccessExpire(id, expire)
     to_encode = {}
     to_encode.update({"sub": str(id)})
     to_encode.update({"aud": typeAccess+"_SERVICES"})
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encode
 
 def refresh_token_type_2(token):
     code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+    id = code.get("sub")
+    account = getAccount(id=id)
+    if account["state"] == 0:
+        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    updateTimeAccessExpire(id, expire)
     code.update({"exp": expire})
     encode = jwt.encode(code, SECRET_KEY, algorithm=ALGORITHM)
     return encode
@@ -284,7 +292,6 @@ def checkPatient(citizen_id: str):
             "token": create_token_type_1(patient[0])
         },
     )
-
 
 # Lấy danh sách dịch vụ
 @app.get("/api/services")
@@ -520,7 +527,9 @@ def login(loginInfo: FormLogin):
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
     if account["state"] == 0:
-        raise HTTPException(status_code=403, detail="Tài khoản bị khóa")
+        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
+    if account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
     if cryptContext.verify(account["salt"]+loginInfo.password, account["hash_pass"]):
         typeAccess = "CASHIER"
         if account["username"] == "admin":
@@ -532,6 +541,24 @@ def login(loginInfo: FormLogin):
         return respone
     else:
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
+    
+# đăng xuất
+@app.post("/api/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(token: str = Depends(oAuthBearer)):
+    _, id = verify_token_type_2(token)
+    account = getAccount(id=id)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+    if account["state"] == 0:
+        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
+    updateTimeAccessExpire(id, datetime.now(timezone.utc))
+    return
+
+# gia hạn
+@app.post("/api/refresh_token")
+def refresh(token: str = Depends(oAuthBearer)):
+    token = refresh_token_type_2(token)
+    return JSONResponse(status_code=200, content={"token": token})
 
 # dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")
@@ -667,7 +694,7 @@ def login_token(form_data: OAuth2PasswordRequestForm = Depends()):
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
     if account["state"] == 0:
-        raise HTTPException(status_code=403, detail="Tài khoản bị khóa")
+        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
     if not cryptContext.verify(account["salt"] + form_data.password, account["hash_pass"]):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
 

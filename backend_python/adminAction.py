@@ -1,6 +1,7 @@
 from connectDB import connect, disconnect
 from fastapi import HTTPException
 from mysql.connector import IntegrityError
+from datetime import datetime
 
 def checkAccount(id, type="CASHIER"):
     conn, cursor = connect(dict=True)
@@ -132,6 +133,18 @@ def getAccount(username: str = None, id: str = None):
             return None
         account = cursor.fetchone()
         return account
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
+    finally:
+        disconnect(conn, cursor)
+
+def updateTimeAccessExpire(account_id: str, time: datetime):
+    conn, cursor = connect(dict=True)
+    try:
+        query = "UPDATE account SET access_exp = %s WHERE account_id = %s"
+        cursor.execute(query, (time, account_id))
+        conn.commit()
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail="Lỗi không xác định")
