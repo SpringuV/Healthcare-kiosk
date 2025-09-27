@@ -32,10 +32,21 @@ const LoginUI = () => {
         cursor: 'pointer',
     };
 
+    const handleOnFinish = async (values: unknown) => {
+        console.log(">>>> check value: ", values)
+        // {username: 'xuanvuaudi2002@gmail.com', password: '123'}
+        // {mobile: '0234567890', captcha: '123123'}
+    }
+
+    const handleOnFinishFailed = (err: unknown) => {
+        console.log("❌ Lỗi validate: ", err);
+    }
     return (
         <ProConfigProvider hashed={false}>
             <div style={{ backgroundColor: token.colorBgContainer }}>
                 <LoginForm
+                    onFinish={handleOnFinish}
+                    onFinishFailed={handleOnFinishFailed}
                     // Thay đổi text button đăng nhập
                     submitter={{
                         render: () => (
@@ -55,7 +66,7 @@ const LoginUI = () => {
                     actions={
                         <Space>
                             Đăng nhập bằng
-                            <GoogleOutlined style={iconStyles} /> 
+                            <GoogleOutlined style={iconStyles} />
                             <GithubOutlined style={iconStyles} />
                             <FacebookOutlined style={iconStyles} />
                         </Space>
@@ -147,7 +158,7 @@ const LoginUI = () => {
                                         message: 'Vui lòng nhập số điện thoại của bạn！',
                                     },
                                     {
-                                        pattern: /^0\d{10}$/,
+                                        pattern: /^0\d{9}$/,
                                         message: 'Định dạng số điện thoại di động không chính xác！',
                                     },
                                 ]}
@@ -189,6 +200,7 @@ const LoginUI = () => {
                             Đăng nhập tự động
                         </ProFormCheckbox>
                         <a
+                            href=''
                             style={{
                                 float: 'right',
                             }}
@@ -196,7 +208,11 @@ const LoginUI = () => {
                             Quên mật khẩu
                         </a>
                     </div>
+                    <div className='!mb-4 text-center'>
+                        <span>Bạn chưa có tài khoản ? <a href='/auth/register' className='italic text-blue-300'>Đăng kí tại đây</a> </span>
+                    </div>
                 </LoginForm>
+
             </div>
         </ProConfigProvider>
     );

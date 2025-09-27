@@ -6,10 +6,13 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Depends,
-    status
+    status,
+    Query
 )
+from fastapi.responses import JSONResponse
+from secrets import token_urlsafe
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator, EmailStr
 from decimal import Decimal
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +20,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import timezone, timedelta, datetime
-from random import choices
+from random import choices, random
 from patientAction import (
     cancelOrder,
     getPatientHistory,
@@ -38,6 +41,8 @@ from patientAction import (
 from adminAction import (
     createAccount,
     getAccount,
+    updateAccountState,
+    updateActivationCode,
     updateTimeAccessExpire,
     checkAccount,
     lockAccount,
@@ -45,8 +50,9 @@ from adminAction import (
     changePass,
     getOrders,
     getCashiers,
-    getDashboardInfos
+    getDashboardInfos,
 )
+from mail.mail_service import send_activation_email
 from cashierAction import payCashOrder
 
 from qrMaker import makeQRCode
@@ -60,7 +66,7 @@ PORT = "8000"
 SECRET_KEY = "v8P2shAY3fDKWuz5qZt0mXNaHy1Lrj"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
-ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
@@ -144,13 +150,16 @@ def verify_token_type_2(token):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    salt = create_random_str(k=10)
-    hash_pass = cryptContext.hash(salt+default_password)
-    result, detail = createAccount("", "", "admin", salt, hash_pass)
-    if result:
-        print("Đã tạo thành công tài khoản admin")
-    else:
-        print(detail)
+    try:
+        salt = create_random_str(k=10)
+        hash_pass = cryptContext.hash(salt + default_password)
+        result, detail = createAccount("", "", "admin", salt, hash_pass, None)  # Thêm email mặc định
+        if result:
+            print("Đã tạo thành công tài khoản admin")
+        else:
+            print(detail)
+    except Exception as e:
+        print(f"Lỗi trong lifespan: {e}")
     yield
     print("Shutdown")
 
@@ -175,6 +184,9 @@ class PatientInfo(BaseModel):
     ethnic: str
     job: str
 
+class ActivateRequest(BaseModel):
+    email: str
+    code: str
 
 class PatientInfoUpdate(BaseModel):
     address: str
@@ -187,13 +199,20 @@ class OrderInfo(BaseModel):
     type: str
 
 class FormLogin(BaseModel):
-    username: str
+    username: str | None = None
     password: str
+    email: EmailStr | None = None
+    @model_validator(mode="after")
+    def check_at_least_one_identifier(self):
+        if not any(value for value in [self.username, self.email] if value is not None):
+            raise ValueError("Cần cung cấp ít nhất username hoặc email")
+        return self
 
 class FormCreateAccount(BaseModel):
     realname: str
     username: str
     citizen_id: str
+    email: EmailStr
 
 class FormChangePassword(BaseModel):
     old_password: str
@@ -521,27 +540,55 @@ def cancelOrderAPI(order_id: str):
 ############################################################################################################################################################################
 # admin quản lý
 # đăng nhập
+
 @app.post("/api/login")
 def login(loginInfo: FormLogin):
-    account = getAccount(username=loginInfo.username)
+    # 1. Xác định account theo email hoặc username
+    account = None
+    if loginInfo.email and "@" in loginInfo.email:
+        account = getAccount(email=loginInfo.email)
+    elif loginInfo.username:
+        account = getAccount(username=loginInfo.username)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cần cung cấp username hoặc email hợp lệ"
+        )
+
+    # 2. Kiểm tra tồn tại
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+
+    # 3. Kiểm tra trạng thái
     if account["state"] == 0:
-        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
-    if account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        raise HTTPException(status_code=403, detail="Tài khoản đã bị khóa")
+    if account["state"] == 2:
+        raise HTTPException(status_code=403, detail="Tài khoản chưa kích hoạt email")
+
+    # 4. Kiểm tra phiên còn hiệu lực không
+    if account["access_exp"] and account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
         raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
-    if cryptContext.verify(account["salt"]+loginInfo.password, account["hash_pass"]):
-        typeAccess = "CASHIER"
-        if account["username"] == "admin":
-            typeAccess = "ADMIN"
-        token = create_token_type_2(account["account_id"], typeAccess)
-        respone = JSONResponse(status_code=200, content={
-            "token": token
-        })
-        return respone
-    else:
+
+    # 5. Xác thực mật khẩu
+    if not cryptContext.verify(account["salt"] + loginInfo.password, account["hash_pass"]):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
-    
+
+    # 6. Xác định role
+    typeAccess = "CASHIER"
+    if account["username"] == "admin" or account.get("role") == "ADMIN":
+        typeAccess = "ADMIN"
+
+    # 7. Tạo JWT
+    token = create_token_type_2(account["account_id"], typeAccess)
+
+    # 8. Trả về response
+    return JSONResponse(
+        status_code=200,
+        content={
+            "access_token": token,
+            "token_type": "bearer"
+        }
+    )
 # đăng xuất
 @app.post("/api/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(token: str = Depends(oAuthBearer)):
@@ -579,18 +626,69 @@ def getDashboardInfo(token: str = Depends(oAuthBearer)):
         return JSONResponse(status_code=200, content={"datas": datas, "token": token})
     raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
 
+def generate_otp(length=6):
+    return ''.join(choices("0123456789", k=length))
+
 # tạo tài khoản
 @app.post("/api/user/admin/create_cashier")
-def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
+async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
     code, _ = verify_token_type_2(token)
     if code == "ADMIN":
         salt = create_random_str(k=10)
-        result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
+        active_code = generate_otp()  # ví dụ "482931"
+        result, detail = createAccount(
+            data.realname,
+            data.citizen_id,
+            data.username,
+            salt,
+            cryptContext.hash(salt + default_password),
+            data.email,
+            active_code
+        )
         if result:
+            # gửi mail xác thực (chỉ có mã OTP)
+            await send_activation_email(data.email, active_code)
             token = refresh_token_type_2(token)
             return JSONResponse(status_code=201, content={"detail": detail, "token": token})
-        raise HTTPException(status_code=401, detail = detail)
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+        raise HTTPException(status_code=401, detail=detail)
+    raise HTTPException(status_code=403, detail="Không có thẩm quyền, chỉ Admin mới có quyền này")
+
+@app.post("/api/resend-activation")
+async def resend_activation(email: str = Query(...)):
+    account = getAccount(email=email)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+
+    if account["state"] == 1:
+        return {"detail": "Tài khoản đã kích hoạt, không cần gửi lại"}
+
+    # tạo code mới (OTP 6 chữ số)
+    new_code = generate_otp()
+    if not updateActivationCode(account["account_id"], new_code):
+        raise HTTPException(status_code=500, detail="Không thể cập nhật code kích hoạt")
+
+    # gửi email OTP
+    await send_activation_email(email, new_code)
+
+    return {"detail": "Mã kích hoạt mới đã được gửi qua email"}
+
+@app.post("/api/activate")
+def activate_account(data: ActivateRequest):
+    account = getAccount(email=data.email)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+
+    if account["state"] == 1:
+        return {"detail": "Tài khoản đã được kích hoạt trước đó"}
+
+    if account["active_code"] != data.code:
+        raise HTTPException(status_code=400, detail="Mã kích hoạt không hợp lệ")
+
+    if account["active_exp"] and account["active_exp"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Mã kích hoạt đã hết hạn")
+
+    updateAccountState(account["account_id"], 1)
+    return {"detail": "Tài khoản đã kích hoạt thành công, bạn có thể đăng nhập"}
 
 # lấy danh sách tài khoản thu ngân
 @app.get("/api/user/admin/get_cashier_list/{skip}")
@@ -688,7 +786,7 @@ def payCash(order_id: str, token: str = Depends(oAuthBearer)):
     raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Thu ngân mới có quyền này")
 
 # chỉ dùng để chạy thử trên /docs, xóa khi deploy
-@app.post("/token")
+@app.post("/api/token")
 def login_token(form_data: OAuth2PasswordRequestForm = Depends()):
     account = getAccount(username=form_data.username)
     if account is None:
