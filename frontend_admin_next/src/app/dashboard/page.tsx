@@ -1,7 +1,15 @@
+import AuthGuard from '@/components/auth/auth.guard'
+import Dashboard from '@/components/dashboard/dashboard'
 import React from 'react'
 
-export const Dashboard = () => {
-  return (
-    <div>Dashboard Page</div>
-  )
+const DashboardPage = () => {
+    return (
+        <>
+            <AuthGuard>
+                <Dashboard />
+            </AuthGuard>
+        </>
+    )
 }
+
+export default DashboardPage

@@ -21,6 +21,7 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import timezone, timedelta, datetime
 from random import choices, random
+from services.reset_password_router import router as reset_password_router
 from patientAction import (
     cancelOrder,
     getPatientHistory,
@@ -66,7 +67,7 @@ PORT = "8000"
 SECRET_KEY = "v8P2shAY3fDKWuz5qZt0mXNaHy1Lrj"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
-ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
@@ -172,7 +173,7 @@ app.add_middleware(
     allow_methods=["*"],  # Cho tất cả method
     allow_headers=["*"],  # Cho tất cả header
 )
-
+app.include_router(reset_password_router, prefix="/api", tags=["Reset Password"])
 
 class PatientInfo(BaseModel):
     patient_id: str
@@ -192,7 +193,6 @@ class PatientInfoUpdate(BaseModel):
     address: str
     ethnic: str
     job: str
-
 
 class OrderInfo(BaseModel):
     service_name: str
@@ -547,9 +547,12 @@ def login(loginInfo: FormLogin):
     account = None
     if loginInfo.email and "@" in loginInfo.email:
         account = getAccount(email=loginInfo.email)
+        print("Login bằng email:", loginInfo.email)
     elif loginInfo.username:
         account = getAccount(username=loginInfo.username)
+        print("Login bằng username:", loginInfo.username)
     else:
+        print("Không cung cấp username/email hợp lệ")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cần cung cấp username hoặc email hợp lệ"
@@ -557,38 +560,64 @@ def login(loginInfo: FormLogin):
 
     # 2. Kiểm tra tồn tại
     if account is None:
+        print("Tài khoản không tồn tại")
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
 
     # 3. Kiểm tra trạng thái
     if account["state"] == 0:
+        print("Tài khoản đã bị khóa")
         raise HTTPException(status_code=403, detail="Tài khoản đã bị khóa")
     if account["state"] == 2:
+        print("Tài khoản chưa kích hoạt email")
         raise HTTPException(status_code=403, detail="Tài khoản chưa kích hoạt email")
 
     # 4. Kiểm tra phiên còn hiệu lực không
-    if account["access_exp"] and account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+    if account.get("access_exp") and account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        print("Tài khoản đang được truy cập, chưa hết phiên")
         raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
 
     # 5. Xác thực mật khẩu
     if not cryptContext.verify(account["salt"] + loginInfo.password, account["hash_pass"]):
+        print("Sai mật khẩu")
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
 
     # 6. Xác định role
     typeAccess = "CASHIER"
     if account["username"] == "admin" or account.get("role") == "ADMIN":
         typeAccess = "ADMIN"
+    print("Role:", typeAccess)
 
     # 7. Tạo JWT
     token = create_token_type_2(account["account_id"], typeAccess)
+    print("JWT token:", token)
 
-    # 8. Trả về response
-    return JSONResponse(
+    # 8. Decode exp trong token để đồng bộ cookie lifetime
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+    exp = payload.get("exp")
+    max_age = exp - int(datetime.now(timezone.utc).timestamp())
+    print("Token expire in (s):", max_age)
+
+    # 9. Trả response + set cookie, đồng thời gửi username và role
+    response = JSONResponse(
         status_code=200,
         content={
-            "access_token": token,
+            "message": "Đăng nhập thành công",
+            "_id": account["account_id"],
+            "role": typeAccess,
             "token_type": "bearer"
         }
     )
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=False,      # True nếu chạy HTTPS
+        samesite="Lax",
+        max_age=max_age,
+    )
+    print("Đăng nhập thành công, cookie set")
+    return response
+
 # đăng xuất
 @app.post("/api/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(token: str = Depends(oAuthBearer)):
@@ -604,8 +633,23 @@ def logout(token: str = Depends(oAuthBearer)):
 # gia hạn
 @app.post("/api/refresh_token")
 def refresh(token: str = Depends(oAuthBearer)):
-    token = refresh_token_type_2(token)
-    return JSONResponse(status_code=200, content={"token": token})
+    new_token = refresh_token_type_2(token)
+
+    # Lấy exp mới từ token
+    payload = jwt.decode(new_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+    exp = payload.get("exp")
+    max_age = exp - int(datetime.now(timezone.utc).timestamp())
+
+    response = JSONResponse(status_code=200, content={"message": "Token đã refresh"})
+    response.set_cookie(
+        key="access_token",
+        value=new_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=max_age,
+    )
+    return response
 
 # dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")
@@ -633,25 +677,33 @@ def generate_otp(length=6):
 @app.post("/api/user/admin/create_cashier")
 async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
     code, _ = verify_token_type_2(token)
-    if code == "ADMIN":
-        salt = create_random_str(k=10)
-        active_code = generate_otp()  # ví dụ "482931"
-        result, detail = createAccount(
-            data.realname,
-            data.citizen_id,
-            data.username,
-            salt,
-            cryptContext.hash(salt + default_password),
+    if code != "ADMIN":
+        raise HTTPException(status_code=403, detail="Chỉ Admin mới có quyền này")
+
+    salt = create_random_str(k=10)
+    hash_pass = cryptContext.hash(salt + default_password)
+
+    # Tạo tài khoản (không cần active_code nữa)
+    result, detail = createAccount(
+        data.realname,
+        data.citizen_id,
+        data.username,
+        salt,
+        hash_pass,
+        data.email,
+        None  # không gửi active_code
+    )
+
+    if result:
+        # Gửi email thông báo mật khẩu mặc định
+        await send_activation_email(
             data.email,
-            active_code
+            f"Tài khoản của bạn đã được tạo.\nTên đăng nhập: {data.username}\nMật khẩu tạm thời: {default_password}\nHãy đăng nhập và đổi mật khẩu."
         )
-        if result:
-            # gửi mail xác thực (chỉ có mã OTP)
-            await send_activation_email(data.email, active_code)
-            token = refresh_token_type_2(token)
-            return JSONResponse(status_code=201, content={"detail": detail, "token": token})
-        raise HTTPException(status_code=401, detail=detail)
-    raise HTTPException(status_code=403, detail="Không có thẩm quyền, chỉ Admin mới có quyền này")
+        token = refresh_token_type_2(token)
+        return JSONResponse(status_code=201, content={"detail": detail, "token": token})
+
+    raise HTTPException(status_code=400, detail=detail)
 
 @app.post("/api/resend-activation")
 async def resend_activation(email: str = Query(...)):
@@ -732,19 +784,34 @@ def deleteCashier(account_id: str, token: str = Depends(oAuthBearer)):
 
 # đổi mật khẩu admin/cashier
 @app.put("/api/user/change_password")
-def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
+async def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
     _, id = verify_token_type_2(token)
     account = getAccount(id=id)
-    if cryptContext.verify(account["salt"]+data.old_password, account["hash_pass"]):
-        new_salt = create_random_str(k=10)
-        new_hash_pass = cryptContext.hash(new_salt+data.new_password)
-        if changePass(id, new_salt, new_hash_pass):
-            token = refresh_token_type_2(token)
-            return JSONResponse(status_code=201, content={"detail": "Đổi mật khẩu thành công", "token": token})
-        else:
-            raise HTTPException(status_code=409, detail = "Đổi mật khẩu thất bại")
-    else:
-        raise HTTPException(status_code=400, detail = "Mật khẩu cũ ko chính xác")
+
+    if not cryptContext.verify(account["salt"] + data.old_password, account["hash_pass"]):
+        raise HTTPException(status_code=400, detail="Mật khẩu cũ không chính xác")
+
+    # Nếu là lần đổi mật khẩu đầu tiên thì yêu cầu OTP
+    if account["state"] == 1:  # giả sử state=1 nghĩa là chưa xác thực khi đổi pass
+        otp = generate_otp()
+        if not updateActivationCode(account["account_id"], otp):
+            raise HTTPException(status_code=500, detail="Không thể tạo mã OTP")
+
+        # gửi OTP về email
+        await send_activation_email(account["email"], f"Mã OTP đổi mật khẩu: {otp}")
+        return JSONResponse(
+            status_code=202,
+            content={"detail": "OTP đã gửi qua email. Vui lòng xác thực để đổi mật khẩu"}
+        )
+
+    # Nếu không phải lần đầu thì cho đổi luôn
+    new_salt = create_random_str(k=10)
+    new_hash_pass = cryptContext.hash(new_salt + data.new_password)
+    if changePass(id, new_salt, new_hash_pass):
+        token = refresh_token_type_2(token)
+        return JSONResponse(status_code=201, content={"detail": "Đổi mật khẩu thành công", "token": token})
+
+    raise HTTPException(status_code=409, detail="Đổi mật khẩu thất bại")
 
 # lấy danh sách giao dịch
 @app.get("/api/user/get_order_list/{search}/{skip}")
@@ -774,6 +841,29 @@ def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
         })
     token = refresh_token_type_2(token)
     return JSONResponse(status_code=200, content={'orders': data, 'token': token})
+
+@app.post("/api/user/verify_change_password")
+async def verifyChangePassword(email: str = Query(...), otp: str = Query(...), new_password: str = Query(...)):
+    account = getAccount(email=email)
+    if not account:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
+
+    if account["active_code"] != otp:
+        raise HTTPException(status_code=400, detail="OTP không hợp lệ")
+
+    if account["active_exp"] and account["active_exp"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="OTP đã hết hạn")
+
+    # update mật khẩu mới
+    new_salt = create_random_str(k=10)
+    new_hash_pass = cryptContext.hash(new_salt + new_password)
+    if not changePass(account["account_id"], new_salt, new_hash_pass):
+        raise HTTPException(status_code=500, detail="Không thể đổi mật khẩu")
+
+    # set state = 1 (active hoàn toàn sau khi đổi pass thành công)
+    updateAccountState(account["account_id"], 1)
+
+    return {"detail": "Đổi mật khẩu thành công và tài khoản đã được kích hoạt"}
 
 # thanh toán tiền mặt cho bệnh nhân
 @app.get("/api/user/cashier/payCash/{order_id}")

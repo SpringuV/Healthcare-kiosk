@@ -95,7 +95,7 @@ def createAccount(
     salt: str,
     hash_pass: str,
     email: str,
-    active_code: str = None,
+    active_code: str = None,  # không dùng khi tạo user mới
 ):
     conn, cursor = connect()
     try:
@@ -103,16 +103,17 @@ def createAccount(
         if username.lower() == "admin":
             if not hasAdmin():
                 createAdminAccount(salt, hash_pass, email)
-                return True, "✅ Tài khoản admin đã được tạo"
+                return True, "Tài khoản admin đã được tạo"
             else:
-                return False, "⚠️ Đã tồn tại tài khoản admin"
+                return False, "Đã tồn tại tài khoản admin"
 
         # Nếu là user thường
+        state = 1   # mặc định active
         active_exp = None
-        state = 1  # mặc định active
         if active_code:
-            active_exp = datetime.now() + timedelta(minutes=15)  # code hết hạn 15 phút
-            state = 2  # chờ kích hoạt email
+            # chỉ dùng khi xác thực OTP đổi mật khẩu (sau này)
+            active_exp = datetime.now() + timedelta(minutes=15)
+            state = 2
 
         query = """
             INSERT INTO account 
@@ -135,11 +136,7 @@ def createAccount(
         )
         conn.commit()
 
-        return True, (
-            "Tạo tài khoản thành công. Vui lòng kiểm tra email để kích hoạt"
-            if active_code
-            else "Tạo tài khoản thành công"
-        )
+        return True, "Tạo tài khoản thành công"
 
     except IntegrityError as e:
         if "Duplicate entry" in str(e):
@@ -152,7 +149,6 @@ def createAccount(
 
     finally:
         disconnect(conn, cursor)
-
 
 def lockAccount(account_id: str, action: str):
     user = getAccount(id=account_id)

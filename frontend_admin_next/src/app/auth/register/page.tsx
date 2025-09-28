@@ -1,7 +1,9 @@
+import Register from "@/components/auth/register"
+
 const RegisterPage = () => {
     return (
         <>
-            register Page
+            <Register />
         </>
     )
 }

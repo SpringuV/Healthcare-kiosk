@@ -1,4 +1,4 @@
-import LoginUI from "@/components/login"
+import LoginUI from "@/components/auth/login"
 
 const LoginPage = () =>{
     return (
