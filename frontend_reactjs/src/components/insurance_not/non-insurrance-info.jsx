@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { select_check_patient_exist_data, select_patient_register_data } from '../../reducers'
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
-import { Spin } from 'antd'
+import { Modal, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 
 function NonInsurranceInfo() {
@@ -13,7 +13,7 @@ function NonInsurranceInfo() {
     const patient_check = useSelector(select_check_patient_exist_data)
     const { setStateStep } = useGlobalContext()
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [1500, 2000, 2500]
     useEffect(() => {
         setStateStep(1)
     }, [setStateStep])
@@ -30,6 +30,17 @@ function NonInsurranceInfo() {
             <Helmet>
                 <title>Thông tin người khám</title>
             </Helmet>
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
+            </Modal>
             {patient_exist !== undefined ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
                     <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">
@@ -71,20 +82,31 @@ function NonInsurranceInfo() {
                             </div>
                         </div>
                         <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                            <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                            <div className="w-full grid grid-cols-2 gap-5">
                                 <button
-                                    disabled={localLoading}
-                                    className="cursor-pointer px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
-                                    onClick={() => {
-                                        const delay = [2000, 3000, 4000, 5000, 6000, 7000]
-                                        setLocalLoading(true)
-                                        setTimeout(() => {
-                                            handleNext()
-                                        }, delay[Math.floor(Math.random() * delay.length)])
-                                    }}>
-                                    {localLoading === true ? "Đang xử lý ..." : "Bước tiếp theo: Chọn dịch vụ khám"}
+                                    className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                            bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                            font-semibold text-white"
+                                    onClick={() => navigate("/non-insur")}
+                                >
+                                    Trở lại
                                 </button>
-                            </Spin>
+                                <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                    <button
+                                        disabled={localLoading}
+                                        className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                                bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                                font-semibold text-white"
+                                        onClick={() => {
+                                            setLocalLoading(true)
+                                            setTimeout(() => {
+                                                handleNext()
+                                            }, delay[Math.floor(Math.random() * delay.length)])
+                                        }}>
+                                        {localLoading === true ? (<span className='loading-dots'>Đang xử lý</span>) : "Bước tiếp theo: Chọn dịch vụ khám"}
+                                    </button>
+                                </Spin>
+                            </div>
                         </div>
                     </div>
                 </div>

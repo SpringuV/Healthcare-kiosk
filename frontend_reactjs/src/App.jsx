@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Service from './components/service_selection'
+import Service from './components/clinic_room'
 import InputCCCD from './components/input_cccd'
 import Register from './components/register-user'
 import InfoInsurrance from './components/insurance/insurrance_info'
@@ -12,6 +12,7 @@ import PaymentControl from './components/payment/PaymentControl'
 import PaymentWithQR from './components/payment/PaymentWithQR'
 import ResultSearch from './components/history_check'
 import LayoutHome from './components/Layout/LayoutHome'
+import RegisterPage from './components/register'
 import { useGlobalContext } from './components/context/provider'
 import { useDispatch } from 'react-redux'
 import { clear_patient_register } from './actions/patient'
@@ -24,11 +25,12 @@ function App() {
         <Routes>
             {/* Trang chủ: không có step */}
             <Route path="/" element={<LayoutHome />}>
-                <Route path='/' element={<HomePage />} />
+                <Route index element={<HomePage />} />
                 <Route path="result-search" element={<InputCCCD mode="history" onClose={() => {
                     navigate(-1)
                     clearStateStepAndFlowType()
                 }} onSuccess={() => { navigate('/result') }} />} />
+                <Route path="register" element={<RegisterPage />} />
                 <Route path="result" element={<ResultSearch onClose={() => navigate(-1)} />} />
             </Route>
             {/* Flow Bảo hiểm y tế */}

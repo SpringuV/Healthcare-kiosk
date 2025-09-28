@@ -32,3 +32,4 @@ kiosk
 .env
 **/.env
 **/.venv
+.next

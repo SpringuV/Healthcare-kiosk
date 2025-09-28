@@ -6,6 +6,7 @@ import { patient_get_history_check, patient_put_cancelled_payment } from "../../
 import { useNavigate } from "react-router-dom"
 import dayjs from "dayjs"
 import { EyeOutlined, CloseCircleOutlined, CreditCardOutlined, LoadingOutlined } from "@ant-design/icons"
+import { useMessageProvider } from "../context/message_provider"
 
 const { RangePicker } = DatePicker
 function DataTable(props) {
@@ -22,6 +23,9 @@ function DataTable(props) {
     const [dateRange, setDateRange] = useState(null)
     const [localLoading, setLocalLoading] = useState(false)
 
+    // eslint-disable-next-line no-unused-vars
+    const { success, error, warning, contextHolder } = useMessageProvider()
+
     const patient = data_patient_history_booking?.patient
     const handleReload = async () => {
         try {
@@ -29,11 +33,13 @@ function DataTable(props) {
             const res = await patient_get_history_check(patient.citizen_id)
             if (res.ok) {
                 setOrders(res.data.history)
+                success("Load dữ liệu lại thành công")
             }
         } catch (err) {
             console.error(err)
+            error("Lỗi: " + err)
         } finally {
-            setLoadingTable(false)  // tắt loading
+            setLoadingTable(false) 
         }
     }
     // Đóng modal chi tiết
@@ -92,18 +98,21 @@ function DataTable(props) {
                         // Cập nhật trực tiếp UI
                         const newOrders = orders.map((item) => item.order_id === order.order_id ? { ...item, payment_status: "CANCELLED" } : item)
                         setOrders(newOrders)
-
+                        
                         // Nếu đang mở modal chi tiết, cập nhật luôn
                         if (selectedOrder?.order_id === order.order_id) {
                             setSelectedOrder({ ...order, payment_status: "CANCELLED" })
                         }
+                        success("Hủy thanh toán thành công")
                     } else {
                         Modal.error({ title: "Hủy đơn thất bại" })
+                        error("Hủy đơn thất bại")
                     }
                 } catch (err) {
                     setLoadingCancel(false)
                     console.error(err)
                     Modal.error({ title: "Đã có lỗi khi hủy đơn" })
+                    error("Đã có lỗi khi hủy đơn: " + err)
                 }
             },
         })
@@ -227,6 +236,19 @@ function DataTable(props) {
     ]
     return (
         <>
+            {contextHolder}
+            {/* modal load */}
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
+            </Modal>
             {/* Bộ lọc ngày */}
             <div className="flex items-center justify-end mb-3">
                 <label className="mr-3">Lọc theo ngày</label>
@@ -255,7 +277,15 @@ function DataTable(props) {
                 onCancel={onCancelModal}
                 footer={
                     selectedOrder?.payment_status?.trim()?.toUpperCase() === "UNPAID" ? (<div>
-                        <Button className="mr-2" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
+                        <Button className="hover:scale-105 transition-all duration-500 ease-in-out mr-3" type="primary" onClick={() => {
+                            const delay = [1000, 2000, 3000]
+                            setLocalLoading(true)
+                            setTimeout(() => {
+                                handlePaying(selectedOrder)
+                            }, delay[Math.floor(Math.random() * delay.length)])
+
+                        }}>Thanh toán lại</Button>
+                        <Button className="hover:scale-105 transition-all duration-500 ease-in-out mr-3 bg-red-400 hover:!bg-red-600" type="primary" onClick={() => handleCancelOrder(selectedOrder)}>Hủy thanh toán</Button>
                         <Button onClick={onCancelModal} type="dashed">Đóng</Button>
                     </div>) : (<Button onClick={onCancelModal}>Đóng</Button>)
                 }
@@ -265,17 +295,18 @@ function DataTable(props) {
             {/* Nút về trang chủ */}
             <div className="flex justify-between items-center mt-2">
                 <Tooltip title="Tải lại dữ liệu mới nhất">
-                    <Button onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
+                    <Button className="hover:scale-105 transition-all duration-500 ease-in-out" onClick={handleReload} type="primary" >Tải lại dữ liệu</Button>
                 </Tooltip>
                 <Tooltip title="Quay về trang chủ">
                     <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
-                        <Button disabled={localLoading} className="!text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
+                        <Button disabled={localLoading} className="hover:scale-105 transition-all duration-500 ease-in-out !text-base lg:!text-lg text-white !font-medium !px-5 !py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700"
                             onClick={() => {
+                                const delay = [1000, 2000, 3000]
                                 setLocalLoading(true)
                                 setTimeout(() => {
                                     handleReturnHome()
                                     setLocalLoading(false)
-                                }, Math.random(2000, 7000))
+                                }, delay[Math.floor(Math.random() * delay.length)])
                             }} type="button">
                             {localLoading === true ? "Đang xử lý ..." : "Về trang chủ"}
                         </Button>

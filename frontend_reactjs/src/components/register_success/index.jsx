@@ -13,6 +13,8 @@ function RegisterSuccess() {
     const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const patient_booking_service_data = useSelector(select_patient_booking_service_data)
     const [localLoading, setLocalLoading] = useState(false)
+    const [countDownTime, setCountDownTime] = useState(30)
+    const delay = [1000, 2000]
     useEffect(() => {
         if (flowType === "insurance") {
             setStateStep(3)
@@ -24,11 +26,34 @@ function RegisterSuccess() {
     const is_payment_again = paymentAgain && Object.keys(paymentAgain).length !== 0
     const handleReturnHomeInsur = () => {
         if (is_payment_again) {
-            navigate(-1)
+            navigate("/result")
         } else {
             navigate("/", { replace: true })
         }
     }
+
+    //  Auto play audio khi trang render
+    useEffect(() => {
+        const audio = new Audio("/audio/confirm_booking.mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
+
+    useEffect(() => {
+        if (countDownTime <= 0) {
+            if (is_payment_again) {
+                navigate("/result")
+            } else {
+                navigate("/", { replace: true })
+            }
+            return
+        }
+        const timer = setTimeout(() => {
+            setCountDownTime(previous => previous - 1)
+        }, 1000)
+        return () => clearTimeout(timer) // cleanup khi component unmount
+    }, [navigate, countDownTime, is_payment_again])
 
     useEffect(() => {
         const handlePopState = (e) => {
@@ -65,7 +90,7 @@ function RegisterSuccess() {
         address_room: fallback(patient_booking_service_data?.address_room, paymentAgain?.info_order?.clinic_name),
         doctor_name: fallback(patient_booking_service_data?.doctor_name, paymentAgain?.info_order?.doctor_name),
         queue_number: fallback(patient_booking_service_data?.queue_number, paymentAgain?.info_order?.queue_number),
-        is_insurrance: fallback(patient_booking_service_data?.is_insurrance, paymentAgain?.info_user?.is_insurrance),
+        use_insurance: fallback(patient_booking_service_data?.use_insurance, paymentAgain?.info_user?.use_insurance),
         time_order: fallback(patient_booking_service_data?.time_order, paymentAgain?.info_order?.time_order),
         price: fallback(patient_booking_service_data?.price, paymentAgain?.info_order?.price),
     }
@@ -99,7 +124,7 @@ function RegisterSuccess() {
                     <div className='bg-colorOne px-4 py-2 text-center text-white font-bold text-[16px] md:text-[18px] lg:text-[20px] rounded-t-lg'>
                         <h3>Xác nhận thông tin đăng kí</h3>
                     </div>
-
+ 
                     {/* Scrollable content */}
                     <div className='px-5 py-2 flex-1'>
                         <span className='flex justify-center items-center text-[18px] sm:text-[20px] md:text-[23px] lg:text-[25px] font-bold w-full mb-2'>PHIẾU KHÁM BỆNH</span>
@@ -112,12 +137,11 @@ function RegisterSuccess() {
                             ['Phòng khám:', displayInfoRegister.address_room],
                             ['Bác sĩ:', displayInfoRegister.doctor_name],
                             ['Số phiếu đợi:', displayInfoRegister.queue_number],
-                            ['Bảo hiểm y tế:', displayInfoRegister.is_insurrance ? 'Có' : 'Không'],
-                            // ['Sử dụng bảo hiểm y tế:', patientRegister.use_insurrance ? 'Có' : 'Không'],
+                            ['Sử dụng bảo hiểm y tế:', displayInfoRegister.use_insurance ? 'Có' : 'Không'],
                             ['Ngày đăng kí:', formatDate(displayInfoRegister.time_order)],
                             ['Giá khám:', `${Math.round(displayInfoRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`],
-                            // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Không" ? true : false],
-                            // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurrance === "Có" ? true : false],
+                            // ['Giá khám dịch vụ:', `${Math.round(patientRegister.price * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurance === "Không" ? true : false],
+                            // ['Giá khám bảo hiểm:', `${Math.round(patientRegister.price_insur * 26181).toLocaleString('vi-VN')} VNĐ`, patientRegister.is_insurance === "Có" ? true : false],
                         ].map(([label, value, isItalic], index) => (
                             <div key={index} className='py-2 flex justify-between items-center border-b-2 text-[14px] md:text-[16px] lg:text-[18px]'>
                                 <label>{label}</label>
@@ -134,18 +158,18 @@ function RegisterSuccess() {
                             <p className="text-gray-500 italic">Đang tải mã QR...</p>
                         )}
                     </div>
-                    <div className=' flex justify-center items-center px-5 py-3'>
+                    <div className=' flex justify-center flex-col items-center px-5 py-3'>
+                        <p className='text-green-700 text-base'>Trang sẽ tự động thoát sau: <span className='text-red-500'>{countDownTime}s</span></p>
                         <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
-                            <button className=' text-[14px] md:text-[16px] lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                            <button className='hover:scale-105 transition-all duration-300 ease-in-out text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                 onClick={() => {
-                                    const delay = [3000, 4000, 5000, 6000, 7000]
                                     setLocalLoading(true)
                                     setTimeout(() => {
                                         handleReturnHomeInsur()
                                         setLocalLoading(false)
                                     }, delay[Math.floor(Math.random() * delay.length)])
                                 }}
-                                type='button' >{localLoading === true ? "Đang xử lý ..." : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
+                                type='button' >{localLoading === true ? (<span className="loading-dots">Đang xử lý</span>) : is_payment_again === true ? "Quay về trang trước" : "Xác nhận và quay về trang chủ"}</button>
                         </Spin>
                     </div>
                 </div>

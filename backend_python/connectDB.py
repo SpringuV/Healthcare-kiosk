@@ -113,7 +113,7 @@ load_dotenv()
 
 # server
 
-def connect():
+def connect(dict=False):
     config = {
         'user': os.getenv("DB_USER"),
         'password': os.getenv("DB_PASSWORD"),
@@ -131,7 +131,10 @@ def connect():
 
     try:
         conn = mysql.connector.connect(**config)
-        cursor = conn.cursor()
+        if dict:
+            cursor = conn.cursor(dictionary=True)
+        else:
+            cursor = conn.cursor()
         return conn, cursor
     except mysql.connector.Error as err:
         print("Error connecting to database:", err)

@@ -4,14 +4,14 @@ import { useSelector } from "react-redux"
 import { select_insurance_check_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
-import { Spin } from "antd"
+import { Modal, Spin } from "antd"
 import { LoadingOutlined } from '@ant-design/icons'
 
 function InfoInsurrance() {
     const navigate = useNavigate()
     const insurance_info = useSelector(select_insurance_check_data)
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [1500, 2000, 2500]
     const handleChangePath = () => {
         if (insurance_info.is_saved) {
             navigate('/insur/service')
@@ -29,6 +29,17 @@ function InfoInsurrance() {
             <Helmet>
                 <title>Thông tin BHYT</title>
             </Helmet>
+            <Modal
+                open={localLoading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang xử lý, vui lòng chờ</div>
+            </Modal>
             {insurance_info ? (
                 <div className='fixed w-full inset-0 flex justify-center flex-col items-center backdrop-blur-sm p-1 bg-black/30'>
                     <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw]">
@@ -59,21 +70,39 @@ function InfoInsurrance() {
                             </div>
                         </div>
                         <div className="flex justify-center items-center p-3 bg-white rounded-b-md">
-                            <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                            <div className="w-full grid grid-cols-2 gap-5">
                                 <button
-                                    disabled={localLoading}
-                                    className="px-3 py-1 bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 font-semibold text-white"
-                                    onClick={() => {
-                                        const delay = [2000, 3000, 4000, 5000, 6000, 7000]
+                                    className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                            bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                            font-semibold text-white"
+                                    onClick={() => navigate("/insur")}
+                                >
+                                    Trở lại
+                                </button>
+                                <Spin spinning={localLoading} indicator={<LoadingOutlined />}>
+                                    <button
+                                        disabled={localLoading}
+                                        className="w-full hover:scale-105 transition-all duration-500 ease-in-out cursor-pointer px-3 py-2 
+                                                bg-gradient-to-r from-colorTwo to-colorFive rounded-lg hover:from-green-500 hover:to-emerald-600 
+                                                font-semibold text-white"
+                                        onClick={() => {
                                         setLocalLoading(true)
                                         setTimeout(() => {
                                             handleChangePath()
                                             setLocalLoading(false)
                                         }, delay[Math.floor(Math.random() * delay.length)])
-                                    }}>
-                                    {localLoading === true ? "Đang xử lý ..." : insurance_info.is_saved ? "Bước tiếp theo: Chọn dịch vụ khám" : "Bước tiếp theo: Cập nhật thông tin"}
-                                </button>
-                            </Spin>
+                                        }}
+                                    >
+                                        {localLoading ? (
+                                        <span className="loading-dots">Đang xử lý</span>
+                                        ) : insurance_info.is_saved ? (
+                                        "Bước tiếp theo: Chọn dịch vụ khám"
+                                        ) : (
+                                        "Bước tiếp theo: Cập nhật thông tin"
+                                        )}
+                                    </button>
+                                </Spin>
+                            </div>
                         </div>
                     </div>
                 </div>

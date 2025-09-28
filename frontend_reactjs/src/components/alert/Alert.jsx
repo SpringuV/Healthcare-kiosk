@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 
-function Alert({ textInput, onClose, onConfirm, showConfirmButton = true, confirmText = "Khám dịch vụ", cancelText = "Nhập lại thông tin" }) {
+function Alert({ textInput, onClose, onConfirm, showConfirmButton = true, showCancelButton = true, confirmText = "Khám dịch vụ", cancelText = "Nhập lại thông tin" }) {
     const navigate = useNavigate()
 
     const handleConfirm = () => {
@@ -22,9 +22,11 @@ function Alert({ textInput, onClose, onConfirm, showConfirmButton = true, confir
                         <span>{textInput}</span>
                     </div>
                     <div className="p-3 flex justify-end bg-gradient-to-r from-emerald-500 to-teal-700 rounded-b-xl">
-                        <button type="button" className="px-4 py-2 rounded-lg font-semibold text-white bg-gray-400 hover:bg-gray-500 mr-4" onClick={onClose}>
-                            {cancelText}
-                        </button>
+                        {showCancelButton && (
+                            <button type="button" className="px-4 py-2 rounded-lg font-semibold text-white bg-gray-400 hover:bg-gray-500 mr-4" onClick={onClose}>
+                                {cancelText}
+                            </button>
+                        )}
                         {showConfirmButton && (
                             <button
                                 type="button"

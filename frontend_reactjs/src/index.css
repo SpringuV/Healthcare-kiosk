@@ -12,9 +12,42 @@
     /* .ant-table-column-sorter-tooltip:hover {
         display: none !important;
     } */
+
+    /* Ẩn scrollbar trên Chrome, Edge, Safari */
+    .scroll-hidden::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Ẩn trên Firefox */
+    .scroll-hidden {
+        scrollbar-width: none;
+    }
 }
 
 @layer components {
+    .loading-dots::after {
+        content: "";
+        animation: dots 1s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+        0% {
+            content: "";
+        }
+
+        33% {
+            content: ".";
+        }
+
+        66% {
+            content: "..";
+        }
+
+        100% {
+            content: "...";
+        }
+    }
+
     .print-pdf {
         @apply text-sm p-4 w-[148mm] h-[210mm] bg-white text-black;
     }

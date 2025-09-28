@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button, Spin } from 'antd'
+import { Button, Modal, Spin } from 'antd'
 import Alert from '../alert/Alert'
 import { check_insurance_user, check_patient_existed, clear_insurance_check, history_booking_service } from '../../actions/patient'
 import {
@@ -16,6 +16,7 @@ import {
 import { useGlobalContext } from '../context/provider'
 import { Helmet } from 'react-helmet-async'
 import { LoadingOutlined } from '@ant-design/icons'
+import { useMessageProvider } from '../context/message_provider'
 
 function InputCCCD(props) {
     const { onClose, mode, onSuccess } = props
@@ -43,12 +44,14 @@ function InputCCCD(props) {
         cancelText: "Nhập lại thông tin",
         onConfirm: null
     })
-    const ctx = useGlobalContext()
+    const [delayLoading, setDelayLoading] = useState(false)
     // Hooks
+    const { success, error, warning, contextHolder } = useMessageProvider()
     const navigate = useNavigate()
     const inputRef = useRef(null)
-    const { setFlowType, setStateStep } = useGlobalContext()
-
+    const { setFlowType, setStateStep, setSelectedService } = useGlobalContext()
+    setSelectedService(null)
+    // const timeDelay = 2000
     // Setup initial state
     useEffect(() => {
         setStateStep(1)
@@ -60,6 +63,14 @@ function InputCCCD(props) {
             setFlowType("non-insurance")
         }
     }, [setStateStep, mode, setFlowType, dispatch])
+
+    //  Auto play audio khi trang render
+    useEffect(() => {
+        const audio = new Audio("/audio/input_cccd.mp3")
+        audio.play().catch(err => {
+            console.warn("Trình duyệt chặn autoplay, cần user interaction:", err)
+        })
+    }, [])
 
     const show_alert_with_config = (config) => {
         set_alert_config({
@@ -74,9 +85,11 @@ function InputCCCD(props) {
 
     const handle_insurance_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const result = await dispatch(check_insurance_user(input_value))
             if (result.ok) {
-                onSuccess?.(result.data)
+                onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 // Xử lý các trường hợp thất bại
                 if (result.need_register) {
@@ -91,6 +104,7 @@ function InputCCCD(props) {
                             })
                         }
                     })
+                    warning("Bạn cần đăng kí mới !")
                 } else {
                     show_alert_with_config({
                         text: result.message,
@@ -100,22 +114,29 @@ function InputCCCD(props) {
                             onClose()
                         }
                     })
+                    warning(result.message)
                 }
             }
-        } catch (error) {
+        } catch (err) {
             show_alert_with_config({
                 text: insurance_error || "Lỗi kết nối tới máy chủ",
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            console.error(err)
+            error("Kiểm tra thất bại: " + insurance_error)
+        } finally {
+            setDelayLoading(false)
         }
     }
 
     const handle_non_insurance_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const response = await dispatch(check_patient_existed(input_value))
             if (response.ok) {
-                onSuccess?.(response.data)
+                onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 if (response.need_register) {
                     show_alert_with_config({
@@ -129,6 +150,7 @@ function InputCCCD(props) {
                             })
                         }
                     })
+                    warning("Bạn cần đăng kí mới !")
                 } else {
                     show_alert_with_config({
                         text: response.message,
@@ -138,6 +160,7 @@ function InputCCCD(props) {
                             onClose()
                         }
                     })
+                    warning(response.message)
                 }
             }
         } catch (error) {
@@ -146,20 +169,26 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            error("Kiểm tra thất bại: " + insurance_error)
+        } finally {
+            setDelayLoading(false)
         }
     }
 
     const handle_history_mode = async (input_value) => {
         try {
+            setDelayLoading(true)
             const response = await dispatch(history_booking_service(input_value))
             if (response.ok) {
-                onSuccess?.(response.data)
+                onSuccess()
+                success("Kiểm tra thành công !")
             } else {
                 show_alert_with_config({
                     text: response.message || "Không tìm thấy lịch sử khám bệnh!",
                     showConfirmButton: false,
                     cancelText: "Đóng"
                 })
+                error("Kiểm tra thất bại: " + response.message)
             }
         } catch (error) {
             show_alert_with_config({
@@ -167,6 +196,9 @@ function InputCCCD(props) {
                 showConfirmButton: false,
                 cancelText: "Đóng"
             })
+            error("Kiểm tra thất bại: " + history_booking_error)
+        } finally {
+            setDelayLoading(false)
         }
     }
 
@@ -206,20 +238,39 @@ function InputCCCD(props) {
         history: history_booking_loading,
     }
     const is_loading = loadingMap[mode] || false
-
+    // useEffect(() => {
+    //     let timer
+    //     if (is_loading) {
+    //         setDelayLoading(true)
+    //     } else {
+    //         timer = setTimeout(() => setDelayLoading(false), timeDelay)
+    //     }
+    //     return () => clearTimeout(timer)
+    // }, [is_loading])
     return (
         <>
             <Helmet>
                 <title>Nhập CCCD</title>
             </Helmet>
-            <div className="fixed inset-0 flex justify-center items-center backdrop-blur-0">
+            <Modal
+                open={delayLoading || is_loading}
+                footer={null}
+                closable={false}
+                centered
+                maskClosable={false}
+                styles={{ body: { textAlign: "center" } }}
+            >
+                <LoadingOutlined spin style={{ fontSize: 48, color: "#2563eb" }} className="mb-3" />
+                <div className="text-lg font-semibold loading-dots">Đang kiểm tra thông tin, vui lòng chờ</div>
+            </Modal>
+            <div className=" flex justify-center items-center backdrop-blur-0">
                 <div className="w-[80vw] md:w-[50vw] lg:w-[40vw] bg-white z-[100] rounded-md">
                     <div className="flex justify-between w-full items-center py-2 bg-colorOne rounded-t-md">
                         <div className="text-center flex-1 text-white font-semibold text-[18px] lg:text-[22px]">
                             <h2>Nhập thông tin</h2>
                         </div>
                         <div>
-                            <Button onClick={onClose} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600'>
+                            <Button onClick={() => navigate("/register")} className='!outline-none !border-none mr-2 !text-white font-medium px-3 py-1 rounded-lg !bg-gradient-to-r from-colorTwo to-green-600 hover:!from-green-500 hover:!to-emerald-600 hover:scale-110 transition-all duration-500 ease-in-out'>
                                 Trở lại
                             </Button>
                         </div>
@@ -243,14 +294,13 @@ function InputCCCD(props) {
                             {error_message && (
                                 <p className="text-red-500 text-sm mb-3">{error_message}</p>
                             )}
-
-                            <Spin spinning={is_loading} indicator={<LoadingOutlined />}>
+                            <Spin spinning={delayLoading || is_loading} indicator={<LoadingOutlined />}>
                                 <button
                                     type="submit"
-                                    className="text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="hover:scale-105 transition-all duration-500 ease-in-out text-white font-medium mb-4 mt-4 px-3 py-1 rounded-lg bg-gradient-to-r from-colorTwo to-colorFive hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={handle_check_info}
-                                    disabled={is_loading}>
-                                    {is_loading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
+                                    disabled={delayLoading}>
+                                    {delayLoading ? 'Đang kiểm tra...' : 'Kiểm tra thông tin'}
                                 </button>
                             </Spin>
                         </form>
@@ -258,7 +308,7 @@ function InputCCCD(props) {
                 </div>
             </div>
 
-            {show_alert && (
+            {show_alert && !delayLoading && !is_loading && (
                 <Alert
                     textInput={alert_config.text}
                     onClose={() => set_show_alert(false)}

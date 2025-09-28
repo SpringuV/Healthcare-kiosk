@@ -3,9 +3,10 @@ import { useSelector } from "react-redux"
 import { select_history_booking_data } from "../../reducers"
 import DataTable from "./data_table"
 import InfoUser from "./info_user"
-import { Switch } from "antd"
+import { Button, Switch } from "antd"
 import { useEffect, useState } from "react"
 import DataGridList from "./data_grid_list"
+import { useNavigate } from "react-router-dom"
 function ResultSearch() {
     // State quản lý
     const patient_history_booking = useSelector(select_history_booking_data)
@@ -13,7 +14,7 @@ function ResultSearch() {
     const [isTable, setIsTable] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-
+    const navigate = useNavigate()
     const handleChangeDisplay = () => {
         setIsTable(!isTable)
     }
@@ -35,6 +36,10 @@ function ResultSearch() {
         window.addEventListener("resize", handleResize)
         return () => window.removeEventListener("resize", handleResize)
     }, [])
+
+    const handleBack = () => {
+        navigate(-1)
+    }
 
     return (
         <div className="mx-[5%] bg-white p-3 rounded-lg mb-20">
@@ -72,9 +77,25 @@ function ResultSearch() {
                     )}
                 </>
             ) : (
-                <div className="text-center text-red-500 font-bold">
-                    Không có thông tin người khám
-                </div>
+                <>
+                    <div className="w-full h-full flex flex-col justify-center items-center">
+                        <div className="text-center text-red-500 font-bold mb-3">
+                            Không có thông tin người khám
+                        </div>
+                        <Button onClick={handleBack} className='!px-4 !py-2 
+                                                                    !rounded-lg 
+                                                                    !font-semibold 
+                                                                    !text-white 
+                                                                    !bg-gradient-to-r !from-colorTwo !to-green-600
+                                                                    hover:!from-green-500 hover:!to-emerald-600
+                                                                    !border-none
+                                                                    focus:!outline-none focus:!ring-2 focus:!ring-green-400
+                                                                    !transition-all !duration-200'
+                        >
+                            Quay trở lại
+                        </Button>
+                    </div>
+                </>
             )}
         </div>
     )

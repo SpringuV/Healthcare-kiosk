@@ -1,17 +1,18 @@
 from datetime import datetime
 from connectDB import connect, disconnect
 from mysql.connector import Error
+from fastapi import HTTPException
 
 
-def isInsurrance(citizen_id: str):
+def isInsurance(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = """SELECT * FROM heath_insurrance WHERE citizen_id = %s"""
+        query = """SELECT * FROM heath_insurance WHERE citizen_id = %s LIMIT 1"""
         cursor.execute(query, (citizen_id,))
         result = cursor.fetchone()
         if result:
             now = datetime.now().date()
-            if result[6] <= now <= result[7]:
+            if result[7] <= now <= result[8]:
                 return True, "Bảo hiểm hợp lệ", result
             else:
                 return False, "Hết thời hạn bảo hiểm", result
@@ -19,24 +20,24 @@ def isInsurrance(citizen_id: str):
             return False, "Không có bảo hiểm", None
     except Exception as e:
         print(f"Error: {e}")
-        return False, str(e), None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
 
-def getInsurrance(citizen_id: str):
+def getInsurance(citizen_id: str):
     conn, cursor = connect()
     try:
-        query = """SELECT * FROM heath_insurrance WHERE citizen_id = %s"""
+        query = """SELECT * FROM heath_insurance WHERE citizen_id = %s LIMIT 1"""
         cursor.execute(query, (citizen_id,))
-        insurrance = cursor.fetchone()
-        if insurrance:
-            return insurrance
+        insurance = cursor.fetchone()
+        if insurance:
+            return insurance
         else:
             return None
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -53,54 +54,35 @@ def isHasPatientInfo(citizen_id: str):
             return False, "Không có thông tin bệnh nhân"
     except Exception as e:
         print(f"Error: {e}")
-        return False, str(e)
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
 
-def updatePatientInsurranceState(citizen_id: str, state: bool):
+def updatePatientInsuranceState(citizen_id: str, insurance_id: str | None = None):
     conn, cursor = connect()
     try:
-        state_int = 1 if state else 0
-        query = """SELECT is_insurrance FROM patient WHERE citizen_id = %s"""
-        cursor.execute(query, (citizen_id,))
-        data_state = cursor.fetchone()[0]
-        if data_state == state_int:
-            return True
-        query = """UPDATE patient SET is_insurrance = %s WHERE citizen_id = %s"""
-        cursor.execute(query, (state_int, citizen_id))
+        query = """UPDATE patient SET insurance_id = %s WHERE citizen_id = %s"""
+        cursor.execute(query, (insurance_id, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
         print(f"Error: {e}")
-        return False
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
 
 def savePatientInfo(
-    citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance
+    citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, insurance_id
 ):
     conn, cursor = connect()
     try:
-        insur_int = 1 if is_insurrance else 0
         gender_int = 1 if gender else 0  # Convert boolean to int
 
         query = """INSERT INTO patient 
-                   (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, is_insurrance) 
+                   (citizen_id, fullname, gender, dob, address, phone_number, ethnic, job, insurance_id) 
                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-
-        print(f"Executing query with data:")
-        print(f"citizen_id: {citizen_id}")
-        print(f"fullname: {fullname}")
-        print(f"gender: {gender} -> {gender_int}")
-        print(f"dob: {dob}")
-        print(f"address: {address}")
-        print(f"phone_number: {phone_number}")
-        print(f"ethnic: {ethnic}")
-        print(f"job: {job}")
-        print(f"is_insurrance: {is_insurrance} -> {insur_int}")
-
         cursor.execute(
             query,
             (
@@ -112,7 +94,7 @@ def savePatientInfo(
                 phone_number,
                 ethnic,
                 job,
-                insur_int,
+                insurance_id,
             ),
         )
         conn.commit()
@@ -132,21 +114,21 @@ def savePatientInfo(
             return False, f"Lỗi cơ sở dữ liệu: {str(e)}"
     except Exception as e:
         print(f"Unexpected Error: {e}")
-        return False, f"Lỗi hệ thống: {str(e)}"
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
 
-def updatePatientInfo(citizen_id, address, ethnic, job):
+def updatePatientInfo(citizen_id, address, ethnic, job, insurance_id):
     conn, cursor = connect()
     try:
-        query = """UPDATE patient SET address = %s, ethnic = %s, job = %s, is_insurrance = 1 WHERE citizen_id = %s"""
-        cursor.execute(query, (address, ethnic, job, citizen_id))
+        query = """UPDATE patient SET address = %s, ethnic = %s, job = %s, insurance_id = %s WHERE citizen_id = %s"""
+        cursor.execute(query, (address, ethnic, job, insurance_id, citizen_id))
         conn.commit()
         return cursor.rowcount != 0
     except Exception as e:
         print(f"Error: {e}")
-        return False
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -163,7 +145,7 @@ def getPatient(citizen_id: str):
             return None
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -172,20 +154,21 @@ def getServices():
     conn, cursor = connect()
     try:
         query = """SELECT
+        c.clinic_name,
         s.service_name,
         s.service_description,
         s.price
-        FROM service s
-        JOIN clinic_service cs ON s.service_id = cs.service_id
+        FROM clinic_service cs
+        JOIN service s ON cs.service_id = s.service_id
+        JOIN clinic c ON cs.clinic_id = c.clinic_id
         WHERE cs.service_status = 1
-        GROUP BY s.service_name, s.service_description, s.price
-        ORDER BY s.service_name;"""
+        ORDER BY c.clinic_name, s.service_name;"""
         cursor.execute(query)
         services = cursor.fetchall()
         return services
     except Exception as e:
         print(f"Error: {e}")
-        return []
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -207,7 +190,7 @@ def getNextQueueNumber(clinic_service_id: str):
             return current + 1
     except Exception as e:
         print(f"Error: {e}")
-        return 1
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -226,7 +209,7 @@ def getPatientHistory(citizen_id: str):
             p.phone_number,
             p.ethnic,
             p.job,
-            p.is_insurrance,
+            p.insurance_id,
             o.order_id,
             o.create_at AS time_order,
             o.queue_number,
@@ -252,7 +235,7 @@ def getPatientHistory(citizen_id: str):
         return [dict(zip(columns, row)) for row in history]
     except Exception as e:
         print(f"Error: {e}")
-        return []
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -273,6 +256,7 @@ def getClinicServiceID(service_name: str):
         return clinic_service_id
     except Exception as e:
         print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -282,7 +266,7 @@ def getPrice(
 ):
     conn, cursor = connect()
     try:
-        query = """SELECT s.price, s.price_insurrance 
+        query = """SELECT s.price, s.price_insurance 
         FROM service s
         JOIN clinic_service cs ON s.service_id = cs.service_id
         WHERE s.service_name = %s AND cs.clinic_service_id = %s LIMIT 1"""
@@ -291,16 +275,16 @@ def getPrice(
         if not price_values:
             return 0
         price, price_insur = price_values
-        query = """SELECT is_insurrance FROM patient WHERE citizen_id = %s"""
+        query = """SELECT insurance_id FROM patient WHERE citizen_id = %s"""
         cursor.execute(query, (citizen_id,))
         state = cursor.fetchone()[0]
-        if state == 1 and type_order == "insurance":
+        if state != None and type_order == "insurance":
             return price_insur
         else:
             return price
     except Exception as e:
         print(f"Error: {e}")
-        return 0
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -314,7 +298,7 @@ def cancelOrder(order_id: str):
         return cursor.rowcount != 0
     except Exception as e:
         print(f"Error cancelOrder: {e}")
-        return False
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -322,52 +306,65 @@ def cancelOrder(order_id: str):
 def createOrder(citizen_id: str, service_name: str, type_order: str):
     conn, cursor = connect()
     try:
-        if type_order == "insurance":
-            activate, _, _ = isInsurrance(citizen_id)
-            if not activate:
-                return None
         clinic_service_id = getClinicServiceID(service_name)
         query = """INSERT INTO orders 
         (queue_number, citizen_id, clinic_service_id, payment_method, payment_status, price)
         VALUES
         (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(
-            query,
-            (
-                getNextQueueNumber(clinic_service_id),
-                citizen_id,
-                clinic_service_id,
-                "CASH",
-                "UNPAID",
-                getPrice(citizen_id, clinic_service_id, service_name, type_order),
-            ),
-        )
+        if type_order == "insurance":
+            activate, _, _ = isInsurance(citizen_id)
+            if not activate:
+                return None
+            cursor.execute(
+                query,
+                (
+                    getNextQueueNumber(clinic_service_id),
+                    citizen_id,
+                    clinic_service_id,
+                    "INSURANCE",
+                    "PAID",
+                    getPrice(citizen_id, clinic_service_id, service_name, type_order),
+                ),
+            )
+        elif type_order == "non-insurance":
+            cursor.execute(
+                query,
+                (
+                    getNextQueueNumber(clinic_service_id),
+                    citizen_id,
+                    clinic_service_id,
+                    "CASH",
+                    "UNPAID",
+                    getPrice(citizen_id, clinic_service_id, service_name, type_order),
+                ),
+            )
         conn.commit()
         new_id = cursor.lastrowid
         return new_id
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
 
 def getOrder(order_id: str):
-    conn, cursor = connect()
+    conn, cursor = connect(dict=True)
     try:
-        query1 = """SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance, o.clinic_service_id
+        query1 = """SELECT o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.insurance_id, o.clinic_service_id
         FROM orders o
         JOIN patient p ON o.citizen_id = p.citizen_id
         WHERE o.order_id = %s LIMIT 1
         """
         cursor.execute(query1, (order_id,))
         info1 = cursor.fetchone()
+
         if info1 is None:
             print(f"Error info1")
             return None
-        clinic_service_id = info1[-1]
-        query2 = """SELECT s.service_name, c.clinic_name, c.address_room, st.fullname, s.price_insurrance
+        clinic_service_id = info1["clinic_service_id"]
+        query2 = """SELECT s.service_name, c.clinic_name, c.address_room, st.fullname AS doctor_name, s.price_insurance
         FROM clinic_service cs
         JOIN service s ON cs.service_id = s.service_id
         JOIN clinic c ON cs.clinic_id = c.clinic_id
@@ -380,12 +377,12 @@ def getOrder(order_id: str):
         if info2 is None:
             print(f"Error info2")
             return None
-        use_insurrance = True if float(info1[-3]) == float(info2[-1]) else False
-        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurrance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurrance
-        return list(info1) + list(info2[0:-1]) + [use_insurrance]
+        use_insurance = True if float(info1["price"]) == float(info2["price_insurance"]) else False
+        # o.citizen_id, p.fullname, p.gender, p.dob, o.queue_number, o.create_at, o.price, p.is_insurance o.clinic_service_id, s.service_name, c.clinic_name, c.address_room, st.fullname, use_insurance
+        return info1 | info2 | {"use_insurance": use_insurance}
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -401,7 +398,7 @@ def getOrderInfo(order_id: str):
         return order
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -415,7 +412,7 @@ def setPaymentMethod(order_id: str, method: str):
         return cursor.rowcount != 0
     except Exception as e:
         print(f"Error: {e}")
-        return False
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -433,7 +430,7 @@ def getTransferState(order_id: str):
         return True, ""
     except Exception as e:
         print(f"Error: {e}")
-        return False, "Lỗi backend"
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
 
@@ -447,6 +444,6 @@ def updateTransferState(order_id: str):
         return cursor.rowcount != 0
     except Exception as e:
         print(f"Error: {e}")
-        return False
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)

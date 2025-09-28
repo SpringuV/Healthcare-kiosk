@@ -7,7 +7,8 @@ import { select_patient_booking_service_data } from "../../reducers"
 import { useGlobalContext } from "../context/provider"
 import { Helmet } from "react-helmet-async"
 import { Spin } from "antd"
-
+import { LoadingOutlined } from "@ant-design/icons"
+import { useMessageProvider } from "../context/message_provider"
 function PaymentWithQR() {
     const navigate = useNavigate()
     const [showButtonReturn, setShowButtonReturn] = useState(false)
@@ -16,7 +17,7 @@ function PaymentWithQR() {
     const { flowType, setStateStep, paymentAgain } = useGlobalContext()
     const is_payment_again = paymentAgain && Object.keys(paymentAgain).length !== 0
     const [localLoading, setLocalLoading] = useState(false)
-
+    const delay = [2000, 3000, 4000]
     const handleShowButtonReturn = () => {
         setShowButtonReturn(true)
     }
@@ -29,6 +30,10 @@ function PaymentWithQR() {
         month: "long",
         year: "numeric"
     })
+    const text_pay_success = "Bạn đã thanh toán thành công !" 
+    const text_pay_error = "Thanh toán không thành công !"
+    // eslint-disable-next-line no-unused-vars
+    const { success, error, warning, contextHolder } = useMessageProvider()
 
     const handleConfirmRegistration = () => {
         navigate("/non-insur/confirm-registration")
@@ -83,14 +88,16 @@ function PaymentWithQR() {
                 setTextSuccess("Bạn đã thanh toán thành công, vui lòng trở lại trang chủ !")
                 setShowTimeDown(false)
                 setShowButtonReturn(true)
+                success(text_pay_success)
                 ws.close(); // Đóng socket khi đã có kết quả
             }
         };
         ws.onclose = () => {
             console.log("WebSocket đã đóng");
         };
-        ws.onerror = (error) => {
-            console.error("Lỗi WebSocket:", error);
+        ws.onerror = (err) => {
+            console.error("Lỗi WebSocket:", err)
+            error(text_pay_error)
         };
         // cleanup khi component unmount
         return () => {
@@ -109,6 +116,7 @@ function PaymentWithQR() {
             <Helmet>
                 <title>Thanh toán QR</title>
             </Helmet>
+            {contextHolder}
             <div className="flex flex-col md:grid md:grid-cols-2 px-[7%] gap-3">
                 <div>
                     <h1 className="text-center text-[20px] md:text-[25px] font-bold mb-2">Mã QR chuyển khoản ngân hàng</h1>
@@ -157,9 +165,8 @@ function PaymentWithQR() {
                                     {isFailPayment ? (
                                         <button
                                             disabled={localLoading}
-                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            className='hover:scale-105 transition-all duration-300 ease-in-out text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
-                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
                                                 setLocalLoading(true)
                                                 setTimeout(() => {
                                                     handleConfirmAndReturnHome()
@@ -171,9 +178,8 @@ function PaymentWithQR() {
                                     ) : (
                                         <button
                                             disabled={localLoading}
-                                            className='text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
+                                            className='hover:scale-105 transition-all duration-300 ease-in-out text-center text-base lg:text-[18px] text-white font-medium px-5 py-2 rounded-xl bg-gradient-to-r from-colorOneDark to-colorOne hover:to-emerald-700 hover:from-cyan-700'
                                             onClick={() => {
-                                                const delay = [2000, 3000, 4000, 5000, 6000, 7000]
                                                 setLocalLoading(true)
                                                 setTimeout(() => {
                                                     handleConfirmRegistration()

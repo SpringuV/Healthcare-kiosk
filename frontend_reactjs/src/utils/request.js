@@ -1,4 +1,5 @@
 import { DOMAIN } from "../data/port"
+import { getToken } from "./token"
 
 export const get = async (path) => {
     try {
@@ -13,10 +14,16 @@ export const get = async (path) => {
 
 export const post = async (path, dataRequest) => {
     try {
+        let auth = null
+        const token = getToken()
+        if (token) {
+            auth = `Bearer ${token}`
+        }
         const response = await fetch(`${DOMAIN}${path}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": auth
             },
             body: JSON.stringify(dataRequest)
         })
