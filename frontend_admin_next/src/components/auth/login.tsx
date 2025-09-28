@@ -22,7 +22,7 @@ import {
 import { Button, Modal, Space, theme } from 'antd';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 const LoginUI = () => {
@@ -82,7 +82,7 @@ const LoginUI = () => {
         console.log("Lỗi validate: ", err);
     }
     return (
-        <>
+        <React.Fragment>
             {contextHolder}
             <Modal
                 centered
@@ -215,7 +215,7 @@ const LoginUI = () => {
                     </div>
                 </ProConfigProvider>
             </div>
-        </>
+        </React.Fragment>
     );
 }
 
