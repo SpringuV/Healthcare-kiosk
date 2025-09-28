@@ -36,20 +36,46 @@ def updateAccountState(account_id: int, state: int):
         disconnect(conn, cursor)
 
 
-def checkAccount(id, type="CASHIER"):
+def save_session(session_id: str, account_id: str, refresh_token: str, access_exp: datetime):
+    conn, cursor = connect()
+    try:
+        query = "INSERT INTO sessions (session_id, account_id, refresh_token, access_exp) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (session_id, account_id, refresh_token, access_exp))
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
+    finally:
+        disconnect(conn, cursor)
+
+def delete_session(account_id: str):
+    conn, cursor = connect()
+    try:
+        query = "DELETE FROM sessions WHERE account_id = %s"
+        cursor.execute(query, (account_id,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi không xác định")
+    finally:
+        disconnect(conn, cursor)
+
+def get_session(session_id: str = None, account_id: str = None):
     conn, cursor = connect(dict=True)
     try:
-        query = "SELECT username, state FROM account WHERE account_id = %s LIMIT 1"
-        cursor.execute(query, (id,))
-        user = cursor.fetchone()
-        if user != None:
-            if user["username"] == "admin" and type == "ADMIN":
-                return True
-            if user["username"] != "admin" and type == "CASHIER":
-                if user["state"] == 0:
-                    raise HTTPException(status_code=403, detail="Tài khoản đã bị khóa")
-                return True
-        return False
+        if session_id is not None:
+            query = "SELECT * FROM sessions WHERE session_id = %s LIMIT 1"
+            cursor.execute(query, (session_id,))
+        elif account_id is not None:
+            query = "SELECT * FROM sessions WHERE account_id = %s LIMIT 1"
+            cursor.execute(query, (account_id,))
+        else:
+            return None
+        session = cursor.fetchone()
+        if session != None:
+            return session
+        else:
+            return None
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail="Lỗi không xác định")
@@ -72,23 +98,22 @@ def hasAdmin():
     finally:
         disconnect(conn, cursor)
 
-
-def createAdminAccount(salt: str, hash_pass: str, email: str | None = None):
+def createAdminAccount(account_id: str, salt: str, hash_pass: str, email: str | None = None):
     conn, cursor = connect()
     try:
-        query = "INSERT INTO account (username, realname, citizen_id, salt, hash_pass, email) VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute(query, ("admin", "admin", "admin", salt, hash_pass, email))
+        query = "INSERT INTO account (account_id, realname, citizen_id, username, salt, hash_pass, email) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (account_id, "admin", "admin", "admin", salt, hash_pass, email))
         conn.commit()
         new_id = cursor.lastrowid
         return new_id
     except Exception as e:
         print(f"Error: {e}")
-        raise HTTPException(status_code=500, detail="Lỗi không xác định")
+        return None
     finally:
         disconnect(conn, cursor)
 
-
 def createAccount(
+    account_id: str,
     realname: str,
     citizen_id: str,
     username: str,
@@ -102,27 +127,27 @@ def createAccount(
         # Nếu tạo tài khoản admin
         if username.lower() == "admin":
             if not hasAdmin():
-                createAdminAccount(salt, hash_pass, email)
+                createAdminAccount(account_id, salt, hash_pass, email)
                 return True, "Tài khoản admin đã được tạo"
             else:
                 return False, "Đã tồn tại tài khoản admin"
 
         # Nếu là user thường
-        state = 1   # mặc định active
+        state = 1  # mặc định active
         active_exp = None
         if active_code:
-            # chỉ dùng khi xác thực OTP đổi mật khẩu (sau này)
             active_exp = datetime.now() + timedelta(minutes=15)
             state = 2
 
         query = """
             INSERT INTO account 
-            (username, realname, citizen_id, salt, hash_pass, email, state, active_code, active_exp)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (account_id, username, realname, citizen_id, salt, hash_pass, email, state, active_code, active_exp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(
             query,
             (
+                account_id,
                 username,
                 realname,
                 citizen_id,
@@ -135,7 +160,6 @@ def createAccount(
             ),
         )
         conn.commit()
-
         return True, "Tạo tài khoản thành công"
 
     except IntegrityError as e:
@@ -150,38 +174,21 @@ def createAccount(
     finally:
         disconnect(conn, cursor)
 
-def lockAccount(account_id: str, action: str):
-    user = getAccount(id=account_id)
-    if user == None:
-        raise HTTPException(
-            status_code=404, detail=f"""Người dùng Id:{account_id} không tồn tại"""
-        )
-    elif user["username"] == "admin" and action == "lock":
-        raise HTTPException(
-            status_code=405, detail=f"""Không thể khóa tài khoản Admin"""
-        )
-    if action == "lock":
-        status = 0
-        result = f"Khóa tài khoản {user['username']} thành công"
-    elif action == "unlock":
-        status = 1
-        result = f"Mở khóa tài khoản {user['username']} thành công"
-    else:
-        raise HTTPException(
-            status_code=400, detail='''Action chỉ nhận "lock" hoặc "unlock"'''
-        )
+def lockAccount(account_id: str, status: int):
+    """
+    Cập nhật trạng thái tài khoản trong database
+    status: 0 = khóa, 1 = mở khóa
+    """
     conn, cursor = connect()
     try:
         query = "UPDATE account SET state = %s WHERE account_id = %s"
         cursor.execute(query, (status, account_id))
         conn.commit()
-        return result
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in lockAccount: {e}")
         raise HTTPException(status_code=500, detail="Lỗi không xác định")
     finally:
         disconnect(conn, cursor)
-
 
 def deleteAccount(account_id):
     user = getAccount(id=account_id)
@@ -189,6 +196,7 @@ def deleteAccount(account_id):
         raise HTTPException(
             status_code=404, detail=f"""Người dùng Id:{account_id} không tồn tại"""
         )
+
     conn, cursor = connect()
     try:
         query = "DELETE FROM account WHERE account_id = %s"
@@ -217,19 +225,21 @@ def getAccount(username: str = None, id: str = None, email: str = None):
         else:
             return None
         account = cursor.fetchone()
-        return account
+        if account != None:
+            return account
+        else:
+            return None
     except Exception as e:
         print(f"Error: {e}")
-        raise HTTPException(status_code=500, detail="Lỗi không xác định")
+        return None
     finally:
         disconnect(conn, cursor)
 
-
-def updateTimeAccessExpire(account_id: str, time: datetime):
+def updateTimeAccessExpire(session_id: str, time: datetime):
     conn, cursor = connect(dict=True)
     try:
-        query = "UPDATE account SET access_exp = %s WHERE account_id = %s"
-        cursor.execute(query, (time, account_id))
+        query = "UPDATE sessions SET access_exp = %s WHERE session_id = %s"
+        cursor.execute(query, (time, session_id))
         conn.commit()
     except Exception as e:
         print(f"Error: {e}")
