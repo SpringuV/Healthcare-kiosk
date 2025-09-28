@@ -6,7 +6,9 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Depends,
-    status
+    status,
+    Response,
+    Cookie
 )
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -18,6 +20,7 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import timezone, timedelta, datetime
 from random import choices
+from dotenv import load_dotenv
 from patientAction import (
     cancelOrder,
     getPatientHistory,
@@ -39,13 +42,15 @@ from adminAction import (
     createAccount,
     getAccount,
     updateTimeAccessExpire,
-    checkAccount,
     lockAccount,
     deleteAccount,
     changePass,
     getOrders,
     getCashiers,
-    getDashboardInfos
+    getDashboardInfos,
+    save_session,
+    delete_session,
+    get_session
 )
 from cashierAction import payCashOrder
 
@@ -53,14 +58,19 @@ from qrMaker import makeQRCode
 from pdfMaker import makePDF, round_like_js
 
 import asyncio
+import os
 
-IP = "127.0.0.1"
-PORT = "8000"
+load_dotenv()
+SECURE = os.getenv("SECURE", "false").lower() == "true"
+SAMESITE = os.getenv("SAMESITE")
 
 SECRET_KEY = "v8P2shAY3fDKWuz5qZt0mXNaHy1Lrj"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 5
-ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 10
+PATIENT_TOKEN_EXPIRE_MINUTES = 5
+ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 45
+CASHIER_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
@@ -69,7 +79,7 @@ cryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oAuthBearer = OAuth2PasswordBearer(tokenUrl="token")
 
 default_password = "123@Abc"
-space = "124567890qwertyuiopasdfghjklzxcvbnm"
+space = "124567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
 
 def create_random_str(k: int):
     s = choices(space, k=k)
@@ -80,7 +90,7 @@ def create_token_type_1(citizen_id):
     to_encode = {}
     hash_id = cryptContext.hash(citizen_id)
     to_encode.update({"sub": hash_id})
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=PATIENT_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encode
@@ -97,62 +107,90 @@ def verify_token_type_1(token, citizen_id):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token lỗi")
     
-def create_token_type_2(id, typeAccess):
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    updateTimeAccessExpire(id, expire)
+def create_token_type_2(id, time, typeAccess, session_id=None):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=time)
     to_encode = {}
     to_encode.update({"sub": str(id)})
     to_encode.update({"aud": typeAccess+"_SERVICES"})
     to_encode.update({"exp": expire})
+    if session_id:
+        to_encode.update({"sid": session_id})
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encode
+    return encode, expire
 
-def refresh_token_type_2(token):
-    code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
-    id = code.get("sub")
-    account = getAccount(id=id)
-    if account["state"] == 0:
-        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    updateTimeAccessExpire(id, expire)
-    code.update({"exp": expire})
-    encode = jwt.encode(code, SECRET_KEY, algorithm=ALGORITHM)
-    return encode
-
-
-def verify_token_type_2(token):
+# kiểm tra access token admin, cashier cho các hành động chung (đổi pass, logout)
+def verify_token_type_2(token: str = Depends(oAuthBearer)):
     try:
         code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+        aud = code.get("aud")
+        if aud not in ("ADMIN_SERVICES", "CASHIER_SERVICES"):
+            raise JWTError("Invalid audience")
         id = code.get("sub")
-        type_service = code.get("aud")
-        if type_service == "ADMIN_SERVICES":
-            if checkAccount(id, type="ADMIN"):
-                return "ADMIN", id
-            raise HTTPException(status_code=403, detail="Không có thẩm quyền")
-        elif type_service == "CASHIER_SERVICES":
-            if checkAccount(id):
-                return "CASHIER", id
-            raise HTTPException(status_code=403, detail="Không có thẩm quyền")
-        else:
-            raise HTTPException(status_code=404, detail="Không xác thực được người dùng")
+        if get_session(account_id=id) is None:
+            raise HTTPException(status_code=404, detail="Phiên làm việc không hợp lệ")
+        account = getAccount(id=id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="Tài khoản không hợp lệ")
+        if account["state"] == 0:
+            raise HTTPException(status_code=497, detail="Tài khoản đã bị khóa")
+        return id
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=499, detail="Hết phiên làm việc")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token không hợp lệ")
+
+# kiểm tra access token admin   
+def verify_token_admin(token: str = Depends(oAuthBearer)):
+    try:
+        code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience="ADMIN_SERVICES")
+        id = code.get("sub")
+        if get_session(account_id=id) is None:
+            raise HTTPException(status_code=404, detail="Phiên làm việc không hợp lệ")
+        account = getAccount(id=id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="Tài khoản không hợp lệ")
+        return id
     except ExpiredSignatureError:
         raise HTTPException(status_code=499, detail="Hết phiên làm việc")
     except JWTError as e:
-        print("JWT decode error:", str(e))  # log lỗi cụ thể
-        raise HTTPException(status_code=401, detail="Token lỗi")
+        print("JWT decode error:", str(e))
+        raise HTTPException(status_code=401, detail="Token không hợp lệ")
+
+# kiểm tra access token cashier   
+def verify_token_cashier(token: str = Depends(oAuthBearer)):
+    try:
+        code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience="CASHIER_SERVICES")
+        id = code.get("sub")
+        if get_session(account_id=id) is None:
+            raise HTTPException(status_code=404, detail="Phiên làm việc không hợp lệ")
+        account = getAccount(id=id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="Tài khoản không hợp lệ")
+        if account["state"] == 0:
+            raise HTTPException(status_code=497, detail="Tài khoản đã bị khóa")
+        return id
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=499, detail="Hết phiên làm việc")
+    except JWTError as e:
+        print("JWT decode error:", str(e))
+        raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    while True:
+        account_id = create_random_str(k=10)
+        if getAccount(id=account_id) is None:
+            break
     salt = create_random_str(k=10)
     hash_pass = cryptContext.hash(salt+default_password)
-    result, detail = createAccount("", "", "admin", salt, hash_pass)
+    result, detail = createAccount(account_id, "", "", "admin", salt, hash_pass)
     if result:
-        print("Đã tạo thành công tài khoản admin")
+        print("INFO: Đã tạo thành công tài khoản admin")
     else:
         print(detail)
     yield
-    print("Shutdown")
+    print("INFO: Shutdown")
 
 app = FastAPI(lifespan=lifespan) 
 
@@ -223,9 +261,9 @@ def check_insurance(citizen_id: str):
         return {
             "citizen_id": insurance[0],
             "full_name": insurance[2],
-            "dob": insurance[4].isoformat() if insurance[4] else None,  # Format date
-            "valid_from": insurance[7].isoformat() if insurance[7] else None,
-            "expired": insurance[8].isoformat() if insurance[8] else None,
+            "dob": insurance[4].isoformat(),
+            "valid_from": insurance[7].isoformat(),
+            "expired": insurance[8].isoformat(),
             "registration_place": insurance[6],
             "phone_number": insurance[5],
             "gender": "Nam" if insurance[3] == 1 else "Nữ",
@@ -336,9 +374,9 @@ def makeOrder(citizen_id: str, orderInfo: OrderInfo, token: str = Depends(oAuthB
             "citizen_id": order["citizen_id"],
             "fullname": order["fullname"],
             "gender": "Nam" if order["gender"] == 1 else "Nữ",
-            "dob": order["dob"].isoformat() if order["dob"] else None,
+            "dob": order["dob"].isoformat(),
             "queue_number": order["queue_number"],
-            "time_order": order["create_at"].isoformat() if order["create_at"] else None,
+            "time_order": order["create_at"].isoformat(),
             "is_insurance": bool(order["insurance_id"]),
             "use_insurance": order["use_insurance"],
             "service_name": order["service_name"],
@@ -453,7 +491,7 @@ def getPatientHistoryAPI(citizen_id: str):
         "citizen_id": first["citizen_id"],
         "fullname": first["fullname"],
         "gender": "Nam" if first["gender"] == 1 else "Nữ",
-        "dob": first["dob"].isoformat() if first["dob"] else None,
+        "dob": first["dob"].isoformat(),
         "address": first["address"],
         "phone_number": first["phone_number"],
         "ethnic": first["ethnic"],
@@ -509,7 +547,6 @@ def cancelOrderAPI(order_id: str):
         return JSONResponse(
             status_code=400, content={"message": "Đơn hàng đã bị hủy trước đó"}
         )
-
     if cancelOrder(order_id):
         return JSONResponse(
             status_code=200,
@@ -523,126 +560,170 @@ def cancelOrderAPI(order_id: str):
 # đăng nhập
 @app.post("/api/login")
 def login(loginInfo: FormLogin):
+    # Kiểm tra tài khoản
     account = getAccount(username=loginInfo.username)
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
     if account["state"] == 0:
-        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
-    if account["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
-        raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
+        raise HTTPException(status_code=497, detail="Tài khoản đã bị khóa")
+    # Kiểm tra phiên làm việc
+    session = get_session(account_id=account["account_id"])
+    if session is not None:
+        if session["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+            raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
+    # Kiểm tra mật khẩu
     if cryptContext.verify(account["salt"]+loginInfo.password, account["hash_pass"]):
-        typeAccess = "CASHIER"
+        delete_session(account_id=account["account_id"])
         if account["username"] == "admin":
             typeAccess = "ADMIN"
-        token = create_token_type_2(account["account_id"], typeAccess)
-        respone = JSONResponse(status_code=200, content={
-            "token": token
-        })
-        return respone
+            time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+            time_refresh = ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
+        else:
+            typeAccess = "CASHIER"
+            time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+            time_refresh = CASHIER_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
+        while True:
+            session_id = create_random_str(k=36)
+            if get_session(session_id=session_id) is None:
+                break
+        access_token, expire = create_token_type_2(account["account_id"], time_access, typeAccess)
+        refresh_token, _ = create_token_type_2(account["account_id"], time_refresh, typeAccess, session_id)
+        save_session(session_id, account["account_id"], refresh_token, expire)
+        response = JSONResponse(
+            content={"access_token": access_token, "token_type": "bearer"}
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=SECURE,
+            samesite=SAMESITE,
+            max_age=time_refresh * 60
+        )
+        return response
     else:
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
     
 # đăng xuất
 @app.post("/api/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(token: str = Depends(oAuthBearer)):
-    _, id = verify_token_type_2(token)
-    account = getAccount(id=id)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
-    if account["state"] == 0:
-        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
-    updateTimeAccessExpire(id, datetime.now(timezone.utc))
+def logout(id: str = Depends(verify_token_type_2)):
+    delete_session(account_id=id)
     return
 
 # gia hạn
 @app.post("/api/refresh_token")
-def refresh(token: str = Depends(oAuthBearer)):
-    token = refresh_token_type_2(token)
-    return JSONResponse(status_code=200, content={"token": token})
+def refresh(request: Request):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Không có refresh token")
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+        account_id = payload.get("sub")
+        # Kiểm tra tài khoản
+        account = getAccount(id=account_id)
+        if account["state"] == 0:
+            raise HTTPException(status_code=497, detail="Tài khoản đã bị khóa")
+        # Kiểm tra phiên làm việc
+        session = get_session(account_id=account_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Không có session lưu")
+        session_id = payload.get("sid")
+        if session["session_id"] == session_id and session["refresh_token"] == refresh_token:
+            pass
+        else:
+            raise HTTPException(status_code=401, detail="Thông tin session lưu không chính xác")
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=498, detail="Refresh token hết hạn")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token không hợp lệ")
+
+    if account["username"] == "admin":
+        time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        typeAccess = "ADMIN"
+    else:
+        time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        typeAccess = "CASHIER"
+    access_token, _ = create_token_type_2(account_id, time_access, typeAccess)
+    updateTimeAccessExpire(session_id=session_id, time=datetime.now(timezone.utc) + timedelta(minutes=time_access))
+    return JSONResponse(status_code=200, content={"access_token": access_token, "token_type": "bearer"})
 
 # dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")
-def getDashboardInfo(token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
+def getDashboardInfo(id: str = Depends(verify_token_admin)):
     datas = []
-    if code == "ADMIN":
-        infos = getDashboardInfos()
-        for info in infos:
-            datas.append({
-                "order_date": info["order_date"].isoformat(),
-                "order_money": float(info["order_money"]),
-                "total_paid_orders": info["total_paid_orders"],
-                "total_unpaid_orders": info["total_unpaid_orders"],
-                "total_cancelled_orders": info["total_cancelled_orders"]
-            })
-        token = refresh_token_type_2(token)
-        return JSONResponse(status_code=200, content={"datas": datas, "token": token})
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+    infos = getDashboardInfos()
+    for info in infos:
+        datas.append({
+            "order_date": info["order_date"].isoformat(),
+            "order_money": float(info["order_money"]),
+            "total_paid_orders": info["total_paid_orders"],
+            "total_unpaid_orders": info["total_unpaid_orders"],
+            "total_cancelled_orders": info["total_cancelled_orders"]
+        })
+    return JSONResponse(status_code=200, content={"datas": datas})
 
 # tạo tài khoản
 @app.post("/api/user/admin/create_cashier")
-def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
-    if code == "ADMIN":
-        salt = create_random_str(k=10)
-        result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
-        if result:
-            token = refresh_token_type_2(token)
-            return JSONResponse(status_code=201, content={"detail": detail, "token": token})
-        raise HTTPException(status_code=401, detail = detail)
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+def createAccountUser(data: FormCreateAccount, id: str = Depends(verify_token_admin)):
+    salt = create_random_str(k=10)
+    result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
+    if result:
+        return JSONResponse(status_code=201, content={"detail": detail})
+    raise HTTPException(status_code=401, detail = detail)
 
 # lấy danh sách tài khoản thu ngân
 @app.get("/api/user/admin/get_cashier_list/{skip}")
-def getCashierList(skip: int, token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
+def getCashierList(skip: int, id: str = Depends(verify_token_admin)):
     data = []
-    if code == "ADMIN":
-        # a.account_id, a.realname, a.citizen_id, a.username, a.state
-        cashiers = getCashiers(skip)
-        for cashier in cashiers:
-            data.append({
-                "account_id": cashier['account_id'],
-                "realname": cashier['realname'],
-                "citizen_id": cashier['citizen_id'],
-                "username": cashier['username'],
-                "state": bool(cashier['state']),
-            })
-        token = refresh_token_type_2(token)
-        return JSONResponse(status_code=200, content={'cashiers': data, 'token': token})
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+    # a.account_id, a.realname, a.citizen_id, a.username, a.state
+    cashiers = getCashiers(skip)
+    for cashier in cashiers:
+        data.append({
+            "account_id": cashier['account_id'],
+            "realname": cashier['realname'],
+            "citizen_id": cashier['citizen_id'],
+            "username": cashier['username'],
+            "state": bool(cashier['state']),
+        })
+    return JSONResponse(status_code=200, content={'cashiers': data})
 
 # khóa/mở tài khoản; action = lock | unlock
 @app.put("/api/user/admin/lock_account/{account_id}/{action}")
-def setAccountState(account_id: str, action: str, token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
-    if code == "ADMIN":
-        detail = lockAccount(account_id, action)
-        token = refresh_token_type_2(token)
-        return JSONResponse(status_code=200, content={"detail": detail, "token": token})
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+def setAccountState(account_id: str, action: str, id: str = Depends(verify_token_admin)):
+    user = getAccount(id=account_id)
+    if user == None:
+        raise HTTPException(status_code=404, detail=f'''Người dùng Id:{account_id} không tồn tại''')
+    elif user["username"] == "admin" and action == "lock":
+        raise HTTPException(status_code=405, detail=f'''Không thể khóa tài khoản Admin''')
+    if action == "lock":
+        status = 0
+        result = f"Khóa tài khoản {user['username']} thành công"
+    elif action == "unlock":
+        status = 1
+        result = f"Mở khóa tài khoản {user['username']} thành công"
+    else:
+        raise HTTPException(status_code=400, detail='''Action chỉ nhận "lock" hoặc "unlock"''')
+    lockAccount(account_id, status)
+    return JSONResponse(status_code=200, content={"detail": result})
 
 # xóa tài khoản thu ngân
 @app.delete("/api/user/admin/delete_account/{account_id}")
-def deleteCashier(account_id: str, token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
-    if code == "ADMIN":
-        detail = deleteAccount(account_id)
-        token = refresh_token_type_2(token)
-        return JSONResponse(status_code=200, content={"detail": detail, "token": token})
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Admin mới có quyền này")
+def deleteCashier(account_id: str, id: str = Depends(verify_token_admin)):
+    user = getAccount(id=account_id)
+    if user == None:
+        raise HTTPException(status_code=404, detail=f'''Người dùng Id:{account_id} không tồn tại''')
+    detail = deleteAccount(account_id)
+    return JSONResponse(status_code=200, content={"detail": detail})
 
 # đổi mật khẩu admin/cashier
 @app.put("/api/user/change_password")
-def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
-    _, id = verify_token_type_2(token)
+def changePassword(data: FormChangePassword, id: str = Depends(verify_token_type_2)):
     account = getAccount(id=id)
     if cryptContext.verify(account["salt"]+data.old_password, account["hash_pass"]):
         new_salt = create_random_str(k=10)
         new_hash_pass = cryptContext.hash(new_salt+data.new_password)
         if changePass(id, new_salt, new_hash_pass):
-            token = refresh_token_type_2(token)
-            return JSONResponse(status_code=201, content={"detail": "Đổi mật khẩu thành công", "token": token})
+            return JSONResponse(status_code=201, content={"detail": "Đổi mật khẩu thành công"})
         else:
             raise HTTPException(status_code=409, detail = "Đổi mật khẩu thất bại")
     else:
@@ -650,8 +731,7 @@ def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
 
 # lấy danh sách giao dịch
 @app.get("/api/user/get_order_list/{search}/{skip}")
-def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
-    verify_token_type_2(token)
+def get_order_list(search: str, skip: int, id: str = Depends(verify_token_type_2)):
     if search == "empty":
         search = ""
     orders = getOrders(search, skip)
@@ -661,10 +741,10 @@ def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
         data.append({
             "fullname": order["fullname"],
             "citizen_id": order["citizen_id"],
-            "dob": order["dob"].isoformat() if order["dob"] else None,
+            "dob": order["dob"].isoformat(),
             "insurance_id": order["insurance_id"],
             "service_name": order["service_name"],
-            "create_at": order["create_at"].isoformat() if order["create_at"] else None,
+            "create_at": order["create_at"].isoformat(),
             "payment_method": order["payment_method"],
             "payment_status": order["payment_status"],
             "price": float(order["price"]),
@@ -674,18 +754,13 @@ def get_order_list(search: str, skip: int, token: str = Depends(oAuthBearer)):
             "address_room": order["address_room"],
             "doctor_name": order["doctor_name"],
         })
-    token = refresh_token_type_2(token)
-    return JSONResponse(status_code=200, content={'orders': data, 'token': token})
+    return JSONResponse(status_code=200, content={'orders': data})
 
 # thanh toán tiền mặt cho bệnh nhân
 @app.get("/api/user/cashier/payCash/{order_id}")
-def payCash(order_id: str, token: str = Depends(oAuthBearer)):
-    code, _ = verify_token_type_2(token)
-    if code == "CASHIER":
-        payCashOrder(order_id)
-        token = refresh_token_type_2(token)
-        return JSONResponse(status_code=200, content={"detail": "Thanh toán thành công", "token": token})
-    raise HTTPException(status_code=403, detail = "Không có thẩm quyền, chỉ Thu ngân mới có quyền này")
+def payCash(order_id: str, id: str = Depends(verify_token_cashier)):
+    payCashOrder(order_id)
+    return JSONResponse(status_code=200, content={"detail": "Thanh toán thành công"})
 
 # chỉ dùng để chạy thử trên /docs, xóa khi deploy
 @app.post("/token")
@@ -694,12 +769,13 @@ def login_token(form_data: OAuth2PasswordRequestForm = Depends()):
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
     if account["state"] == 0:
-        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
+        raise HTTPException(status_code=497, detail="Tài khoản đã bị khóa")
     if not cryptContext.verify(account["salt"] + form_data.password, account["hash_pass"]):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
 
     typeAccess = "ADMIN" if account["username"] == "admin" else "CASHIER"
-    token = create_token_type_2(account["account_id"], typeAccess)
+    token, expire = create_token_type_2(account["account_id"], ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES, typeAccess)
 
     return {"access_token": token, "token_type": "bearer"}
+
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
