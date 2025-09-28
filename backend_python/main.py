@@ -165,6 +165,18 @@ def verify_token_admin(token: str = Depends(oAuthBearer)):
         print("JWT decode error:", str(e))
         raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
+def refresh_token_type_2(token):
+    code = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+    id = code.get("sub")
+    account = getAccount(id=id)
+    if account["state"] == 0:
+        raise HTTPException(status_code=498, detail="Tài khoản đã bị khóa")
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    updateTimeAccessExpire(id, expire)
+    code.update({"exp": expire})
+    encode = jwt.encode(code, SECRET_KEY, algorithm=ALGORITHM)
+    return encode
+
 # kiểm tra access token cashier   
 def verify_token_cashier(token: str = Depends(oAuthBearer)):
     try:
@@ -197,12 +209,14 @@ async def lifespan(app: FastAPI):
 
         # Tạo tài khoản admin
         result, detail = createAccount(
-            account_id,  # ID dùng UUID
-            "",          # email
-            "",          # tên
-            "admin",     # quyền
-            salt,
-            hash_pass
+            realname="Admin System",
+            citizen_id="",          
+            username="admin",     
+            salt=salt,
+            hash_pass=hash_pass,
+            email="",          
+            active_code=None,
+            account_id=account_id
         )
 
         if result:
@@ -214,7 +228,6 @@ async def lifespan(app: FastAPI):
         print(f"ERROR trong lifespan: {e}")
 
     yield
-
     print("INFO: Shutdown FastAPI")
 
 app = FastAPI(lifespan=lifespan) 
@@ -616,6 +629,14 @@ def login(loginInfo: FormLogin):
         }
     )
     response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=SECURE,
+        samesite=SAMESITE,
+        max_age=time_access * 60  # Access token cookie expire ngắn
+    )
+    response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
@@ -633,6 +654,7 @@ def logout(id: str = Depends(verify_token_type_2)):
     return
 
 # gia hạn
+@app.post("/api/refresh_token")
 def refresh(request: Request):
     # 1. Lấy refresh token từ cookie (secure hơn là từ header)
     refresh_token = request.cookies.get("refresh_token")
@@ -755,6 +777,13 @@ def getDashboardInfo(id: str = Depends(verify_token_admin)):
 def generate_otp(length=6):
     return ''.join(choices("0123456789", k=length))
 
+def createAccountUser(data: FormCreateAccount, id: str = Depends(verify_token_admin)):
+    salt = create_random_str(k=10)
+    result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
+    if result:
+        return JSONResponse(status_code=201, content={"detail": detail})
+    raise HTTPException(status_code=401, detail = detail)
+
 # tạo tài khoản
 @app.post("/api/user/admin/create_cashier")
 async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
@@ -824,12 +853,7 @@ def activate_account(data: ActivateRequest):
     updateAccountState(account["account_id"], 1)
     return {"detail": "Tài khoản đã kích hoạt thành công, bạn có thể đăng nhập"}
 
-def createAccountUser(data: FormCreateAccount, id: str = Depends(verify_token_admin)):
-    salt = create_random_str(k=10)
-    result, detail = createAccount(data.realname, data.citizen_id, data.username, salt, cryptContext.hash(salt+default_password))
-    if result:
-        return JSONResponse(status_code=201, content={"detail": detail})
-    raise HTTPException(status_code=401, detail = detail)
+
 
 # lấy danh sách tài khoản thu ngân
 @app.get("/api/user/admin/get_cashier_list/{skip}")
