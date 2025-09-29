@@ -127,6 +127,40 @@ def create_token_type_2(id, time, typeAccess, session_id=None):
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encode, expire
 
+def refresh_token_type_2(refresh_token: str):
+    try:
+        # Giải mã refresh_token
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token không hợp lệ")
+
+        account_id = payload.get("sub")
+        if not account_id:
+            raise HTTPException(status_code=401, detail="Không tìm thấy account_id trong token")
+
+        # Kiểm tra DB xem refresh_token còn hiệu lực không
+        user = getAccount(id=account_id)
+        if user is None or user["refresh_token"] != refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token không hợp lệ hoặc đã bị thu hồi")
+
+        # Sinh access_token mới
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": account_id},
+            expires_delta=access_token_expires,
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token đã hết hạn, vui lòng đăng nhập lại")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Lỗi: {str(e)}")
+
 # kiểm tra access token admin, cashier cho các hành động chung (đổi pass, logout)
 def verify_token_type_2(token: str = Depends(oAuthBearer)):
     try:
@@ -197,12 +231,13 @@ async def lifespan(app: FastAPI):
 
         # Tạo tài khoản admin
         result, detail = createAccount(
-            account_id,  # ID dùng UUID
-            "",          # email
-            "",          # tên
-            "admin",     # quyền
+            account_id,
+            "",
+            "",
+            "admin",
             salt,
-            hash_pass
+            hash_pass,
+            "admin@example.com"  # email mặc định
         )
 
         if result:
@@ -651,7 +686,7 @@ def refresh(request: Request):
     except ExpiredSignatureError:
         raise HTTPException(status_code=498, detail="Refresh token đã hết hạn")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ")
+        raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
     
     # 3. Kiểm tra tài khoản tồn tại và trạng thái
     account = getAccount(id=account_id)
