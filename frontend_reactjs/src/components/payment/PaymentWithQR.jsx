@@ -70,7 +70,7 @@ function PaymentWithQR() {
 
     useEffect(() => {
         // Tạo kết nối tới WebSocket backend
-        const ws = new WebSocket(`${WS_URL}/ws/checkTransfer`);
+        const ws = new WebSocket(`${WS_URL}/api/payment/ws/check_transfer`);
         ws.onopen = () => {
             console.log("Kết nối WebSocket thành công");
             // Gửi order_id sang backend
