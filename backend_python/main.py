@@ -596,10 +596,11 @@ def login(loginInfo: FormLogin):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cần cung cấp username hoặc email hợp lệ"
         )
-     # 2. Kiểm tra tồn tại
+
+    # 2. Kiểm tra tồn tại
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
-    
+
     # 3. Kiểm tra trạng thái
     if account["state"] == 0:
         print("Tài khoản đã bị khóa")
@@ -607,26 +608,26 @@ def login(loginInfo: FormLogin):
     if account["state"] == 2:
         print("Tài khoản chưa kích hoạt email")
         raise HTTPException(status_code=403, detail="Tài khoản chưa kích hoạt email")
-    
+
     # 4. Kiểm tra session đang hoạt động
     session = get_session(account_id=account["account_id"])
     if session is not None:
         if session["access_exp"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
             raise HTTPException(status_code=403, detail="Tài khoản đang được truy cập")
-        
+
     # 5. Xác thực mật khẩu
     if not cryptContext.verify(account["salt"] + loginInfo.password, account["hash_pass"]):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
-    
+
     # 6. Xác định role
     typeAccess = "CASHIER"
     if account["username"] == "admin" or account.get("role") == "ADMIN":
         typeAccess = "ADMIN"
-        
+
     # 7. Tạo session ID mới
     session_id = str(uuid.uuid4())
     delete_session(account_id=account["account_id"])  # Xóa session cũ nếu có
-    
+
     # 8. Tạo JWT token
     if typeAccess == "ADMIN":
         time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
@@ -635,19 +636,28 @@ def login(loginInfo: FormLogin):
         time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
         time_refresh = CASHIER_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
 
-    access_token, expire = create_token_type_2(account["account_id"], time_access, typeAccess)
-    refresh_token, _ = create_token_type_2(account["account_id"], time_refresh, typeAccess, session_id)
+    access_token, access_exp = create_token_type_2(
+        account["account_id"], time_access, typeAccess
+    )
+    refresh_token, refresh_exp = create_token_type_2(
+        account["account_id"], time_refresh, typeAccess, session_id
+    )
 
-    save_session(session_id, account["account_id"], refresh_token, expire)
-    
-    # 9. Trả response + set cookie
+    # 9. Lưu session vào DB
+    save_session(session_id, account["account_id"], refresh_token, access_exp)
+
+    # 10. Trả response + set cookie refresh_token
     response = JSONResponse(
         status_code=200,
         content={
             "message": "Đăng nhập thành công",
             "_id": account["account_id"],
+            "name": account["username"],
             "role": typeAccess,
-            "token_type": "bearer"
+            "token_type": "bearer",
+            "refresh_token": refresh_token,
+            "access_token": access_token,
+            "expires_in": time_access * 60  # giây
         }
     )
     response.set_cookie(
@@ -656,6 +666,7 @@ def login(loginInfo: FormLogin):
         httponly=True,
         secure=SECURE,
         samesite=SAMESITE,
+        path="/",
         max_age=time_refresh * 60
     )
     print("Đăng nhập thành công, cookie set")
@@ -668,109 +679,55 @@ def logout(id: str = Depends(verify_token_type_2)):
     return
 
 # gia hạn
+@app.post("/api/refresh")
 def refresh(request: Request):
-    # 1. Lấy refresh token từ cookie (secure hơn là từ header)
+    # 1. Lấy refresh token từ cookie
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        raise HTTPException(status_code=401, detail="Không có refresh token")
-    
+        raise HTTPException(status_code=401, detail="Thiếu refresh token")
+
     try:
-        # 2. Decode và validate refresh token
+        # 2. Giải mã refresh_token
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+
         account_id = payload.get("sub")
         session_id = payload.get("sid")
-        
-        if not account_id:
-            raise HTTPException(status_code=401, detail="Token không hợp lệ")
-            
+        aud = payload.get("aud")
+
+        if not account_id or not session_id:
+            raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
+
+        # 3. Kiểm tra DB session
+        session = get_session(account_id=account_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy session")
+
+        if session["refresh_token"] != refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token không trùng khớp")
+
+        # 4. Tạo access token mới
+        if aud == "ADMIN_SERVICES":
+            time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        elif aud == "CASHIER_SERVICES":
+            time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        else:
+            raise HTTPException(status_code=401, detail="Loại token không hợp lệ")
+
+        new_access_token, access_exp = create_token_type_2(account_id, time_access, aud.split("_")[0], session_id)
+
+        # 5. Cập nhật thời gian hết hạn trong session
+        updateTimeAccessExpire(account_id=account_id, access_exp=access_exp)
+
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": time_access * 60
+        }
+
     except ExpiredSignatureError:
-        raise HTTPException(status_code=498, detail="Refresh token đã hết hạn")
+        raise HTTPException(status_code=401, detail="Refresh token hết hạn, vui lòng đăng nhập lại")
     except JWTError:
         raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
-    
-    # 3. Kiểm tra tài khoản tồn tại và trạng thái
-    account = getAccount(id=account_id)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
-    
-    if account["state"] == 0:
-        raise HTTPException(status_code=403, detail="Tài khoản đã bị khóa")
-    if account["state"] == 2:
-        raise HTTPException(status_code=403, detail="Tài khoản chưa kích hoạt email")
-    
-    # 4. Kiểm tra session (nếu có system session management)
-    if session_id:  # Chỉ check session nếu có session_id trong token
-        try:
-            session = get_session(account_id=account_id)
-            if session is None:
-                raise HTTPException(status_code=404, detail="Session không tồn tại")
-                
-            # Validate session integrity
-            if session.get("session_id") != session_id or session.get("refresh_token") != refresh_token:
-                raise HTTPException(status_code=401, detail="Session không hợp lệ")
-        except Exception:
-            # Nếu không có session system, bỏ qua bước này
-            pass
-    
-    # 5. Xác định role và thời gian expire
-    if account["username"] == "admin" or account.get("role") == "ADMIN":
-        time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
-        typeAccess = "ADMIN"
-    else:
-        time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES  
-        typeAccess = "CASHIER"
-    
-    # 6. Tạo access token mới
-    try:
-        if hasattr(globals(), 'create_token_type_2'):
-            # Version 2: Trả về tuple (token, expire_time)
-            access_token, expire_time = create_token_type_2(account_id, time_access, typeAccess)
-        else:
-            # Version 1: Chỉ trả về token
-            access_token = create_token_type_2(account_id, typeAccess)
-            expire_time = None
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi tạo token: {str(e)}")
-    
-    # 7. Cập nhật session expire time (nếu có)
-    if session_id and expire_time:
-        try:
-            updateTimeAccessExpire(session_id=session_id, time=expire_time)
-        except Exception:
-            # Log warning nhưng không fail request
-            print(f"Warning: Không thể cập nhật session expire time cho session {session_id}")
-    
-    # 8. Decode token để lấy thông tin expire cho cookie
-    try:
-        token_payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
-        exp = token_payload.get("exp")
-        max_age = exp - int(datetime.now(timezone.utc).timestamp()) if exp else 3600  # default 1 hour
-    except Exception:
-        max_age = 3600  # fallback to 1 hour
-    
-    # 9. Tạo response với cookie httpOnly (secure approach)
-    response = JSONResponse(
-        status_code=200, 
-        content={
-            "message": "Token đã được refresh thành công",
-            "access_token": access_token,
-            "token_type": "bearer",
-            "expires_in": max_age
-        }
-    )
-    
-    # 10. Set access token vào httpOnly cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,      # Set True cho production với HTTPS
-        samesite="Lax",
-        max_age=max_age,
-    )
-    
-    print(f"Token refreshed successfully for user {account_id} with role {typeAccess}")
-    return response
 
 # dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")

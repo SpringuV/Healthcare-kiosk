@@ -63,7 +63,7 @@ async function request<T>(
 export const get = <T>(path: string, params?: Record<string, unknown>, headers?: Record<string, string>) =>
     request<T>("get", path, undefined, params, headers);
 
-export const post = <T>(path: string, data: DataType, params?: Record<string, unknown>, headers?: Record<string, string>) =>
+export const post = <T>(path: string, data?: DataType, params?: Record<string, unknown>, headers?: Record<string, string>) =>
     request<T>("post", path, data, params, headers);
 
 export const put = <T>(path: string, data: DataType, params?: Record<string, unknown>, headers?: Record<string, string>) =>

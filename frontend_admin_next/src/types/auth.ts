@@ -11,5 +11,11 @@ export interface LoginResponseData {
   role: string;  
 }
 
+export interface RefreshTokenResponseData {
+  access_token: string;
+  expires_in: number;
+}
+
 // Kiểu trả về giống axios
-export type LoginResponseType = AxiosResponse<LoginResponseData>;
+export type RefreshTokenResponseDataType = AxiosResponse<RefreshTokenResponseData>
+export type LoginResponseType = AxiosResponse<LoginResponseData>

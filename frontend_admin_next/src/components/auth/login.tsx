@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { loginThunk } from '@/redux/slices/user.thunk';
-import { AppDispatch, RootState } from '@/redux/store';
 import { LoginAccountType } from '@/types/auth';
+import { authenticate } from '@/utils/action';
 import { useAppMessageNotification } from '@/utils/message';
 import {
     FacebookOutlined,
@@ -26,15 +25,12 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 const LoginUI = () => {
-    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter()
     const { contextHolder, openMessageNotification } = useAppMessageNotification()
     const { token } = theme.useToken();
     const [localLoading, setLocalLoading] = useState(false)
     const [messageModal, setMessageModal] = useState("")
-    const auth = useSelector((state: RootState) => state.auth);
 
-    console.log("state auth: ", auth)
 
     const iconStyles: CSSProperties = {
         marginInlineStart: '16px',
@@ -46,21 +42,22 @@ const LoginUI = () => {
 
 
     const handleOnFinish = async (values: LoginAccountType) => {
-        const { email, password, username } = values
+        const { username, password } = values
         // console.log(">>>> check value: ", values)
         // {username: 'xuanvuaudi2002@gmail.com', password: '123'}
         // {mobile: '0234567890', captcha: '123123'}
         setLocalLoading(true)
         setMessageModal("Đang đăng nhập, vui lòng chờ.")
         try {
-            const res = await dispatch(loginThunk({ username: username ?? email, password })).unwrap(); // unwrap() giúp bạn bắt trực tiếp dữ liệu từ fulfilled, và catch sẽ nhận giá trị reject từ rejectWithValue
+            const res = await authenticate(username ?? '', password ?? '')
             // Redirect khi login thành công
-            console.log(">>> check res: ", res)
-            // console.log(">>> login log: ", res.data)
+            console.log(">>> login log: ", res.data)
             //>>> login log: {message: 'Đăng nhập thành công', token_type: 'bearer'}
             openMessageNotification('success', res?.message || 'Đăng nhập thành công', 4);
             setMessageModal("Đang chuyển hướng tới trang chủ")
-            router.push('/dashboard')
+            setTimeout(()=>{
+                router.push('/')
+            }, 5000)
         } catch (error: any) {
             console.error(error)
             const status = error.response?.status
@@ -75,7 +72,6 @@ const LoginUI = () => {
             setMessageModal("")
             setLocalLoading(false)
         }
-
     }
 
     const handleOnFinishFailed = (err: unknown) => {
