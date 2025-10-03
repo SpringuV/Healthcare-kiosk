@@ -1,17 +1,22 @@
 // services/api.ts → instance axios + core request
-import axios, { AxiosRequestConfig } from "axios"
+import axios, { AxiosRequestConfig } from "axios";
+// import https from "https";
 
 type DataType = object | string | number | boolean | FormData | ArrayBuffer | Blob;
 
-// 🔹 Tạo instance mặc định
+//Tạo httpsAgent để bỏ verify self-signed cert dev
+// const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+//Tạo instance mặc định
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
-    timeout: 15000, // 10s timeout, nếu không sẽ ném lỗi và hủy request
-    withCredentials: true, // gửi cookie
+    timeout: 15000,
+    withCredentials: true,
+    // httpsAgent, // production thì bỏ ra
 });
 
 // Xử lý data → headers/body
-function prepareRequest(data?: DataType): { body?: DataType; headers: Record<string, string> } { // kiểu của kết quả trả về (return type) của hàm.
+function prepareRequest(data?: DataType): { body?: DataType; headers: Record<string, string> } {
     const headers: Record<string, string> = {};
     let body: DataType | undefined = data;
 
@@ -46,13 +51,13 @@ async function request<T>(
 ) {
     const { body, headers: dynamicHeaders } = prepareRequest(data);
 
-    // Trong object literal (object viết { ... }), khi tên biến trùng với tên key thì có thể viết tắt ví dụ -  method: method => method
     const config: AxiosRequestConfig = {
         method,
         url: path,
         params,
         headers: { ...dynamicHeaders, ...headers },
         data: body,
+        // httpsAgent, //chắc chắn mỗi request cũng có agent
     };
 
     const res = await api.request<T>(config);

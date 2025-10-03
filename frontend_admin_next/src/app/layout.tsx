@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextAuthWrapper from "@/library/next.auth.wrapper";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import ReduxProviderWrapper from "@/library/redux.provider.wrapper";
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             >
                 <AntdRegistry>
                     <NextAuthWrapper>
-                        {children}
+                        <ReduxProviderWrapper>
+                            {children}
+                        </ReduxProviderWrapper>
                     </NextAuthWrapper>
                 </AntdRegistry>
             </body>

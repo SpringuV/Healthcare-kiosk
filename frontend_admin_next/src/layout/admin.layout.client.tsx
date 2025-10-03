@@ -20,7 +20,7 @@ const AdminLayoutClient: React.FC<AdminLayoutClientProps> = ({ children }) =>{
     const [collapsed, setCollapsed] = useState(false);
     return (
         <>
-            <Layout className="h-screen w-screen overflow-hidden">
+            <Layout className="min-h-screen w-screen overflow-auto">
                 <AdminSideBar collapsed={collapsed} />
                 <Layout>
                     <AdminHeader collapsed={collapsed} setCollapsed={setCollapsed}/>

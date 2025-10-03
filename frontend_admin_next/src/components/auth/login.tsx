@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
+import store from '@/redux/store';
+import { setUser } from '@/redux/user/user.slice';
 import { LoginAccountType } from '@/types/auth';
 import { authenticate } from '@/utils/action';
 import { useAppMessageNotification } from '@/utils/message';
@@ -19,12 +21,14 @@ import {
     setAlpha,
 } from '@ant-design/pro-components';
 import { Button, Modal, Space, theme } from 'antd';
+import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 const LoginUI = () => {
+    const dispatch = useDispatch()
     const router = useRouter()
     const { contextHolder, openMessageNotification } = useAppMessageNotification()
     const { token } = theme.useToken();
@@ -42,35 +46,39 @@ const LoginUI = () => {
 
 
     const handleOnFinish = async (values: LoginAccountType) => {
+        
         const { username, password } = values
         // console.log(">>>> check value: ", values)
         // {username: 'xuanvuaudi2002@gmail.com', password: '123'}
-        // {mobile: '0234567890', captcha: '123123'}
         setLocalLoading(true)
         setMessageModal("Đang đăng nhập, vui lòng chờ.")
         try {
             const res = await authenticate(username ?? '', password ?? '')
             // Redirect khi login thành công
-            console.log(">>> login log: ", res.data)
-            //>>> login log: {message: 'Đăng nhập thành công', token_type: 'bearer'}
-            openMessageNotification('success', res?.message || 'Đăng nhập thành công', 4);
-            setMessageModal("Đang chuyển hướng tới trang chủ")
-            setTimeout(()=>{
-                router.push('/')
-            }, 5000)
-        } catch (error: any) {
-            console.error(error)
-            const status = error.response?.status
-            const detail = error.response?.data?.detail
-
-            if (status) {
-                console.log('HTTP status code:', status) // <-- bạn vẫn nhận được mã lỗi
+            if (res.error) {
+                openMessageNotification('error', res.error, 4);
+            } else {
+                const session = await getSession()
+                console.log(">>> check session: ", session)
+                if(session?.user){
+                    dispatch(setUser({
+                        _id: session.user._id,
+                        access_token: session.user.accessToken,
+                        role: session.user.role,
+                        username: session.user.username
+                    }))
+                }
+                console.log("State after dispatch:", store.getState());
+                openMessageNotification('success', 'Đăng nhập thành công', 2);
+                setMessageModal("Đang chuyển hướng tới trang chủ...");
+                setTimeout(() => router.push('/dashboard'), 1000);
             }
-
-            openMessageNotification('error', detail, 4)
+        } catch (error: any) {
+            console.error("Lỗi khi login:", error);
+            openMessageNotification('error', error?.message || 'Có lỗi xảy ra', 4);
         } finally {
-            setMessageModal("")
-            setLocalLoading(false)
+            setMessageModal("");
+            setLocalLoading(false);
         }
     }
 

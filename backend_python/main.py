@@ -12,6 +12,8 @@ from fastapi import (
     Cookie
 )
 import uuid
+import ssl
+import uvicorn
 from model import *
 from fastapi.responses import JSONResponse
 from secrets import token_urlsafe
@@ -76,10 +78,8 @@ SAMESITE = os.getenv("SAMESITE")
 SECRET_KEY = "v8P2shAY3fDKWuz5qZt0mXNaHy1Lrj"
 ALGORITHM = "HS256"
 PATIENT_TOKEN_EXPIRE_MINUTES = 5
-ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 15
-ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440
-CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 45
-CASHIER_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES = 45
 
 SEPAY_API_KEY = "d99cff6fc8a2f1fbc39e1c8f4f9eb28d692c40900bbb3486b426a13da37b79a0"
 SEPAY_API_KEY_2 = "ZFAOUF2TM0TDDCAICNFAVOKCUFPZ34ILKDSY5DBW6BMMYVY94R5UO3OPXWG8L1L2"
@@ -116,50 +116,71 @@ def verify_token_type_1(token, citizen_id):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token lỗi")
     
-def create_token_type_2(id, time, typeAccess, session_id=None):
+def create_token_type_2(id, time, role, session_id=None, is_refresh=False):
     expire = datetime.now(timezone.utc) + timedelta(minutes=time)
-    to_encode = {}
-    to_encode.update({"sub": str(id)})
-    to_encode.update({"aud": typeAccess+"_SERVICES"})
-    to_encode.update({"exp": expire})
+    to_encode = {
+        "sub": str(id),
+        "role": role,   # thay vì aud
+        "exp": expire,
+        "type": "refresh" if is_refresh else "access"
+    }
     if session_id:
         to_encode.update({"sid": session_id})
+
     encode = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encode, expire
 
+
 def refresh_token_type_2(refresh_token: str):
     try:
-        # Giải mã refresh_token
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-
+        
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
         account_id = payload.get("sub")
-        if not account_id:
-            raise HTTPException(status_code=401, detail="Không tìm thấy account_id trong token")
+        session_id = payload.get("sid")
+        aud = payload.get("aud")
 
-        # Kiểm tra DB xem refresh_token còn hiệu lực không
-        user = getAccount(id=account_id)
-        if user is None or user["refresh_token"] != refresh_token:
-            raise HTTPException(status_code=401, detail="Refresh token không hợp lệ hoặc đã bị thu hồi")
+        if not account_id or not session_id:
+            raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
 
-        # Sinh access_token mới
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": account_id},
-            expires_delta=access_token_expires,
+        # Kiểm tra DB session
+        session = get_session(account_id=account_id)
+        if not session or session["refresh_token"] != refresh_token:
+            raise HTTPException(
+                status_code=401, 
+                detail="Refresh token không trùng khớp hoặc đã bị thu hồi"
+            )
+
+        # Sinh access token mới
+        type_access = "ADMIN" if aud == "ADMIN_SERVICES" else "CASHIER"
+        time_access = ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        
+        new_access_token, exp = create_token_type_2(
+            account_id, 
+            time_access, 
+            type_access, 
+            session_id, 
+            is_refresh=False
         )
 
+        # Update lại access_exp trong DB
+        updateTimeAccessExpire(account_id=account_id, access_exp=exp)
+        
         return {
-            "access_token": access_token,
-            "token_type": "bearer"
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": time_access * 60  # Convert to seconds
         }
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401, 
+            detail="Refresh token đã hết hạn, vui lòng đăng nhập lại"
+        )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
 
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Refresh token đã hết hạn, vui lòng đăng nhập lại")
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Lỗi: {str(e)}")
 
 # kiểm tra access token admin, cashier cho các hành động chung (đổi pass, logout)
 def verify_token_type_2(token: str = Depends(oAuthBearer)):
@@ -256,10 +277,10 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],  # URL của Next.js
     allow_credentials=True,
-    allow_methods=["*"],  # Cho tất cả method
-    allow_headers=["*"],  # Cho tất cả header
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.include_router(reset_password_router, prefix="/api", tags=["Reset Password"])
 
@@ -630,17 +651,17 @@ def login(loginInfo: FormLogin):
 
     # 8. Tạo JWT token
     if typeAccess == "ADMIN":
-        time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
-        time_refresh = ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
+        time_access = ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        time_refresh = REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
     else:
-        time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
-        time_refresh = CASHIER_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
+        time_access = ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        time_refresh = REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES
 
     access_token, access_exp = create_token_type_2(
         account["account_id"], time_access, typeAccess
     )
     refresh_token, refresh_exp = create_token_type_2(
-        account["account_id"], time_refresh, typeAccess, session_id
+        account["account_id"], time_refresh, typeAccess, session_id, is_refresh=True
     )
 
     # 9. Lưu session vào DB
@@ -651,12 +672,15 @@ def login(loginInfo: FormLogin):
         status_code=200,
         content={
             "message": "Đăng nhập thành công",
-            "_id": account["account_id"],
-            "name": account["username"],
-            "role": typeAccess,
-            "token_type": "bearer",
-            "refresh_token": refresh_token,
+            "user": {
+                "id": account["account_id"],
+                "username": account["username"],
+                "isVerify": account.get("state") == 1,
+                "type": typeAccess,
+                "role": typeAccess,
+            },
             "access_token": access_token,
+            "token_type": "bearer",
             "expires_in": time_access * 60  # giây
         }
     )
@@ -664,8 +688,8 @@ def login(loginInfo: FormLogin):
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=SECURE,
-        samesite=SAMESITE,
+        secure=False,       # localhost thì False, production phải True
+        samesite="none",    # quan trọng để FE nhận cookie cross-site
         path="/",
         max_age=time_refresh * 60
     )
@@ -680,54 +704,63 @@ def logout(id: str = Depends(verify_token_type_2)):
 
 # gia hạn
 @app.post("/api/refresh")
-def refresh(request: Request):
-    # 1. Lấy refresh token từ cookie
-    refresh_token = request.cookies.get("refresh_token")
+def refresh(response: Response, refresh_token: str = Cookie(None)):
+    print("start refresh")
     if not refresh_token:
-        raise HTTPException(status_code=401, detail="Thiếu refresh token")
-
+        raise HTTPException(status_code=401, detail="Refresh token không tồn tại")
+    
     try:
-        # 2. Giải mã refresh_token
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+        print("refresh_token:", refresh_token)
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("payload:", payload)
+
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
         account_id = payload.get("sub")
         session_id = payload.get("sid")
-        aud = payload.get("aud")
+        role = payload.get("role")   # lấy trực tiếp role
 
         if not account_id or not session_id:
             raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
+        print("Kiểm tra session")
+        # Kiểm tra session
+        session = get_session(session_id=session_id, account_id=account_id)
+        if not session or session["refresh_token"] != refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
 
-        # 3. Kiểm tra DB session
-        session = get_session(account_id=account_id)
-        if session is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy session")
+        print("Tạo access token mới theo role")
+        # Tạo access token mới theo role
+        time_access = ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
+        new_access_token, access_exp = create_token_type_2(
+            account_id,
+            time_access,
+            role,
+            session_id,
+            is_refresh=False
+        )
+        print("update lại time hết hạn")
+        updateTimeAccessExpire(session_id=session_id, time=access_exp)
 
-        if session["refresh_token"] != refresh_token:
-            raise HTTPException(status_code=401, detail="Refresh token không trùng khớp")
-
-        # 4. Tạo access token mới
-        if aud == "ADMIN_SERVICES":
-            time_access = ADMIN_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
-        elif aud == "CASHIER_SERVICES":
-            time_access = CASHIER_ACCOUNT_ACCESS_TOKEN_EXPIRE_MINUTES
-        else:
-            raise HTTPException(status_code=401, detail="Loại token không hợp lệ")
-
-        new_access_token, access_exp = create_token_type_2(account_id, time_access, aud.split("_")[0], session_id)
-
-        # 5. Cập nhật thời gian hết hạn trong session
-        updateTimeAccessExpire(account_id=account_id, access_exp=access_exp)
-
-        return {
-            "access_token": new_access_token,
-            "token_type": "bearer",
-            "expires_in": time_access * 60
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "access_token": new_access_token,
+                "token_type": "bearer",
+                "expires_in": time_access * 60,
+                "role": role
+            }
+        )
 
     except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Refresh token hết hạn, vui lòng đăng nhập lại")
-    except JWTError:
+        raise HTTPException(status_code=401, detail="Refresh token đã hết hạn")
+    except JWTError as e:
+        print("JWTError:", e)
         raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
+    except Exception as e:
+        print(f"Error in refresh: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi server")
+
 
 # dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")
@@ -968,8 +1001,22 @@ def login_token(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
 
     typeAccess = "ADMIN" if account["username"] == "admin" else "CASHIER"
-    token, expire = create_token_type_2(account["account_id"], ADMIN_REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES, typeAccess)
+    token, expire = create_token_type_2(account["account_id"], REFRESH_ACCESS_TOKEN_EXPIRE_MINUTES, typeAccess)
 
     return {"access_token": token, "token_type": "bearer"}
 
+if __name__ == "__main__":
+    # Cấu hình SSL cho HTTPS
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(
+        certfile="../certs/localhost.pem",
+        keyfile="../certs/localhost-key.pem"
+    )
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        ssl_keyfile="../certs/localhost-key.pem",
+        ssl_certfile="../certs/localhost.pem"
+    )
 # run: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
