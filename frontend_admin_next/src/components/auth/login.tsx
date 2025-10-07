@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import store from '@/redux/store';
-import { setUser } from '@/redux/user/user.slice';
-import { LoginAccountType } from '@/types/auth';
+import { clearUser, setUser } from '@/redux/user/user.slice';
 import { authenticate } from '@/utils/action';
 import { useAppMessageNotification } from '@/utils/message';
 import {
@@ -21,11 +20,12 @@ import {
     setAlpha,
 } from '@ant-design/pro-components';
 import { Button, Modal, Space, theme } from 'antd';
-import { getSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { clearDashboard } from '@/redux/dashboard/dashboard.slice';
 
 const LoginUI = () => {
     const dispatch = useDispatch()
@@ -34,7 +34,13 @@ const LoginUI = () => {
     const { token } = theme.useToken();
     const [localLoading, setLocalLoading] = useState(false)
     const [messageModal, setMessageModal] = useState("")
-
+    const { data: session } = useSession()
+    // mỗi lần trang load lại sẽ xóa các redux và session
+    useEffect(() => {
+        localStorage.removeItem("refresh_token");
+        dispatch(clearDashboard())
+        dispatch(clearUser())
+    }, [dispatch])
 
     const iconStyles: CSSProperties = {
         marginInlineStart: '16px',
@@ -44,9 +50,8 @@ const LoginUI = () => {
         cursor: 'pointer',
     };
 
-
     const handleOnFinish = async (values: LoginAccountType) => {
-        
+
         const { username, password } = values
         // console.log(">>>> check value: ", values)
         // {username: 'xuanvuaudi2002@gmail.com', password: '123'}
@@ -58,17 +63,18 @@ const LoginUI = () => {
             if (res.error) {
                 openMessageNotification('error', res.error, 4);
             } else {
-                const session = await getSession()
-                console.log(">>> check session: ", session)
-                if(session?.user){
+                localStorage.setItem("refresh_token", session?.refresh_token ?? "");
+                if (session?.user) {
                     dispatch(setUser({
-                        _id: session.user._id,
-                        access_token: session.user.accessToken,
+                        id: session.user.id,
+                        email: session.user.email,
                         role: session.user.role,
-                        username: session.user.username
+                        username: session.user.username,
+                        isVerify: session.user.isVerify,
+                        realname: session.user.realname,
+                        type: session.user.type
                     }))
                 }
-                console.log("State after dispatch:", store.getState());
                 openMessageNotification('success', 'Đăng nhập thành công', 2);
                 setMessageModal("Đang chuyển hướng tới trang chủ...");
                 setTimeout(() => router.push('/dashboard'), 1000);

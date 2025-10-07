@@ -1,13 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Kiểu dữ liệu chung gửi đi
-export type DataType = object | string | number | boolean | FormData | ArrayBuffer | Blob;
+type LoginAccountType = {
+    username: string;
+    password: string;
+}
 
-// Kiểu của object params query
-export type QueryParams = Record<string, unknown>;
-
-// Kiểu response chung
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  [key: string]: any;
+type LoginResponseType = {
+    message: string;
+    user: {
+        id: string;
+        username: string;
+        email: string;
+        realname: string;
+        isVerify: string;
+        type: string;
+        role: string;
+    },
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    expires_in: string;
+    refresh_expires_in: string;
+    session_id: string
 }

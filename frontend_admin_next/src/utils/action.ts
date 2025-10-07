@@ -12,6 +12,7 @@ const errorMap: Record<string, { error: string; code: number }> = {
     AccountLockedError: { error: "Your account is locked", code: 3 },
     AccountNotFoundError: { error: "Account not found", code: 4 },
 }
+
 export async function authenticate(username: string, password: string): Promise<AuthResult> {
     const res = await signIn("credentials", {
         username,

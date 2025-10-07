@@ -1,3 +1,5 @@
+import secrets
+import string
 from fastapi import (
     FastAPI,
     Request,
@@ -118,9 +120,19 @@ def verify_token_type_1(token, citizen_id):
     
 def create_token_type_2(id, time, role, session_id=None, is_refresh=False):
     expire = datetime.now(timezone.utc) + timedelta(minutes=time)
+    
+    # Xác định audience dựa theo role
+    if role == "ADMIN":
+        audience = "ADMIN_SERVICES"
+    elif role == "CASHIER":
+        audience = "CASHIER_SERVICES"
+    else:
+        audience = "GENERAL_SERVICES"
+
     to_encode = {
         "sub": str(id),
-        "role": role,   # thay vì aud
+        "role": role,
+        "aud": audience, 
         "exp": expire,
         "type": "refresh" if is_refresh else "access"
     }
@@ -602,6 +614,7 @@ def cancelOrderAPI(order_id: str):
 # admin quản lý
 # đăng nhập
 
+# Login - trả refresh_token trong response
 @app.post("/api/login")
 def login(loginInfo: FormLogin):
     # 1. Xác định account theo email hoặc username
@@ -667,62 +680,64 @@ def login(loginInfo: FormLogin):
     # 9. Lưu session vào DB
     save_session(session_id, account["account_id"], refresh_token, access_exp)
 
-    # 10. Trả response + set cookie refresh_token
-    response = JSONResponse(
+    # 10. Trả response với refresh_token trong body
+    print("Đăng nhập thành công")
+    return JSONResponse(
         status_code=200,
         content={
             "message": "Đăng nhập thành công",
             "user": {
                 "id": account["account_id"],
                 "username": account["username"],
+                "email": account.get("email"),
+                "realname": account.get("realname"),
                 "isVerify": account.get("state") == 1,
                 "type": typeAccess,
                 "role": typeAccess,
             },
             "access_token": access_token,
+            "refresh_token": refresh_token,  # Thêm refresh_token vào response
             "token_type": "bearer",
-            "expires_in": time_access * 60  # giây
+            "expires_in": time_access * 60,  # giây
+            "refresh_expires_in": time_refresh * 60,  # giây
+            "session_id": session_id  # Có thể cần để logout
         }
     )
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,       # localhost thì False, production phải True
-        samesite="none",    # quan trọng để FE nhận cookie cross-site
-        path="/",
-        max_age=time_refresh * 60
-    )
-    print("Đăng nhập thành công, cookie set")
-    return response
 
-# đăng xuất
+
+# Đăng xuất
 @app.post("/api/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(id: str = Depends(verify_token_type_2)):
     delete_session(account_id=id)
     return
 
-# gia hạn
+
+# Gia hạn token - nhận refresh_token từ body hoặc header
 @app.post("/api/refresh")
-def refresh(response: Response, refresh_token: str = Cookie(None)):
+def refresh(refresh_data: dict):
     print("start refresh")
+    # Lấy refresh_token từ body request
+    refresh_token = refresh_data.get("refresh_token")
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token không tồn tại")
     
     try:
-        print("refresh_token:", refresh_token)
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("start refresh_token:", refresh_token)
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
         print("payload:", payload)
 
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
         account_id = payload.get("sub")
+        print("account_id: ", account_id)
         session_id = payload.get("sid")
-        role = payload.get("role")   # lấy trực tiếp role
-
+        print("session_id: ", session_id)
+        role = payload.get("role")
+        print("role: ", role)
         if not account_id or not session_id:
             raise HTTPException(status_code=401, detail="Refresh token không hợp lệ")
+        
         print("Kiểm tra session")
         # Kiểm tra session
         session = get_session(session_id=session_id, account_id=account_id)
@@ -739,16 +754,21 @@ def refresh(response: Response, refresh_token: str = Cookie(None)):
             session_id,
             is_refresh=False
         )
+        
         print("update lại time hết hạn")
         updateTimeAccessExpire(session_id=session_id, time=access_exp)
+
+        # Lấy thông tin user để trả về
+        account = getAccount(id=account_id)
 
         return JSONResponse(
             status_code=200,
             content={
+                "message": "Làm mới token thành công",
                 "access_token": new_access_token,
+                "refresh_token": refresh_token,  # Trả lại refresh_token cũ
                 "token_type": "bearer",
                 "expires_in": time_access * 60,
-                "role": role
             }
         )
 
@@ -761,8 +781,6 @@ def refresh(response: Response, refresh_token: str = Cookie(None)):
         print(f"Error in refresh: {e}")
         raise HTTPException(status_code=500, detail="Lỗi server")
 
-
-# dữ liệu dashboard
 @app.get("/api/user/admin/get_dashboard_info")
 def getDashboardInfo(id: str = Depends(verify_token_admin)):
     datas = []
@@ -780,7 +798,91 @@ def getDashboardInfo(id: str = Depends(verify_token_admin)):
 def generate_otp(length=6):
     return ''.join(choices("0123456789", k=length))
 
-# tạo tài khoản
+# Đổi mật khẩu - cập nhật response
+@app.put("/api/user/change_password")
+async def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):
+    _, id = verify_token_type_2(token)
+    account = getAccount(id=id)
+
+    if not cryptContext.verify(account["salt"] + data.old_password, account["hash_pass"]):
+        raise HTTPException(status_code=400, detail="Mật khẩu cũ không chính xác")
+
+    # Nếu là lần đổi mật khẩu đầu tiên thì yêu cầu OTP
+    if account["state"] == 2:  # state=2: chưa đổi mật khẩu lần đầu
+        otp = generate_otp()
+        if not updateActivationCode(account["account_id"], otp):
+            raise HTTPException(status_code=500, detail="Không thể tạo mã OTP")
+
+        # gửi OTP về email
+        await send_activation_email(account["email"], f"Mã OTP đổi mật khẩu: {otp}")
+        return JSONResponse(
+            status_code=202,
+            content={
+                "detail": "OTP đã gửi qua email. Vui lòng xác thực để đổi mật khẩu",
+                "require_otp": True,
+                "email": account["email"]
+            }
+        )
+
+    # Nếu không phải lần đầu thì cho đổi luôn
+    new_salt = create_random_str(k=10)
+    new_hash_pass = cryptContext.hash(new_salt + data.new_password)
+    if changePass(id, new_salt, new_hash_pass):
+        # Tạo token mới
+        new_token = refresh_token_type_2(token)
+        return JSONResponse(
+            status_code=201, 
+            content={
+                "detail": "Đổi mật khẩu thành công",
+                "message": "Đổi mật khẩu thành công",
+                "token": new_token,
+                "require_login": False
+            }
+        )
+
+    raise HTTPException(status_code=409, detail="Đổi mật khẩu thất bại")
+
+
+# Xác thực OTP và đổi mật khẩu
+@app.post("/api/user/verify_change_password")
+async def verifyChangePassword(data: dict):
+    email = data.get("email")
+    otp = data.get("otp")
+    new_password = data.get("new_password")
+    
+    if not all([email, otp, new_password]):
+        raise HTTPException(status_code=400, detail="Thiếu thông tin bắt buộc")
+    
+    account = getAccount(email=email)
+    if not account:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
+
+    if account["active_code"] != otp:
+        raise HTTPException(status_code=400, detail="OTP không hợp lệ")
+
+    if account["active_exp"] and account["active_exp"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="OTP đã hết hạn")
+
+    # update mật khẩu mới
+    new_salt = create_random_str(k=10)
+    new_hash_pass = cryptContext.hash(new_salt + new_password)
+    if not changePass(account["account_id"], new_salt, new_hash_pass):
+        raise HTTPException(status_code=500, detail="Không thể đổi mật khẩu")
+
+    # set state = 1 (active hoàn toàn sau khi đổi pass thành công)
+    updateAccountState(account["account_id"], 1)
+
+    return JSONResponse(
+        status_code=200,
+        content={
+            "detail": "Đổi mật khẩu thành công và tài khoản đã được kích hoạt",
+            "message": "Đổi mật khẩu thành công",
+            "require_login": True  # Yêu cầu đăng nhập lại
+        }
+    )
+
+
+# Tạo tài khoản cashier - cập nhật response
 @app.post("/api/user/admin/create_cashier")
 async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthBearer)):
     code, _ = verify_token_type_2(token)
@@ -790,7 +892,7 @@ async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthB
     salt = create_random_str(k=10)
     hash_pass = cryptContext.hash(salt + default_password)
 
-    # Tạo tài khoản (không cần active_code nữa)
+    # Tạo tài khoản
     result, detail = createAccount(
         data.realname,
         data.citizen_id,
@@ -808,18 +910,79 @@ async def createAccountUser(data: FormCreateAccount, token: str = Depends(oAuthB
             f"Tài khoản của bạn đã được tạo.\nTên đăng nhập: {data.username}\nMật khẩu tạm thời: {default_password}\nHãy đăng nhập và đổi mật khẩu."
         )
         token = refresh_token_type_2(token)
-        return JSONResponse(status_code=201, content={"detail": detail, "token": token})
+        return JSONResponse(
+            status_code=201, 
+            content={
+                "detail": detail,
+                "message": "Tạo tài khoản thành công",
+                "token": token,
+                "account": {
+                    "username": data.username,
+                    "email": data.email,
+                    "realname": data.realname,
+                    "citizen_id": data.citizen_id
+                }
+            }
+        )
 
     raise HTTPException(status_code=400, detail=detail)
 
+
+# Kích hoạt tài khoản - cập nhật response
+@app.post("/api/activate")
+def activate_account(data: ActivateRequest):
+    account = getAccount(email=data.email)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
+
+    if account["state"] == 1:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "detail": "Tài khoản đã được kích hoạt trước đó",
+                "message": "Tài khoản đã được kích hoạt",
+                "already_activated": True
+            }
+        )
+
+    if account["active_code"] != data.code:
+        raise HTTPException(status_code=400, detail="Mã kích hoạt không hợp lệ")
+
+    if account["active_exp"] and account["active_exp"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Mã kích hoạt đã hết hạn")
+
+    updateAccountState(account["account_id"], 1)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "detail": "Tài khoản đã kích hoạt thành công, bạn có thể đăng nhập",
+            "message": "Kích hoạt thành công",
+            "activated": True,
+            "can_login": True
+        }
+    )
+
+
+# Gửi lại mã kích hoạt - cập nhật response
 @app.post("/api/resend-activation")
-async def resend_activation(email: str = Query(...)):
+async def resend_activation(data: dict):
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email không được để trống")
+    
     account = getAccount(email=email)
     if account is None:
         raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
 
     if account["state"] == 1:
-        return {"detail": "Tài khoản đã kích hoạt, không cần gửi lại"}
+        return JSONResponse(
+            status_code=200,
+            content={
+                "detail": "Tài khoản đã kích hoạt, không cần gửi lại",
+                "message": "Tài khoản đã kích hoạt",
+                "already_activated": True
+            }
+        )
 
     # tạo code mới (OTP 6 chữ số)
     new_code = generate_otp()
@@ -829,25 +992,15 @@ async def resend_activation(email: str = Query(...)):
     # gửi email OTP
     await send_activation_email(email, new_code)
 
-    return {"detail": "Mã kích hoạt mới đã được gửi qua email"}
-
-@app.post("/api/activate")
-def activate_account(data: ActivateRequest):
-    account = getAccount(email=data.email)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Tài khoản không tồn tại")
-
-    if account["state"] == 1:
-        return {"detail": "Tài khoản đã được kích hoạt trước đó"}
-
-    if account["active_code"] != data.code:
-        raise HTTPException(status_code=400, detail="Mã kích hoạt không hợp lệ")
-
-    if account["active_exp"] and account["active_exp"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Mã kích hoạt đã hết hạn")
-
-    updateAccountState(account["account_id"], 1)
-    return {"detail": "Tài khoản đã kích hoạt thành công, bạn có thể đăng nhập"}
+    return JSONResponse(
+        status_code=200,
+        content={
+            "detail": "Mã kích hoạt mới đã được gửi qua email",
+            "message": "Đã gửi mã kích hoạt",
+            "email": email,
+            "sent": True
+        }
+    )
 
 def createAccountUser(data: FormCreateAccount, id: str = Depends(verify_token_admin)):
     salt = create_random_str(k=10)
@@ -902,6 +1055,8 @@ def deleteCashier(account_id: str, id: str = Depends(verify_token_admin)):
     detail = deleteAccount(account_id)
     return JSONResponse(status_code=200, content={"detail": detail})
 
+def generate_otp(length=6):
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
 # đổi mật khẩu admin/cashier
 @app.put("/api/user/change_password")
 async def changePassword(data: FormChangePassword, token: str = Depends(oAuthBearer)):

@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import AdminLayoutClient from "@/layout/admin.layout.client";
 
 interface AdminLayoutProps {
@@ -5,12 +6,8 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = async ({ children }) => {
-    // const session = await auth();
-    return <AdminLayoutClient
-    // session={session}
-    >
-        {children}
-    </AdminLayoutClient>;
+    const session = await auth();
+    return <AdminLayoutClient session={session}>{children}</AdminLayoutClient>;
 };
 
 export default AdminLayout

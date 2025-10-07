@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { DashboardDataType } from "@/components/dashboard/dashboard";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type DashBoardType = {
     error: string;
     loading: boolean;
-    data: any[];
+    data: DashboardDataType[];
 }
 
 const initialState: DashBoardType = {
@@ -34,8 +35,14 @@ const dashboardSlice = createSlice({
             state.loading = false;
             state.error = action.payload; // lỗi từ API
         },
+
+        clearDashboard: (state) => {
+            state.loading = false;
+            state.data = [];
+            state.error = "";
+        },
     }
 })
 
-export const { loadDashboardInfo_Start, loadDashboardInfo_Success, loadDashboardInfo_Fail } = dashboardSlice.actions;
+export const { loadDashboardInfo_Start, loadDashboardInfo_Success, loadDashboardInfo_Fail, clearDashboard } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

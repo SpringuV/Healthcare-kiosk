@@ -3,10 +3,7 @@ import { Cell, Legend, Pie, ResponsiveContainer, Tooltip, PieChart } from "recha
 import { DashboardDataType } from "./dashboard"
 
 
-interface PieChartProps {
-    dataProps: DashboardDataType | null
-}
-function CustomPieChart(props: PieChartProps) {
+function CustomPieChart(props: any) {
     const { dataProps } = props
     // Tính tổng các loại đơn
     let totalPaidOrder = 0
@@ -59,10 +56,7 @@ function CustomPieChart(props: PieChartProps) {
     return (
         <>
             <div className='mb-10'>
-                <h2 className='text-lg font-semibold mb-4'>
-                    Thống kê trạng thái giao dịch
-                </h2>
-                <div className='grid grid-cols-2 place-content-center gap-5 '> 
+                <div className=' flex flex-col lg:grid lg:grid-cols-2 lg:place-content-center gap-5 '> 
                     {/* flex items-center  flex-wrap */}
                     <div className='w-[400px] h-[400px] mx-auto'>
                         <ResponsiveContainer className="w-full h-full">
@@ -93,7 +87,7 @@ function CustomPieChart(props: PieChartProps) {
                     </div>
 
                     {/* Summary Cards */}
-                    <div className='flex flex-col gap-3'>
+                    <div className='flex flex-row lg:flex-col gap-3'>
                         <div className='p-4 bg-slate-200 rounded-lg max-w-52'>
                             <div className='text-sm text-gray-500'>
                                 Tổng số đơn hàng

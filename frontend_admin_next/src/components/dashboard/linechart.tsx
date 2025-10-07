@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
-import { useAppNotification } from "@/utils/notification"
 import { useEffect, useMemo, useState } from "react"
-import { DashboardDataType } from "./dashboard"
 import { Button } from "antd"
 import {
     LineChart,
@@ -22,30 +20,27 @@ type TransactionDataType = {
     total_money: number
 }[]
 
-interface LineChartProps {
-    dataProps: DashboardDataType | null
+const amount = (number: number) => {
+    return Math.round((number * 26181))
 }
 
-function CustomLineChart(props: LineChartProps) {
+function CustomLineChart(props: any) {
     const { dataProps } = props
-    // console.log(">> check data props: ", dataProps)
-
     const [transactionData, setTransactionData] = useState<TransactionDataType>([])
     const [mode, setMode] = useState<"day" | "month">("day")
 
     // convert DashboardDataType -> TransactionDataType
     useEffect(() => {
         if (dataProps && Array.isArray(dataProps.datas)) {
-            const mapped: TransactionDataType = dataProps.datas.map((item) => ({
+            const mapped: TransactionDataType = dataProps.datas.map((item: any) => ({
                 date: item.order_date.slice(0, 10), // yyyy-MM-dd
                 total_orders:
                     item.total_paid_orders +
                     item.total_unpaid_orders +
                     item.total_cancelled_orders,
                 paid_orders: item.total_paid_orders,
-                total_money: item.order_money,
+                total_money: amount(item.order_money),
             }))
-            console.log(">> Mapped transaction data:", mapped)
             setTransactionData(mapped)
         }
     }, [dataProps])
@@ -103,14 +98,14 @@ function CustomLineChart(props: LineChartProps) {
         }
     }, [mode, transactionData])
 
-    console.log(">> Chart data:", chartData)
-
     // Format số tiền
     const formatMoney = (value: number) => {
-        if (value >= 1000000) {
-            return (value / 1000000).toFixed(1) + "M"
+        if (value >= 1000000000) {
+            return (value / 1000000000).toFixed(1) + "B" // Tỷ
+        } else if (value >= 1000000) {
+            return (value / 1000000).toFixed(1) + "M" // Triệu
         } else if (value >= 1000) {
-            return (value / 1000).toFixed(0) + "K"
+            return (value / 1000).toFixed(0) + "K" // Nghìn
         }
         return value.toString()
     }
