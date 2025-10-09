@@ -1,7 +1,11 @@
-const AccountPage = ()=>{
+import Cashier from "@/components/cashier/cashier"
+
+const AccountPage = () => {
     return (
         <>
-            AccountPage
+            <div className='min-h-screen'>
+                <Cashier />
+            </div>
         </>
     )
 }

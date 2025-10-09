@@ -48,13 +48,17 @@ const Dashboard = () => {
         // 2. Chưa có data trong Redux
         // 3. Không đang loading
         // 4. Chưa fetch lần nào
-        if (session?.access_token && !data && !loading && !hasFetched.current) {
+        if (session?.access_token && (Array.isArray(data)) && !loading && !hasFetched.current) {
             hasFetched.current = true
             console.log("Fetching dashboard data...")
             dispatch(fetchDashBoard(session.access_token))
+            if ((Array.isArray(data)) && !loading) {
+                openNotificationWithIcon('Thành công', 'Load dữ liệu thành công', 'success')
+            }
         } else {
+            console.log("data: ", data)
             console.log("⏭ => Skip fetch - data exists or loading:", {
-                hasData: !!data,
+                hasData: Array.isArray(data) && data.length > 0,
                 loading,
                 hasFetched: hasFetched.current
             })
@@ -67,11 +71,6 @@ const Dashboard = () => {
         }
     }, [error, openNotificationWithIcon])
 
-    useEffect(() => {
-        if (data && !loading) {
-            openNotificationWithIcon('Thành công', 'Load dữ liệu thành công', 'success')
-        }
-    }, [data, loading, openNotificationWithIcon])
     return (
         <>
             {contextHolder}

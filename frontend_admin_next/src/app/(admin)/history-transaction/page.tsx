@@ -1,7 +1,9 @@
-const HistoryTransactionPage = ()=>{
+const HistoryTransactionPage = () => {
     return (
         <>
-            HistoryTransactionPage
+            <div className='min-h-screen'>
+                HistoryTransactionPage
+            </div>
         </>
     )
 }

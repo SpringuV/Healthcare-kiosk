@@ -1,15 +1,26 @@
 'use client'
-import { UploadOutlined, UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { HistoryOutlined, HomeOutlined, UploadOutlined, UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import { Layout, Menu } from 'antd';
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 const { Sider } = Layout;
 type PropsType = {
     collapsed: boolean
 }
 
+const items = [
+    { key: '/dashboard', icon: <HomeOutlined />, label: 'Trang chính' },
+    { key: '/account', icon: <UserOutlined />, label: 'Quản lý tài khoản' },
+    { key: '/history-transaction', icon: <HistoryOutlined />, label: 'Lịch sử giao dịch' },
+]
+
 const AdminSideBar = (props: PropsType) => {
     const { collapsed } = props
     const router = useRouter()
+    const pathname = usePathname()
+
+    const onSideBarClick = (e: { key: string }) => {
+        router.push(e.key)
+    }
     return (
         <>
             <Sider style={{ transitionDuration: "300", transform: "ease-in" }} trigger={null} collapsible collapsed={collapsed}>
@@ -18,33 +29,10 @@ const AdminSideBar = (props: PropsType) => {
                     style={{ position: "sticky" }}
                     theme="dark"
                     mode="inline"
-                    defaultSelectedKeys={['1']}
-                    items={[
-                        {
-                            key: '1',
-                            icon: <UserOutlined />,
-                            label: 'Trang chính',
-                            onClick: () => {
-                                router.push('/dashboard')
-                            }
-                        },
-                        {
-                            key: '2',
-                            icon: <VideoCameraOutlined />,
-                            label: 'Quản lý tài khoản',
-                            onClick: () => {
-                                router.push('/account')
-                            }
-                        },
-                        {
-                            key: '3',
-                            icon: <UploadOutlined />,
-                            label: 'Lịch sử giao dịch',
-                            onClick: () => {
-                                router.push('/history-transaction')
-                            }
-                        },
-                    ]}
+                    onClick={onSideBarClick}
+                    defaultSelectedKeys={['/dashboard']}
+                    selectedKeys={[pathname]}
+                    items={items}
                 />
             </Sider>
         </>
